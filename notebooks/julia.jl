@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.19
 
 using Markdown
 using InteractiveUtils
@@ -19,6 +19,26 @@ using BenchmarkTools
 
 # ╔═╡ f9bc5799-195d-41ae-ba89-0cb1cf22e603
 using PlutoUI
+
+# ╔═╡ 54777de2-a602-4236-9b53-980bf4ce193f
+include("shared.jl")
+
+# ╔═╡ 01c33da1-b98d-42dc-8725-4afb8ae6f44f
+present()
+
+# ╔═╡ ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
+md"""## Pluto notebook using guide:
+### How to play this notebook?
+1. Clone this Github repo to your local host.
+```bash
+git clone https://github.com/GiggleLiu/ModernScientificComputing.git
+```
+
+### Controls
+
+* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to present this notebook as slides.
+* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
+"""
 
 # ╔═╡ 57b3426a-1dc7-44ca-9368-78cb322c259b
 md"## Caches"
@@ -82,7 +102,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.4"
 manifest_format = "2.0"
-project_hash = "e2d3efcbedc4eec7465348c1d2d08b26d7df5b2f"
+project_hash = "0da5d17056461ac0abf65ae8365452a13a39bc03"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -336,6 +356,9 @@ version = "17.4.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╠═54777de2-a602-4236-9b53-980bf4ce193f
+# ╠═01c33da1-b98d-42dc-8725-4afb8ae6f44f
+# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
 # ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
 # ╠═f9bc5799-195d-41ae-ba89-0cb1cf22e603
 # ╟─57b3426a-1dc7-44ca-9368-78cb322c259b
