@@ -26,19 +26,142 @@ include("shared.jl")
 # ╔═╡ 01c33da1-b98d-42dc-8725-4afb8ae6f44f
 present()
 
-# ╔═╡ ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
-md"""## Pluto notebook using guide:
-### How to play this notebook?
-1. Clone this Github repo to your local host.
-```bash
-git clone https://github.com/GiggleLiu/ModernScientificComputing.git
-```
-
-### Controls
-
-* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to present this notebook as slides.
-* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
+# ╔═╡ 5c5f6214-61c5-4532-ac05-85a43e5639cc
+md"""
+# About this course
+## Scientific computing
+> Scientific computing is the collection of tools, techniques and theories required to solve on a computer the mathematical models of problems in science and engineering.
+>
+> -- Gene H. Golub and James M. Ortega
 """
+
+# ╔═╡ c51b55d2-c899-421f-a633-1daa4168c6d5
+md"## Textbook"
+
+# ╔═╡ d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
+leftright(md"""
+$(LocalResource("images/textbook.jpg"))
+""", md"""
+#### Chapters
+1. Scientific Computing
+2. Systems of linear equations
+3. Linear least squares
+4. Eigenvalue problems
+5. Nonlinear equations
+6. Optimization
+7. Interpolation
+8. $(del("Numerical integration and differentiation"))
+9. $(del("Initial value problems for ordinary differential equations"))
+10. $(del("Boundary value problems for ordinary differential equations"))
+11. $(del("Partial differential equations"))
+12. Fast fourier transform
+13. Random numbers and stochastic simulation
+"""; width=660, left=0.4)
+
+# ╔═╡ af0db2a7-41ca-4baf-89f3-4a416a062382
+md"""
+## This course (Slightly more than the textbook)
+1. Modern toolkits
+    - Computer architecture
+    - An operating system: Linux
+    - A programming language: Julia
+    - Four types of parallel computing schemes
+        - Single instruction and multiple data (SIMD)
+        - Multithreading
+        - Message passing interface (MPI)
+        - CUDA programming
+2. Old mathematical modeling and algorithms
+3. State of the art problems
+    - probabilistic modeling
+    - sparsity detection (in dataset)
+    - computational hard problems
+"""
+
+# ╔═╡ ce633741-5a25-4eda-a0f4-9050be226255
+md"""
+## Grading
+1. 70% by course assignment
+2. 30% by final presentation
+## $(highlight("Our communication channel!"))
+(Zulip link to be added)
+## My email
+Jinguo Liu
+
+[jinguoliu@hkust-gz.edu.cn](mailto:jinguoliu@hkust-gz.edu.cn)
+"""
+
+# ╔═╡ f36e7b45-193e-4028-aae5-352711b8406d
+md"# Lecture 1: Understanding our computer"
+
+# ╔═╡ 684c162a-cd72-4675-aa47-3969cf1768ee
+md"""
+![Computer arch, Power suppl, CPU, Registers, Caches, Main memory, GPU]()
+"""
+
+# ╔═╡ e95e9fa0-42e7-43ea-8571-37fbb6043948
+md"""
+```bash
+(base) ➜  ~ lscpu
+Architecture:            x86_64
+  CPU op-mode(s):        32-bit, 64-bit
+  Address sizes:         39 bits physical, 48 bits virtual
+  Byte Order:            Little Endian
+CPU(s):                  8
+  On-line CPU(s) list:   0-7
+Vendor ID:               GenuineIntel
+  Model name:            Intel(R) Core(TM) i7-10510U CPU @ 1.80GHz
+    CPU family:          6
+    Model:               142
+    Thread(s) per core:  2
+    Core(s) per socket:  4
+    Socket(s):           1
+    Stepping:            12
+    CPU max MHz:         4900.0000
+    CPU min MHz:         400.0000
+    BogoMIPS:            4599.93
+    Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat 
+                         pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx p
+                         dpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good n
+                         opl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 mo
+                         nitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1
+                          sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c 
+                         rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single ss
+                         bd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept 
+                         vpid ept_ad fsgsbase tsc_adjust sgx bmi1 avx2 smep bmi2 erms invpc
+                         id mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1
+                          xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_
+                         epp md_clear flush_l1d arch_capabilities
+Virtualization features: 
+  Virtualization:        VT-x
+Caches (sum of all):     
+  L1d:                   128 KiB (4 instances)
+  L1i:                   128 KiB (4 instances)
+  L2:                    1 MiB (4 instances)
+  L3:                    8 MiB (1 instance)
+NUMA:                    
+  NUMA node(s):          1
+  NUMA node0 CPU(s):     0-7
+Vulnerabilities:         
+  Itlb multihit:         KVM: Mitigation: VMX disabled
+  L1tf:                  Not affected
+  Mds:                   Not affected
+  Meltdown:              Not affected
+  Mmio stale data:       Mitigation; Clear CPU buffers; SMT vulnerable
+  Retbleed:              Mitigation; Enhanced IBRS
+  Spec store bypass:     Mitigation; Speculative Store Bypass disabled via prctl and seccom
+                         p
+  Spectre v1:            Mitigation; usercopy/swapgs barriers and __user pointer sanitizati
+                         on
+  Spectre v2:            Mitigation; Enhanced IBRS, IBPB conditional, RSB filling, PBRSB-eI
+                         BRS SW sequence
+  Srbds:                 Mitigation; Microcode
+  Tsx async abort:       Not affected
+```
+"""
+
+# ╔═╡ 0b157313-555b-40a5-aca0-68b17ecd7b86
+md"# Primitive Data Types
+"
 
 # ╔═╡ 57b3426a-1dc7-44ca-9368-78cb322c259b
 md"## Caches"
@@ -85,6 +208,20 @@ run_bm2 && @benchmark f1!($xlarge)
 # ╔═╡ f6904206-5935-4002-b914-f058ecfe3a43
 run_bm2 && @benchmark f2!($xlarge)
 
+# ╔═╡ ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
+md"""## Pluto notebook using guide:
+### How to play this notebook?
+1. Clone this Github repo to your local host.
+```bash
+git clone https://github.com/GiggleLiu/ModernScientificComputing.git
+```
+
+### Controls
+
+* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to toggle the presentation mode.
+* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -100,7 +237,7 @@ PlutoUI = "~0.7.49"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.4"
+julia_version = "1.9.0-beta2"
 manifest_format = "2.0"
 project_hash = "0da5d17056461ac0abf65ae8365452a13a39bc03"
 
@@ -135,7 +272,7 @@ version = "0.11.4"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.1+0"
+version = "1.0.2+0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -206,7 +343,7 @@ version = "1.10.2+0"
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[deps.LinearAlgebra]]
-deps = ["Libdl", "libblastrampoline_jll"]
+deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.Logging]]
@@ -231,7 +368,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.2.1"
+version = "2022.10.11"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
@@ -240,7 +377,7 @@ version = "1.2.0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.20+0"
+version = "0.3.21+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
@@ -249,7 +386,7 @@ uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.5.2"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 version = "1.8.0"
 
@@ -296,22 +433,28 @@ version = "1.0.1"
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SparseArrays]]
-deps = ["LinearAlgebra", "Random"]
+deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+version = "1.9.0"
+
+[[deps.SuiteSparse_jll]]
+deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
+uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
+version = "5.10.1+0"
 
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.0"
+version = "1.0.3"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.1"
+version = "1.10.0"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -337,12 +480,12 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.12+3"
+version = "1.2.13+0"
 
 [[deps.libblastrampoline_jll]]
-deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
+deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.1.1+0"
+version = "5.2.0+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -358,13 +501,20 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╠═54777de2-a602-4236-9b53-980bf4ce193f
 # ╠═01c33da1-b98d-42dc-8725-4afb8ae6f44f
-# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
-# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-# ╠═f9bc5799-195d-41ae-ba89-0cb1cf22e603
+# ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
+# ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
+# ╟─d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
+# ╟─af0db2a7-41ca-4baf-89f3-4a416a062382
+# ╟─ce633741-5a25-4eda-a0f4-9050be226255
+# ╟─f36e7b45-193e-4028-aae5-352711b8406d
+# ╠═684c162a-cd72-4675-aa47-3969cf1768ee
+# ╟─e95e9fa0-42e7-43ea-8571-37fbb6043948
+# ╟─0b157313-555b-40a5-aca0-68b17ecd7b86
 # ╟─57b3426a-1dc7-44ca-9368-78cb322c259b
 # ╠═61094c96-832f-44a4-892a-688187434472
 # ╠═d9ad5708-db25-407d-b382-c3dc8fb1003c
 # ╠═97f9d064-a0ff-4593-bbab-5cf224965b25
+# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
 # ╟─c7157d70-3cdd-4b75-b86b-ea9b1cacbeb0
 # ╠═d0c151cb-55a7-4d89-99d5-416eb00cf251
 # ╠═71cc7d7e-d034-4d33-85a5-3b540c702515
@@ -372,5 +522,7 @@ version = "17.4.0+0"
 # ╠═5f7edd45-01bd-4af4-b25e-5827c5ae580d
 # ╠═749af321-0b3c-43b1-82ac-effc93475e10
 # ╠═f6904206-5935-4002-b914-f058ecfe3a43
+# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
+# ╠═f9bc5799-195d-41ae-ba89-0cb1cf22e603
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

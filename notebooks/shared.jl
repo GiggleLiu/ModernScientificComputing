@@ -29,6 +29,10 @@ macro mermaid_str(str)
 """)
 end
 
+function del(str)
+    return HTML("<del>$str</del>")
+end
+
 if isdefined(@__MODULE__, :AbstractTrees)
 # print directory
 function print_dir_tree(dir; maxdepth=5)
@@ -55,7 +59,7 @@ function kbd(str)
     return HTML("<kbd>$(string(str))</kbd>")
 end
 # left right layout
-function leftright(a, b; width=600)
+function leftright(a, b; width=600, left=0.5)
     HTML("""
 <style>
 table.nohover tr:hover td {
@@ -64,8 +68,8 @@ background-color: white !important;
         
 <table width=$(width)px class="nohover" style="border:none">
 <tr>
-<td>$(html(a))</td>
-<td>$(html(b))</td>
+<td width=$(width*left)>$(html(a))</td>
+<td width=$(width*(1-left))>$(html(b))</td>
 </tr></table>
 """)
 end
