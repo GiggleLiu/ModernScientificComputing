@@ -4,307 +4,164 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
+# ╔═╡ 091c2b70-95ba-11ed-0242-19da394d1ca8
+using LinearAlgebra
 
-# ╔═╡ ed7b56a6-d9cb-4045-979f-3aa618a6b6d4
+# ╔═╡ b36dc961-f76e-4188-a3a3-f26eded6d9b2
 using Plots
 
-# ╔═╡ 8776764c-4483-476b-bfff-a3e779431a68
-using Random
+# ╔═╡ f9844f04-616d-4f90-a3a8-e22ad9cdcfbe
+md"## Matrix norms"
 
-# ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-using BenchmarkTools
-
-# ╔═╡ f9bc5799-195d-41ae-ba89-0cb1cf22e603
-using PlutoUI
-
-# ╔═╡ 54777de2-a602-4236-9b53-980bf4ce193f
-include("shared.jl")
-
-# ╔═╡ 01c33da1-b98d-42dc-8725-4afb8ae6f44f
-present()
-
-# ╔═╡ 5c5f6214-61c5-4532-ac05-85a43e5639cc
+# ╔═╡ 996988dc-1142-4abf-a4cf-1130fa2cc8e9
 md"""
-# About this course
-## Scientific computing
-> Scientific computing is the collection of tools, techniques and theories required to solve on a computer the mathematical models of problems in science and engineering.
->
-> -- Gene H. Golub and James M. Ortega
-"""
-
-# ╔═╡ c51b55d2-c899-421f-a633-1daa4168c6d5
-md"## Textbook"
-
-# ╔═╡ d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-leftright(md"""
-$(LocalResource("images/textbook.jpg"))
-""", md"""
-#### Chapters
-1. Scientific Computing
-2. Systems of linear equations
-3. Linear least squares
-4. Eigenvalue problems
-5. Nonlinear equations
-6. Optimization
-7. Interpolation
-8. $(del("Numerical integration and differentiation"))
-9. $(del("Initial value problems for ordinary differential equations"))
-10. $(del("Boundary value problems for ordinary differential equations"))
-11. $(del("Partial differential equations"))
-12. Fast fourier transform
-13. Random numbers and stochastic simulation
-"""; width=660, left=0.4)
-
-# ╔═╡ af0db2a7-41ca-4baf-89f3-4a416a062382
-md"""
-## This course (Slightly more than the textbook)
-1. Modern toolkits
-    - Understanding our computing devices
-    - An introduction to modern toolkit
-        - Linux operating system
-        - Vim, SSH and Git
-    - A programming language: Julia
-2. Old mathematical modeling and algorithms
-3. State of the art problems
-    - probabilistic modeling
-    - sparsity detection (in dataset)
-    - computational hard problems
-"""
-
-# ╔═╡ ce633741-5a25-4eda-a0f4-9050be226255
-md"""
-## Grading
-1. 70% by course assignment
-2. 30% by final presentation
-## $(highlight("Our communication channel!"))
-(Zulip link to be added)
-## My email
-Jinguo Liu
-
-[jinguoliu@hkust-gz.edu.cn](mailto:jinguoliu@hkust-gz.edu.cn)
-"""
-
-# ╔═╡ f36e7b45-193e-4028-aae5-352711b8406d
-md"# Lecture 1: Understanding our computer"
-
-# ╔═╡ 684c162a-cd72-4675-aa47-3969cf1768ee
-md"""
-![Computer arch, Power suppl, CPU, Registers, Caches, Main memory, GPU]()
-"""
-
-# ╔═╡ e95e9fa0-42e7-43ea-8571-37fbb6043948
-md"""
-```bash
-(base) ➜  ~ lscpu
-Architecture:            x86_64
-  CPU op-mode(s):        32-bit, 64-bit
-  Address sizes:         39 bits physical, 48 bits virtual
-  Byte Order:            Little Endian
-CPU(s):                  8
-  On-line CPU(s) list:   0-7
-Vendor ID:               GenuineIntel
-  Model name:            Intel(R) Core(TM) i7-10510U CPU @ 1.80GHz
-    CPU family:          6
-    Model:               142
-    Thread(s) per core:  2
-    Core(s) per socket:  4
-    Socket(s):           1
-    Stepping:            12
-    CPU max MHz:         4900.0000
-    CPU min MHz:         400.0000
-    BogoMIPS:            4599.93
-    Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat 
-                         pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx p
-                         dpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good n
-                         opl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 mo
-                         nitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1
-                          sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c 
-                         rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single ss
-                         bd ibrs ibpb stibp ibrs_enhanced tpr_shadow vnmi flexpriority ept 
-                         vpid ept_ad fsgsbase tsc_adjust sgx bmi1 avx2 smep bmi2 erms invpc
-                         id mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1
-                          xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_
-                         epp md_clear flush_l1d arch_capabilities
-Virtualization features: 
-  Virtualization:        VT-x
-Caches (sum of all):     
-  L1d:                   128 KiB (4 instances)
-  L1i:                   128 KiB (4 instances)
-  L2:                    1 MiB (4 instances)
-  L3:                    8 MiB (1 instance)
-NUMA:                    
-  NUMA node(s):          1
-  NUMA node0 CPU(s):     0-7
-Vulnerabilities:         
-  Itlb multihit:         KVM: Mitigation: VMX disabled
-  L1tf:                  Not affected
-  Mds:                   Not affected
-  Meltdown:              Not affected
-  Mmio stale data:       Mitigation; Clear CPU buffers; SMT vulnerable
-  Retbleed:              Mitigation; Enhanced IBRS
-  Spec store bypass:     Mitigation; Speculative Store Bypass disabled via prctl and seccom
-                         p
-  Spectre v1:            Mitigation; usercopy/swapgs barriers and __user pointer sanitizati
-                         on
-  Spectre v2:            Mitigation; Enhanced IBRS, IBPB conditional, RSB filling, PBRSB-eI
-                         BRS SW sequence
-  Srbds:                 Mitigation; Microcode
-  Tsx async abort:       Not affected
+The $p$-norm of a vector $x$ is defined as
+```math
+\|x\|_p = \left(\sum |x|^p\right)^{1/p}
 ```
 """
 
-# ╔═╡ 2e61df85-2246-4153-b8b0-174c7fc7ec8c
-md"""## Numbers
-Is floating point number type a field?
+# ╔═╡ bf104a67-23fd-4b68-a1df-d030ee515f30
+md"For $p=2$, we have the widely used Frobenius norm."
+
+# ╔═╡ a62deda5-c52c-43e3-87d2-aeede17fdc0d
+md"""The $p$-norm of a matrix $A$ is defined as
+```math
+\|A\|_p = \sup_{x\neq 0}\frac{\|A x\|_p}{\|x\|_p}
+```
+
 """
 
-# ╔═╡ 7e036714-ab4c-4546-89f2-dbf422868ffc
-md"""
-### Example 1
-"""
+# ╔═╡ 4f029361-063e-4ce6-a0f4-fd6754407ef7
+md"For $p=2$, we have the Frobenius norm of a matrix $\|A\|_2 = \sqrt{\lambda_{\rm max}(A^T A)}$."
 
-# ╔═╡ 9acd075f-bd77-41da-8455-e54063cbc8b4
-function axpy!(a::Real, x::AbstractVector, y::AbstractVector)
-	@assert length(x) == length(y) "the input size of x and y mismatch, got $(length(x)) and $(length(y))"
-	@inbounds for i=1:length(x)
-		y[i] += a * x[i]
-	end
-	return y
-end
-
-# ╔═╡ d381fcf1-3b53-49fa-a5af-1a242c83d05c
-function roll_axpy!(a::Real, x::AbstractVector, y::AbstractVector, indices::AbstractVector{Int})
-	@assert length(x) == length(y) == length(indices) "the input size of x and y mismatch, got $(length(x)), $(length(y)) and $(length(indices))"
-	@inbounds for i in indices
-		y[i] += a * x[i]
-	end
-	return y
-end
-
-# ╔═╡ 85d0bce1-ca15-4a86-821f-87d3ec0b715c
-md" $(@bind timing1 CheckBox()) Show times (binded to `timing1`)"
-
-# ╔═╡ f5edd248-eb04-41d1-b435-21aa77b010b7
-timing1 && let
-	ns = 2 .^ (1:26)
-	times = Float64[]
-	for n in ns
-		x = randn(Float64, n)
-		y = randn(Float64, n)
-		tn = @elapsed axpy!(2.0, x, y)
-		push!(times, tn/n)
-	end
-	plot(ns, times; ylabel="time/n/s", label="axpy!", ylim=(0, 1e-8))
-end
-
-# ╔═╡ 7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-md" $(@bind timing2 CheckBox()) Show times (binded to `timing2`)"
-
-# ╔═╡ 5245a31a-62c3-422d-8d04-d2bdf496cbcc
-timing2 && let
-	ns = 2 .^ (1:26)
-	times = Float64[]
-	for n in ns
-		x = randn(Float64, n)
-		y = randn(Float64, n)
-		indices = Random.shuffle(1:n)
-		tn = @elapsed roll_axpy!(2.0, x, y, indices)
-		push!(times, tn/n)
-	end
-	plot(ns, times; ylabel="time/n/s", label="axpy!", ylim=(0, 1e-7))
-end
-
-# ╔═╡ 0b157313-555b-40a5-aca0-68b17ecd7b86
-md"# Primitive Data Types
+# ╔═╡ cc839bcb-d275-4cea-bbbd-ddebcf9a914a
+md"The norm inequality
+```math
+\|Ax\|_p \leq \|A\|_p\|x\|_p.
+```
 "
 
-# ╔═╡ 57b3426a-1dc7-44ca-9368-78cb322c259b
-md"## Caches"
+# ╔═╡ 92b8353d-be9a-410c-9140-224ba2923fa2
+md"## Roundoff errors matters"
 
-# ╔═╡ 61094c96-832f-44a4-892a-688187434472
-# cache friendly
-function f1!(x)
-	@inbounds for i=1:length(x)
-        x[i] = rand(1:length(x))
-   	end
-	return x
+# ╔═╡ 77941632-30d8-4dff-9f9e-ce19cae07883
+md"""
+The roundoff error of dot product
+"""
+
+# ╔═╡ 7934df27-5e60-4bb1-9b76-86bdcd25938d
+function mydot(x::AbstractVector{T}, y::AbstractVector{T}) where T
+	@assert length(x) == length(y) "two input vectors must have the same length!"
+	s = zero(T)
+	@inbounds for k=1:length(x)
+		s += x[k] * y[k]
+	end
+	return s
 end
 
-# ╔═╡ d9ad5708-db25-407d-b382-c3dc8fb1003c
-# cache unfriendly
-function f2!(x)
-	@inbounds for i=1:length(x)
-        x[i] = x[rand(1:length(x))]
-   	end
-	return x
+# ╔═╡ 3145c228-81d3-4bd2-a189-db022010bbc8
+function measure_error(n::Int; nrepeat=100)
+	error = 0.0
+	for i=1:nrepeat
+		x, y = randn(n), randn(n)
+		res64 = mydot(x, y)
+		res32 = mydot(Float32.(x), Float32.(y))
+		error += abs(res32 - res64)
+	end
+	return error / nrepeat
 end
 
-# ╔═╡ 97f9d064-a0ff-4593-bbab-5cf224965b25
-# ╠═╡ disabled = true
-#=╠═╡
-x = zeros(Int, 10000);
-  ╠═╡ =#
+# ╔═╡ a40ac7a8-e96f-43b8-b224-b3b98aa70e43
+ns = 2:5:2000
 
-# ╔═╡ c7157d70-3cdd-4b75-b86b-ea9b1cacbeb0
-md""" $(@bind run_bm1 CheckBox()) Run Benchmarks"""
+# ╔═╡ 9e65f738-c412-4576-b05c-bcc4ed4191f3
+plot(ns, measure_error.(ns))
 
-# ╔═╡ d0c151cb-55a7-4d89-99d5-416eb00cf251
-#=╠═╡
-run_bm1 && @benchmark f1!($x)
-  ╠═╡ =#
-
-# ╔═╡ 71cc7d7e-d034-4d33-85a5-3b540c702515
-#=╠═╡
-run_bm1 && @benchmark f2!($x)
-  ╠═╡ =#
-
-# ╔═╡ 60d0ebd1-276b-4a7b-958f-44c035dc6d86
-md""" $(@bind run_bm2 CheckBox()) Run Benchmarks"""
-
-# ╔═╡ 5f7edd45-01bd-4af4-b25e-5827c5ae580d
-xlarge = zeros(Int, 10000000);
-
-# ╔═╡ 749af321-0b3c-43b1-82ac-effc93475e10
-run_bm2 && @benchmark f1!($xlarge)
-
-# ╔═╡ f6904206-5935-4002-b914-f058ecfe3a43
-run_bm2 && @benchmark f2!($xlarge)
-
-# ╔═╡ ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
-md"""## Pluto notebook using guide:
-### How to play this notebook?
-1. Clone this Github repo to your local host.
-```bash
-git clone https://github.com/GiggleLiu/ModernScientificComputing.git
+# ╔═╡ 02b40ca6-d165-486e-b0ea-ce0210b662b3
+md"""
+The matrix multiplication error is
+```math
+\texttt{fl}(AB) = AB+E, ~~~~ |E| \leq n \mathbf{u}|A||B| + O(\mathbf{u}^2)
 ```
+"""
 
-### Controls
+# ╔═╡ 5fff83dd-12f1-49bb-ac76-3a564738dd3c
+md"## Matrix factorization"
 
-* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to toggle the presentation mode.
-* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
+# ╔═╡ 7c1e95f3-de5a-4fb9-b62e-84093782f9eb
+function show_nonzeros(A)
+	data = join([join([iszero(A[row, col]) ? "◻" : "■" for col in 1:size(A, 2)], " & ") for row in 1:size(A, 1)], "\\\\\n")
+	Markdown.parse("""```math
+\\left(\\begin{matrix}$data\\end{matrix}\\right)
+```""")
+end
+
+# ╔═╡ 01a949f9-8c84-44be-94d7-e6defd770c92
+md"## LU factorization"
+
+# ╔═╡ 9525df04-e6d4-4488-a8c7-43e7bae8c12b
+md"""**Theorem (LU Factorization).** If $A \in \mathbb{R}^{n \times n}$ and $\det(A(l:k, l:k)) \neq 0$ for $k = l:n - 1$ , then there exists a unit lower triangular $L\in R^{n \times n}$ and an upper triangular $U \in \mathbb{R}^{n\times n}$ such that $A = LU$. If this is the case and A is nonsingular, then the factorization is unique and $\det(A) = U_{11} \ldots U_{nn}$·
+"""
+
+# ╔═╡ b5e765c7-ba79-4d0c-9c70-0c43858643cd
+A = randn(3, 3)
+
+# ╔═╡ 09896bc0-bb21-4d58-91a4-40cfc6bfe25c
+lu(A)
+
+# ╔═╡ bc124a87-e8fc-45ae-86fd-b99685400b96
+show_nonzeros(lu(A).L)
+
+# ╔═╡ 519bfc3f-d9b1-4f71-93e9-83e994a70401
+show_nonzeros(lu(A).U)
+
+# ╔═╡ bda0eaf3-b01a-4cc9-b564-916eef9f1472
+md"""
+## The outer product and gaxpy schemes to compute LU
+"""
+
+# ╔═╡ 9dacd977-d7e2-4e07-9b37-d9df214ef207
+md"## Errors in the LU factorization"
+
+# ╔═╡ d0fd7bca-0849-4d5d-bf13-482a0bf25eb8
+md"### Analysis of an Ideal Equation Solver"
+
+# ╔═╡ f63863c4-fad4-4b78-91b0-ef968f22565c
+md"page 102"
+
+# ╔═╡ 12cd79c5-cd9c-4d43-b3e4-653ce025bc9c
+md"### Roundoff Error in Gaussian Elimination"
+
+# ╔═╡ f1404a8c-67f4-4e75-bfcc-a2bc0eef0963
+md"page 122"
+
+# ╔═╡ 92fe8d7e-065b-4ce6-bb6f-83d2917a2ff0
+md"## Pivoting"
+
+# ╔═╡ b196542e-14fe-48cb-bf9e-516927bc88c0
+md"p 125"
+
+# ╔═╡ a61381af-fbcf-4d81-9326-c465b060c8ff
+md"""
+```math
+PA = LU
+```
+"""
+
+# ╔═╡ ede4a6d0-d5fb-47d1-92ec-f2ca78c9aa32
+md"""
+Let us check the resulting matrix.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-BenchmarkTools = "~1.3.2"
-Plots = "~1.38.1"
-PlutoUI = "~0.7.49"
+Plots = "~1.38.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -313,13 +170,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.0-beta2"
 manifest_format = "2.0"
-project_hash = "1b90952bf3daa0e755468abe5d956fcf9c05ab89"
-
-[[deps.AbstractPlutoDingetjes]]
-deps = ["Pkg"]
-git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
-uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.1.4"
+project_hash = "320aae5ec2ce416d12e4b46d4fb39a856c9641d0"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -330,12 +181,6 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
-
-[[deps.BenchmarkTools]]
-deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
-git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
-uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.3.2"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
@@ -538,33 +383,15 @@ version = "1.0.2"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "Dates", "IniFile", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "fd9861adba6b9ae4b42582032d0936d456c8602d"
+git-tree-sha1 = "eb5aa5e3b500e191763d35198f859e4b40fff4a6"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.6.3"
+version = "1.7.3"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
 git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
-
-[[deps.Hyperscript]]
-deps = ["Test"]
-git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
-uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
-version = "0.0.4"
-
-[[deps.HypertextLiteral]]
-deps = ["Tricks"]
-git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
-uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.4"
-
-[[deps.IOCapture]]
-deps = ["Logging", "Random"]
-git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
-uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.2"
 
 [[deps.IniFile]]
 git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
@@ -728,11 +555,6 @@ git-tree-sha1 = "cedb76b37bc5a6c702ade66be44f831fa23c681e"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.0.0"
 
-[[deps.MIMEs]]
-git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
-uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "0.1.4"
-
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "42324d08725e200c23d4dfb549e0d5d89dede2d2"
@@ -800,9 +622,9 @@ version = "0.8.1+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
-git-tree-sha1 = "df6830e37943c7aaa10023471ca47fb3065cc3c4"
+git-tree-sha1 = "6503b77492fd7fcb9379bf73cd31035670e3c509"
 uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
-version = "1.3.2"
+version = "1.3.3"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -834,9 +656,9 @@ version = "10.42.0+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "6466e524967496866901a78fca3f2e9ea445a559"
+git-tree-sha1 = "8175fc2b118a3755113c8e68084dc1a9e63c61ee"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.2"
+version = "2.5.3"
 
 [[deps.Pipe]]
 git-tree-sha1 = "6842804e7867b115ca9de748a0cf6b364523c16d"
@@ -868,15 +690,9 @@ version = "1.3.2"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SnoopPrecompile", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "02ecc6a3427e7edfff1cebcf66c1f93dd77760ec"
+git-tree-sha1 = "a99bbd3664bb12a775cda2eba7f3b2facf3dad94"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.38.1"
-
-[[deps.PlutoUI]]
-deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "eadad7b14cf046de6eb41f13c9275e5aa2711ab6"
-uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.49"
+version = "1.38.2"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -887,10 +703,6 @@ version = "1.3.0"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-
-[[deps.Profile]]
-deps = ["Printf"]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
@@ -960,9 +772,10 @@ uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
 version = "1.1.0"
 
 [[deps.SnoopPrecompile]]
-git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
+deps = ["Preferences"]
+git-tree-sha1 = "e760a70afdcd461cf01a575947738d359234665c"
 uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
-version = "1.0.1"
+version = "1.0.3"
 
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -1030,11 +843,6 @@ deps = ["Random", "Test"]
 git-tree-sha1 = "94f38103c984f89cf77c402f2a68dbd870f8165f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.11"
-
-[[deps.Tricks]]
-git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
-uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.6"
 
 [[deps.URIs]]
 git-tree-sha1 = "ac00576f90d8a259f2c9d823e91d1de3fd44d348"
@@ -1291,40 +1099,38 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═54777de2-a602-4236-9b53-980bf4ce193f
-# ╠═01c33da1-b98d-42dc-8725-4afb8ae6f44f
-# ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
-# ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
-# ╟─d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-# ╟─af0db2a7-41ca-4baf-89f3-4a416a062382
-# ╟─ce633741-5a25-4eda-a0f4-9050be226255
-# ╟─f36e7b45-193e-4028-aae5-352711b8406d
-# ╠═684c162a-cd72-4675-aa47-3969cf1768ee
-# ╟─e95e9fa0-42e7-43ea-8571-37fbb6043948
-# ╟─2e61df85-2246-4153-b8b0-174c7fc7ec8c
-# ╟─7e036714-ab4c-4546-89f2-dbf422868ffc
-# ╠═9acd075f-bd77-41da-8455-e54063cbc8b4
-# ╠═d381fcf1-3b53-49fa-a5af-1a242c83d05c
-# ╠═ed7b56a6-d9cb-4045-979f-3aa618a6b6d4
-# ╟─85d0bce1-ca15-4a86-821f-87d3ec0b715c
-# ╠═f5edd248-eb04-41d1-b435-21aa77b010b7
-# ╟─7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-# ╠═8776764c-4483-476b-bfff-a3e779431a68
-# ╠═5245a31a-62c3-422d-8d04-d2bdf496cbcc
-# ╟─0b157313-555b-40a5-aca0-68b17ecd7b86
-# ╟─57b3426a-1dc7-44ca-9368-78cb322c259b
-# ╠═61094c96-832f-44a4-892a-688187434472
-# ╠═d9ad5708-db25-407d-b382-c3dc8fb1003c
-# ╠═97f9d064-a0ff-4593-bbab-5cf224965b25
-# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-# ╟─c7157d70-3cdd-4b75-b86b-ea9b1cacbeb0
-# ╠═d0c151cb-55a7-4d89-99d5-416eb00cf251
-# ╠═71cc7d7e-d034-4d33-85a5-3b540c702515
-# ╟─60d0ebd1-276b-4a7b-958f-44c035dc6d86
-# ╠═5f7edd45-01bd-4af4-b25e-5827c5ae580d
-# ╠═749af321-0b3c-43b1-82ac-effc93475e10
-# ╠═f6904206-5935-4002-b914-f058ecfe3a43
-# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
-# ╠═f9bc5799-195d-41ae-ba89-0cb1cf22e603
+# ╠═091c2b70-95ba-11ed-0242-19da394d1ca8
+# ╟─f9844f04-616d-4f90-a3a8-e22ad9cdcfbe
+# ╟─996988dc-1142-4abf-a4cf-1130fa2cc8e9
+# ╟─bf104a67-23fd-4b68-a1df-d030ee515f30
+# ╟─a62deda5-c52c-43e3-87d2-aeede17fdc0d
+# ╟─4f029361-063e-4ce6-a0f4-fd6754407ef7
+# ╟─cc839bcb-d275-4cea-bbbd-ddebcf9a914a
+# ╟─92b8353d-be9a-410c-9140-224ba2923fa2
+# ╟─77941632-30d8-4dff-9f9e-ce19cae07883
+# ╠═7934df27-5e60-4bb1-9b76-86bdcd25938d
+# ╠═3145c228-81d3-4bd2-a189-db022010bbc8
+# ╠═b36dc961-f76e-4188-a3a3-f26eded6d9b2
+# ╠═a40ac7a8-e96f-43b8-b224-b3b98aa70e43
+# ╠═9e65f738-c412-4576-b05c-bcc4ed4191f3
+# ╟─02b40ca6-d165-486e-b0ea-ce0210b662b3
+# ╟─5fff83dd-12f1-49bb-ac76-3a564738dd3c
+# ╠═7c1e95f3-de5a-4fb9-b62e-84093782f9eb
+# ╟─01a949f9-8c84-44be-94d7-e6defd770c92
+# ╟─9525df04-e6d4-4488-a8c7-43e7bae8c12b
+# ╠═b5e765c7-ba79-4d0c-9c70-0c43858643cd
+# ╠═09896bc0-bb21-4d58-91a4-40cfc6bfe25c
+# ╠═bc124a87-e8fc-45ae-86fd-b99685400b96
+# ╠═519bfc3f-d9b1-4f71-93e9-83e994a70401
+# ╟─bda0eaf3-b01a-4cc9-b564-916eef9f1472
+# ╟─9dacd977-d7e2-4e07-9b37-d9df214ef207
+# ╟─d0fd7bca-0849-4d5d-bf13-482a0bf25eb8
+# ╟─f63863c4-fad4-4b78-91b0-ef968f22565c
+# ╟─12cd79c5-cd9c-4d43-b3e4-653ce025bc9c
+# ╟─f1404a8c-67f4-4e75-bfcc-a2bc0eef0963
+# ╟─92fe8d7e-065b-4ce6-bb6f-83d2917a2ff0
+# ╟─b196542e-14fe-48cb-bf9e-516927bc88c0
+# ╟─a61381af-fbcf-4d81-9326-c465b060c8ff
+# ╟─ede4a6d0-d5fb-47d1-92ec-f2ca78c9aa32
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
