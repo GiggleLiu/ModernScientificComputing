@@ -4,24 +4,21 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
 # ╔═╡ 84c14a09-2c9e-4919-bfb1-cdf4d5a61776
 using Pkg, Revise
 
 # ╔═╡ 41ff9fda-a597-420b-93a9-b281d42acfb1
+# ╠═╡ show_logs = false
 Pkg.develop(path="https://github.com/GiggleLiu/PlutoMustache.jl.git")
 
 # ╔═╡ a319ad61-9b51-412b-a186-797150a579ab
 using PlutoMustache
+
+# ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
+using BenchmarkTools
+
+# ╔═╡ cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
+using LinearAlgebra: mul!
 
 # ╔═╡ ed7b56a6-d9cb-4045-979f-3aa618a6b6d4
 using Plots
@@ -29,15 +26,15 @@ using Plots
 # ╔═╡ 8776764c-4483-476b-bfff-a3e779431a68
 using Random
 
-# ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-using BenchmarkTools
-
 # ╔═╡ 01c33da1-b98d-42dc-8725-4afb8ae6f44f
 presentmode()
 
+# ╔═╡ 59cf2bc4-acf0-47ac-aa05-9e9a41ba783e
+TableOfContents()
+
 # ╔═╡ 5c5f6214-61c5-4532-ac05-85a43e5639cc
 md"""
-# About this course
+# About this course (10min)
 ## What is scientific computing?
 """
 
@@ -73,25 +70,32 @@ $(localimage("images/textbook.jpg"))
 
 # ╔═╡ af0db2a7-41ca-4baf-89f3-4a416a062382
 md"""
-## This course (Slightly more than the textbook)
-1. Modern toolkits
+## This course
+1. Programming
     - Understanding our computing devices
     - An introduction to modern toolkit
         - Linux operating system
         - Vim, SSH and Git
     - A programming language: Julia
 2. Mathematical modeling and algorithms
+    - See the textbook
 3. State of the art problems
     - probabilistic modeling
     - sparsity detection (in dataset)
     - computational hard problems
 """
 
+# ╔═╡ 26c56925-c43b-4116-9e17-16e8be2b0631
+segments([3, 6, 4, 1], ["Programming", "Mathematical Modeling", "Scientific problems", "Exam"])
+
+# ╔═╡ 4d23d2f6-eb42-4d83-ad0d-bf6ab70973fd
+md" = 13 Weeks in total"
+
 # ╔═╡ ce633741-5a25-4eda-a0f4-9050be226255
 md"""
 ## Grading
 1. 70% by course assignment
-2. 30% by final presentation
+2. 30% by final exam
 ## $(highlight("Our communication channel!"))
 (Zulip link to be added)
 ## My email
@@ -101,10 +105,10 @@ Jinguo Liu
 """
 
 # ╔═╡ f36e7b45-193e-4028-aae5-352711b8406d
-md"# Lecture 1: Understanding our computer (40min)"
+md"# Lecture 1: Understanding our computing devices"
 
 # ╔═╡ 72924c3a-0bbe-4d74-b2a9-60b250db4ec2
-blackboard("What is inside a computer?")
+blackboard("What is inside a computer?  <br>(40min)")
 
 # ╔═╡ 163016e4-9133-4c61-a7ac-82e41e6db234
 md"## Get hardware information (Linux)"
@@ -128,14 +132,69 @@ if show_meminfo run(`lsmem`) end
 if show_processinfo run(`top -n 1 -b`) end
 
 # ╔═╡ 16dc1e93-9f16-4299-9e8e-59dff16b6fd9
-md"## Estimating the computing power of your devices (20min)"
+md"# Estimating the computing power of your devices (20min)"
+
+# ╔═╡ 5c13904a-505b-4fec-9e32-0ffa54a9dad8
+md"""## Example 1: Matrix multiplication
+```math
+C_{ik} = \sum_j A_{ij} \times B_{jk}
+```
+"""
+
+# ╔═╡ 13dabaa8-7310-4557-ad06-e64f566ca256
+md"""
+Let the matrix size be `n x n`, the peudocode for general matrix multiply (GEMM) is
+```
+for i=1:n
+	for j=1:n
+		for k=1:n
+			C[i, k] = A[i, j] * B[j, k]
+		end
+	end
+end
+```
+"""
 
 # ╔═╡ 37e9697d-e2ed-4fa4-882b-5cd77586d719
+md"GEMM is CPU bottlenecked"
 
+# ╔═╡ 040fc63d-0b5c-4b33-ac8e-946573dc1c0c
+@xbind matrix_size NumberField(2:3000; default=1000)
 
-# ╔═╡ 7e036714-ab4c-4546-89f2-dbf422868ffc
+# ╔═╡ 054c57f7-22cb-4d47-a79c-7ef035586f0c
+@xbind benchmark_example1 CheckBox()
+
+# ╔═╡ 88d538e9-3757-4f87-88c5-68078aef681f
+md"Loading the package for benchmarking"
+
+# ╔═╡ ead892c7-dc0d-452b-9443-15a854683f43
+md"Loading the matrix multiplication function"
+
+# ╔═╡ 4dba5c49-7bfb-426b-8461-f062a9c4a365
+if benchmark_example1
+	let
+		# creating random vectors with normal distribution/zero elements
+		A = randn(Float64, matrix_size, matrix_size)
+		B = randn(Float64, matrix_size, matrix_size)
+		C = zeros(Float64, matrix_size, matrix_size)
+		@benchmark mul!($C, $A, $B)
+	end
+end
+
+# ╔═╡ 407219ae-51df-487e-a831-c6087428159c
+md"FLOPS = the number of floating point operations / the number of seconds"
+
+# ╔═╡ 4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
+blackboard("FLOPS for computing GEMM<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
+
+# ╔═╡ a87eb239-70a5-4da2-a8ce-4d3a93d976b4
 md"""
-### Example 1
+## Example 2: axpy
+"""
+
+# ╔═╡ 330c3319-7954-466d-9100-f6ec19f43fcc
+md"""
+axpy! is memory I/O bottlenecked
 """
 
 # ╔═╡ 9acd075f-bd77-41da-8455-e54063cbc8b4
@@ -147,8 +206,29 @@ function axpy!(a::Real, x::AbstractVector, y::AbstractVector)
 	return y
 end
 
+# ╔═╡ 9abf93ab-ad22-4911-b459-fa5c6f139152
+@xbind axpy_vector_size NumberField(2:10000000; default=1000)
+
+# ╔═╡ 85d0bce1-ca15-4a86-821f-87d3ec0b715c
+@xbind benchmark_axpy CheckBox()
+
+# ╔═╡ f5edd248-eb04-41d1-b435-21aa77b010b7
+if benchmark_axpy
+	let
+		x = randn(Float64, axpy_vector_size)
+		y = randn(Float64, axpy_vector_size)
+		@benchmark axpy!(2.0, $x, $y)
+	end
+end
+
+# ╔═╡ 0e3bfc93-33ff-487e-ac73-71922fabf660
+blackboard("FLOPS for computing axpy<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
+
+# ╔═╡ 13ff13dd-1146-46f7-99a0-c9ee7e878931
+md"## Example 3: modified axpy"
+
 # ╔═╡ d381fcf1-3b53-49fa-a5af-1a242c83d05c
-function roll_axpy!(a::Real, x::AbstractVector, y::AbstractVector, indices::AbstractVector{Int})
+function bad_axpy!(a::Real, x::AbstractVector, y::AbstractVector, indices::AbstractVector{Int})
 	@assert length(x) == length(y) == length(indices) "the input size of x and y mismatch, got $(length(x)), $(length(y)) and $(length(indices))"
 	@inbounds for i in indices
 		y[i] += a * x[i]
@@ -156,89 +236,38 @@ function roll_axpy!(a::Real, x::AbstractVector, y::AbstractVector, indices::Abst
 	return y
 end
 
-# ╔═╡ 85d0bce1-ca15-4a86-821f-87d3ec0b715c
-md" $(@bind timing1 CheckBox()) Show times (binded to `timing1`)"
+# ╔═╡ bb0e95c9-0a73-4367-b738-f42994758ffc
+md"I will show this function is latency bottlenecked"
 
-# ╔═╡ f5edd248-eb04-41d1-b435-21aa77b010b7
-timing1 && let
-	ns = 2 .^ (1:26)
-	times = Float64[]
-	for n in ns
-		x = randn(Float64, n)
-		y = randn(Float64, n)
-		tn = @elapsed axpy!(2.0, x, y)
-		push!(times, tn/n)
-	end
-	plot(ns, times; ylabel="time/n/s", label="axpy!", ylim=(0, 1e-8))
-end
+# ╔═╡ 94016043-b913-4413-8c6a-e2b2a75dd9dd
+@xbind bad_axpy_vector_size NumberField(2:10000000; default=1000)
 
 # ╔═╡ 7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-md" $(@bind timing2 CheckBox()) Show times (binded to `timing2`)"
+@xbind benchmark_bad_axpy CheckBox()
 
 # ╔═╡ 5245a31a-62c3-422d-8d04-d2bdf496cbcc
-timing2 && let
-	ns = 2 .^ (1:26)
-	times = Float64[]
-	for n in ns
-		x = randn(Float64, n)
-		y = randn(Float64, n)
-		indices = Random.shuffle(1:n)
-		tn = @elapsed roll_axpy!(2.0, x, y, indices)
-		push!(times, tn/n)
+if benchmark_bad_axpy
+	let
+		x = randn(Float64, bad_axpy_vector_size)
+		y = randn(Float64, bad_axpy_vector_size)
+		indices = randperm(bad_axpy_vector_size)
+		@benchmark bad_axpy!(2.0, $x, $y, $indices)
 	end
-	plot(ns, times; ylabel="time/n/s", label="axpy!", ylim=(0, 1e-7))
 end
 
-# ╔═╡ 57b3426a-1dc7-44ca-9368-78cb322c259b
-md"## Caches"
+# ╔═╡ d41f8743-d3ba-437e-b7db-a9b6d1756543
+blackboard("FLOPS for computing bad axpy<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
 
-# ╔═╡ 61094c96-832f-44a4-892a-688187434472
-# cache friendly
-function f1!(x)
-	@inbounds for i=1:length(x)
-        x[i] = rand(1:length(x))
-   	end
-	return x
-end
-
-# ╔═╡ d9ad5708-db25-407d-b382-c3dc8fb1003c
-# cache unfriendly
-function f2!(x)
-	@inbounds for i=1:length(x)
-        x[i] = x[rand(1:length(x))]
-   	end
-	return x
-end
-
-# ╔═╡ 97f9d064-a0ff-4593-bbab-5cf224965b25
-# ╠═╡ disabled = true
-#=╠═╡
-x = zeros(Int, 10000);
-  ╠═╡ =#
-
-# ╔═╡ c7157d70-3cdd-4b75-b86b-ea9b1cacbeb0
-md""" $(@bind run_bm1 CheckBox()) Run Benchmarks"""
-
-# ╔═╡ d0c151cb-55a7-4d89-99d5-416eb00cf251
-run_bm1 && @benchmark f1!($x)
-
-# ╔═╡ 71cc7d7e-d034-4d33-85a5-3b540c702515
-run_bm1 && @benchmark f2!($x)
-
-# ╔═╡ 60d0ebd1-276b-4a7b-958f-44c035dc6d86
-md""" $(@bind run_bm2 CheckBox()) Run Benchmarks"""
-
-# ╔═╡ 5f7edd45-01bd-4af4-b25e-5827c5ae580d
-xlarge = zeros(Int, 10000000);
-
-# ╔═╡ 749af321-0b3c-43b1-82ac-effc93475e10
-run_bm2 && @benchmark f1!($xlarge)
-
-# ╔═╡ f6904206-5935-4002-b914-f058ecfe3a43
-run_bm2 && @benchmark f2!($xlarge)
+# ╔═╡ f48ae9b5-51dd-4434-870d-4c5e73497433
+md"""
+# Programming on a device （30min）
+"""
 
 # ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
-md"## Compiling a program"
+md"# Software engineering (40min)"
+
+# ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
+
 
 # ╔═╡ 0b157313-555b-40a5-aca0-68b17ecd7b86
 md"# Primitive Data Types
@@ -250,10 +279,11 @@ Is floating point number type a field?
 """
 
 # ╔═╡ ab90a643-8648-400f-a1ef-90b946c76471
-md"## Homework
-* speed of light
-* ssh to the server and check the computing power
-* get julia installed
+md"# Homework (10min)
+* speed of light.
+* ssh to the server and estimate the computing power.
+* get julia installed.
+* google NPU/TPU.
 "
 
 # ╔═╡ a029e179-9c01-40f9-a23c-a5dd672740cb
@@ -284,11 +314,14 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═41ff9fda-a597-420b-93a9-b281d42acfb1
 # ╠═a319ad61-9b51-412b-a186-797150a579ab
 # ╠═01c33da1-b98d-42dc-8725-4afb8ae6f44f
+# ╠═59cf2bc4-acf0-47ac-aa05-9e9a41ba783e
 # ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
 # ╟─0fe286ff-1359-4eb4-ab6c-28b231f9d56e
 # ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
 # ╟─d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
 # ╟─af0db2a7-41ca-4baf-89f3-4a416a062382
+# ╟─26c56925-c43b-4116-9e17-16e8be2b0631
+# ╟─4d23d2f6-eb42-4d83-ad0d-bf6ab70973fd
 # ╟─ce633741-5a25-4eda-a0f4-9050be226255
 # ╟─f36e7b45-193e-4028-aae5-352711b8406d
 # ╟─72924c3a-0bbe-4d74-b2a9-60b250db4ec2
@@ -300,29 +333,37 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─2c92ab20-c105-4623-83c2-239462d59707
 # ╠═96c87a95-ca76-4cf5-8920-8d1f014ba47b
 # ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
-# ╠═37e9697d-e2ed-4fa4-882b-5cd77586d719
-# ╟─7e036714-ab4c-4546-89f2-dbf422868ffc
+# ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
+# ╟─13dabaa8-7310-4557-ad06-e64f566ca256
+# ╟─37e9697d-e2ed-4fa4-882b-5cd77586d719
+# ╟─040fc63d-0b5c-4b33-ac8e-946573dc1c0c
+# ╟─054c57f7-22cb-4d47-a79c-7ef035586f0c
+# ╟─88d538e9-3757-4f87-88c5-68078aef681f
+# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
+# ╟─ead892c7-dc0d-452b-9443-15a854683f43
+# ╠═cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
+# ╠═4dba5c49-7bfb-426b-8461-f062a9c4a365
+# ╠═407219ae-51df-487e-a831-c6087428159c
+# ╟─4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
+# ╟─a87eb239-70a5-4da2-a8ce-4d3a93d976b4
+# ╟─330c3319-7954-466d-9100-f6ec19f43fcc
 # ╠═9acd075f-bd77-41da-8455-e54063cbc8b4
-# ╠═d381fcf1-3b53-49fa-a5af-1a242c83d05c
 # ╠═ed7b56a6-d9cb-4045-979f-3aa618a6b6d4
+# ╟─9abf93ab-ad22-4911-b459-fa5c6f139152
 # ╟─85d0bce1-ca15-4a86-821f-87d3ec0b715c
 # ╠═f5edd248-eb04-41d1-b435-21aa77b010b7
-# ╟─7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
+# ╟─0e3bfc93-33ff-487e-ac73-71922fabf660
+# ╟─13ff13dd-1146-46f7-99a0-c9ee7e878931
+# ╠═d381fcf1-3b53-49fa-a5af-1a242c83d05c
+# ╟─bb0e95c9-0a73-4367-b738-f42994758ffc
+# ╟─94016043-b913-4413-8c6a-e2b2a75dd9dd
+# ╠═7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
 # ╠═8776764c-4483-476b-bfff-a3e779431a68
 # ╠═5245a31a-62c3-422d-8d04-d2bdf496cbcc
-# ╟─57b3426a-1dc7-44ca-9368-78cb322c259b
-# ╠═61094c96-832f-44a4-892a-688187434472
-# ╠═d9ad5708-db25-407d-b382-c3dc8fb1003c
-# ╠═97f9d064-a0ff-4593-bbab-5cf224965b25
-# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-# ╟─c7157d70-3cdd-4b75-b86b-ea9b1cacbeb0
-# ╠═d0c151cb-55a7-4d89-99d5-416eb00cf251
-# ╠═71cc7d7e-d034-4d33-85a5-3b540c702515
-# ╟─60d0ebd1-276b-4a7b-958f-44c035dc6d86
-# ╠═5f7edd45-01bd-4af4-b25e-5827c5ae580d
-# ╠═749af321-0b3c-43b1-82ac-effc93475e10
-# ╠═f6904206-5935-4002-b914-f058ecfe3a43
+# ╟─d41f8743-d3ba-437e-b7db-a9b6d1756543
+# ╟─f48ae9b5-51dd-4434-870d-4c5e73497433
 # ╟─9306f25a-f4f5-4b19-973d-76845a746510
+# ╠═103bf89d-c74a-4666-bfcb-8e50695ae971
 # ╟─0b157313-555b-40a5-aca0-68b17ecd7b86
 # ╟─2e61df85-2246-4153-b8b0-174c7fc7ec8c
 # ╟─ab90a643-8648-400f-a1ef-90b946c76471
