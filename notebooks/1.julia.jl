@@ -9,10 +9,10 @@ using Pkg, Revise
 
 # ╔═╡ 41ff9fda-a597-420b-93a9-b281d42acfb1
 # ╠═╡ show_logs = false
-Pkg.develop(path="https://github.com/GiggleLiu/PlutoMustache.jl.git")
+Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
 
 # ╔═╡ a319ad61-9b51-412b-a186-797150a579ab
-using PlutoMustache
+using PlutoLecturing
 
 # ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
 using BenchmarkTools
@@ -269,6 +269,44 @@ md"""
 # Programming on a device （30min）
 """
 
+# ╔═╡ 035f8874-d463-4fa8-92cc-49f1fd226d23
+md"## You program are compiled to binary"
+
+# ╔═╡ 7f0ff65f-40fd-4907-b54a-9a5ba4fcccca
+with_terminal() do
+	x, y = randn(10), randn(10)
+	@code_native axpy!(2.0, x, y)
+end
+
+# ╔═╡ e5d9327e-75b2-4f99-97da-d3be1c8cd405
+md"Let us check an easier one"
+
+# ╔═╡ 39c580e0-d184-4400-8562-b5ba6a2d4a81
+function oneton(n::Int)
+   res = zero(n)
+   for i = 1:n
+		res+=i
+   end
+	return res
+end
+
+# ╔═╡ b52078f1-605a-47aa-87f8-ce3b000aa10a
+with_terminal() do
+	@code_native oneton(10)
+end
+
+# ╔═╡ f37d0016-16ab-4bdd-8728-00f26f6e87a9
+md"An instruct has a binary correspondence: [check the online decoder](https://defuse.ca/online-x86-assembler.htm#disassembly)"
+
+# ╔═╡ f559226b-98f9-487c-86a5-b5bd4a03ff7d
+md"## The gist of compiling"
+
+# ╔═╡ 63cfa65b-ba32-46ee-ae9a-02e38385bd29
+blackboard("Compiling stages")
+
+# ╔═╡ 980dac9e-092a-47e0-bcca-85c7e5ededab
+md"## Measuring the performance"
+
 # ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
 md"# Missing semester (40min)"
 
@@ -347,9 +385,7 @@ md"# Resources"
 md"""## Pluto notebook using guide:
 ### How to play this notebook?
 1. Clone this Github repo to your local host.
-```bash
-git clone https://github.com/GiggleLiu/ModernScientificComputing.git
-```
+$(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git"))
 
 ### Controls
 
@@ -412,6 +448,15 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═5245a31a-62c3-422d-8d04-d2bdf496cbcc
 # ╟─d41f8743-d3ba-437e-b7db-a9b6d1756543
 # ╟─f48ae9b5-51dd-4434-870d-4c5e73497433
+# ╟─035f8874-d463-4fa8-92cc-49f1fd226d23
+# ╠═7f0ff65f-40fd-4907-b54a-9a5ba4fcccca
+# ╟─e5d9327e-75b2-4f99-97da-d3be1c8cd405
+# ╠═39c580e0-d184-4400-8562-b5ba6a2d4a81
+# ╠═b52078f1-605a-47aa-87f8-ce3b000aa10a
+# ╟─f37d0016-16ab-4bdd-8728-00f26f6e87a9
+# ╟─f559226b-98f9-487c-86a5-b5bd4a03ff7d
+# ╟─63cfa65b-ba32-46ee-ae9a-02e38385bd29
+# ╟─980dac9e-092a-47e0-bcca-85c7e5ededab
 # ╟─9306f25a-f4f5-4b19-973d-76845a746510
 # ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
 # ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
@@ -423,4 +468,4 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
 # ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
 # ╟─a1ff2e4c-2416-4cb1-9df7-8e2437558287
-# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
+# ╠═ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
