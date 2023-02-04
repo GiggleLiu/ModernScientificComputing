@@ -91,6 +91,12 @@ segments([3, 6, 4, 1], ["Programming", "Mathematical Modeling", "Scientific prob
 # ╔═╡ 4d23d2f6-eb42-4d83-ad0d-bf6ab70973fd
 md" = 13 Weeks in total"
 
+# ╔═╡ 16be9535-6b9e-40fa-902f-ae7aaeb114e1
+md"Each lecture = "
+
+# ╔═╡ 1a06726c-7338-4424-81f3-eaed86a0fdb2
+segments([50, 10, 50, 10, 50], ["Lecturing", "Break", "Lecturing", "Break", "Lecturing"])
+
 # ╔═╡ ce633741-5a25-4eda-a0f4-9050be226255
 md"""
 ## Grading
@@ -182,7 +188,7 @@ if benchmark_example1
 end
 
 # ╔═╡ 407219ae-51df-487e-a831-c6087428159c
-md"FLOPS = the number of floating point operations / the number of seconds"
+md"Calculating the **floating point operations per second**"
 
 # ╔═╡ 4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
 blackboard("FLOPS for computing GEMM<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
@@ -264,32 +270,74 @@ md"""
 """
 
 # ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
-md"# Software engineering (40min)"
+md"# Missing semester (40min)"
 
 # ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
+md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
 
-
-# ╔═╡ 0b157313-555b-40a5-aca0-68b17ecd7b86
-md"# Primitive Data Types
-"
-
-# ╔═╡ 2e61df85-2246-4153-b8b0-174c7fc7ec8c
-md"""## Numbers
-Is floating point number type a field?
+# ╔═╡ dec1a9dd-de98-4dc3-bc82-ee34efb000ab
+md"""
+* $(highlight("1/13: Course overview + the shell (1 - expert)"))
+* $(highlight("1/14: Shell Tools and Scripting (4 - basic)"))
+* $(highlight("1/15: Editors (Vim) (2 - basic)"))
+* 1/16: Data Wrangling
+* 1/21: Command-line Environment
+* $(highlight("1/22: Version Control (Git) (3 - expert)"))
+* 1/23: Debugging and Profiling
+* 1/27: Metaprogramming (build systems, dependency management, testing, CI)
+* 1/28: Security and Cryptography
+* 1/29: Potpourri
+* 1/30: Q&A
 """
+
+# ╔═╡ a5fbf397-70d1-4dfd-a1ea-abff06007239
+md"""
+!!! note
+    *  Yellow backgrounded lectures are required by AMAT5315
+    * (n - basic) is the reading order and the level of familiarity
+"""
+
+# ╔═╡ cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
+md"## What is a Linux operating system?"
+
+# ╔═╡ 25312e41-4cab-408e-8160-c2fcb55dee2a
+md"## What is Vim?"
+
+# ╔═╡ d9e927a2-2c65-4f55-9de0-d7b5511156b5
+md"## What is Git?"
 
 # ╔═╡ ab90a643-8648-400f-a1ef-90b946c76471
 md"# Homework (10min)
-* speed of light.
-* ssh to the server and estimate the computing power.
-* get julia installed.
-* google NPU/TPU.
+1. Estimate the computing power of your computing devices in unit of GFLOPS, you need to use `lscpu` and `lsmem` to support your result.
+2. Let us assume the distance between CPU and main memory is 10cm, show the minimum latency time (hint: information can not propagate fater than the light) and compare this time with the CPU clock time of your device.
+3. Google Neural Network Processing Unit (NPU) and Tensor Processing Unit (TPU), and write a report about their differences (Recommended length: 500 words).
 "
 
 # ╔═╡ a029e179-9c01-40f9-a23c-a5dd672740cb
 md"""
 #### Rules:
-1. Collaboration is allowed, but you should credit your collaborator.
+Collaboration is allowed, but you should acknowledge your collaborators.
+You collaborator will get a `+1` score in the course accessment (the final score can not be greater than 100).
+"""
+
+# ╔═╡ 752a7d31-5065-4d13-86b8-63eb279d1f7b
+md"""
+# Next time
+We have have a $(highlight("coding seminar")).
+I will show you some cheatsheets about
+* Linux operation system
+* Vim
+* Git
+* SSH
+* Julia installation Guide
+
+Please bring your laptops and get your hands dirty!
+If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
+
+## Prepare better
+If you want to install Linux operating system before coming to the lecture. You can use either of the following two approaches
+* [Ubuntu 22.04 system](https://releases.ubuntu.com/22.04/)
+* [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install)
 """
 
 # ╔═╡ a1ff2e4c-2416-4cb1-9df7-8e2437558287
@@ -322,6 +370,8 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─af0db2a7-41ca-4baf-89f3-4a416a062382
 # ╟─26c56925-c43b-4116-9e17-16e8be2b0631
 # ╟─4d23d2f6-eb42-4d83-ad0d-bf6ab70973fd
+# ╟─16be9535-6b9e-40fa-902f-ae7aaeb114e1
+# ╟─1a06726c-7338-4424-81f3-eaed86a0fdb2
 # ╟─ce633741-5a25-4eda-a0f4-9050be226255
 # ╟─f36e7b45-193e-4028-aae5-352711b8406d
 # ╟─72924c3a-0bbe-4d74-b2a9-60b250db4ec2
@@ -343,7 +393,7 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─ead892c7-dc0d-452b-9443-15a854683f43
 # ╠═cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
 # ╠═4dba5c49-7bfb-426b-8461-f062a9c4a365
-# ╠═407219ae-51df-487e-a831-c6087428159c
+# ╟─407219ae-51df-487e-a831-c6087428159c
 # ╟─4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
 # ╟─a87eb239-70a5-4da2-a8ce-4d3a93d976b4
 # ╟─330c3319-7954-466d-9100-f6ec19f43fcc
@@ -363,10 +413,14 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─d41f8743-d3ba-437e-b7db-a9b6d1756543
 # ╟─f48ae9b5-51dd-4434-870d-4c5e73497433
 # ╟─9306f25a-f4f5-4b19-973d-76845a746510
-# ╠═103bf89d-c74a-4666-bfcb-8e50695ae971
-# ╟─0b157313-555b-40a5-aca0-68b17ecd7b86
-# ╟─2e61df85-2246-4153-b8b0-174c7fc7ec8c
+# ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
+# ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
+# ╟─a5fbf397-70d1-4dfd-a1ea-abff06007239
+# ╟─cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
+# ╟─25312e41-4cab-408e-8160-c2fcb55dee2a
+# ╟─d9e927a2-2c65-4f55-9de0-d7b5511156b5
 # ╟─ab90a643-8648-400f-a1ef-90b946c76471
 # ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
+# ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
 # ╟─a1ff2e4c-2416-4cb1-9df7-8e2437558287
 # ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
