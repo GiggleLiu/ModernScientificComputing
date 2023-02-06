@@ -38,11 +38,11 @@ function generate_list(folder; reverse)
                 else
                     name = "($date) " * title
                 end
-                push!(lst, """<li><a href="/$(path[1:prevind(path, length(path)-2)])">$(name)</a></li>""")
+                push!(lst, """<p><a href="/$(path[1:prevind(path, length(path)-2)])">$(name)</a></p>""")
             end
         end
     end
-    return "<ol>$(join(reverse ? lst[end:-1:1] : lst, "\n"))</ol>"
+    return "$(join(reverse ? lst[end:-1:1] : lst, "\n"))"
 end
 
 function readtitle(str::String)
