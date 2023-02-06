@@ -20,9 +20,6 @@ using BenchmarkTools
 # ╔═╡ cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
 using LinearAlgebra: mul!
 
-# ╔═╡ ed7b56a6-d9cb-4045-979f-3aa618a6b6d4
-using Plots
-
 # ╔═╡ 8776764c-4483-476b-bfff-a3e779431a68
 using Random
 
@@ -93,7 +90,7 @@ md" = 13 Weeks in total"
 
 # ╔═╡ ce633741-5a25-4eda-a0f4-9050be226255
 md"""
-## Grading
+## Assessment
 1. 70% by course assignment
 2. 30% by final exam
 ## $(highlight("Our communication channel!"))
@@ -130,6 +127,42 @@ if show_meminfo run(`lsmem`) end
 
 # ╔═╡ 96c87a95-ca76-4cf5-8920-8d1f014ba47b
 if show_processinfo run(`top -n 1 -b`) end
+
+# ╔═╡ f676b4b7-fe66-4d67-827f-9943a41ddf58
+md"""# Numbers"""
+
+# ╔═╡ 080f84a2-a740-4917-acb6-d0329d7855e5
+md"## Integers"
+
+# ╔═╡ f860fd57-7cb9-47b0-84ab-30d71a812ee0
+bitstring(35)
+
+# ╔═╡ 97e5ec37-b014-49fa-8dee-a5c2a62b49df
+bitstring(-35)
+
+# ╔═╡ d168062c-2add-49ca-9a9b-b0cadad6fd60
+bitstring(Int32(35))
+
+# ╔═╡ ad14ab2b-5c29-44b7-8153-a7ffd7b781d5
+typemax(Int64)
+
+# ╔═╡ 9a79ac1a-f98f-4cdd-9dad-fb89fed6475c
+typemax(Int32)
+
+# ╔═╡ 32026c57-02be-4609-b0fa-8e03065ca4ba
+md"The reason why x64 machine is becoming the main stream."
+
+# ╔═╡ 2bd6082c-385a-4be0-a050-746a98377c94
+typemax(UInt32) / 1e9
+
+# ╔═╡ 5088b983-d8d6-4d42-8785-9127856d3fba
+md"## Floating point numbers"
+
+# ╔═╡ 01fb4139-e3c9-4d3a-b95b-cd10181ea6ac
+LocalResource("float-format.png")
+
+# ╔═╡ 9da10c5a-cc91-4663-bbe1-39c5296e7d4a
+md"image source: https://en.wikipedia.org/wiki/IEEE_754"
 
 # ╔═╡ 16dc1e93-9f16-4299-9e8e-59dff16b6fd9
 md"# Estimating the computing power of your devices (20min)"
@@ -332,6 +365,18 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═c0aa6f21-47d5-4f03-8b9b-a8df5c18a1b8
 # ╟─2c92ab20-c105-4623-83c2-239462d59707
 # ╠═96c87a95-ca76-4cf5-8920-8d1f014ba47b
+# ╟─f676b4b7-fe66-4d67-827f-9943a41ddf58
+# ╟─080f84a2-a740-4917-acb6-d0329d7855e5
+# ╠═f860fd57-7cb9-47b0-84ab-30d71a812ee0
+# ╠═97e5ec37-b014-49fa-8dee-a5c2a62b49df
+# ╠═d168062c-2add-49ca-9a9b-b0cadad6fd60
+# ╠═ad14ab2b-5c29-44b7-8153-a7ffd7b781d5
+# ╠═9a79ac1a-f98f-4cdd-9dad-fb89fed6475c
+# ╟─32026c57-02be-4609-b0fa-8e03065ca4ba
+# ╠═2bd6082c-385a-4be0-a050-746a98377c94
+# ╟─5088b983-d8d6-4d42-8785-9127856d3fba
+# ╟─01fb4139-e3c9-4d3a-b95b-cd10181ea6ac
+# ╟─9da10c5a-cc91-4663-bbe1-39c5296e7d4a
 # ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
 # ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
 # ╟─13dabaa8-7310-4557-ad06-e64f566ca256
@@ -343,12 +388,11 @@ git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─ead892c7-dc0d-452b-9443-15a854683f43
 # ╠═cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
 # ╠═4dba5c49-7bfb-426b-8461-f062a9c4a365
-# ╠═407219ae-51df-487e-a831-c6087428159c
+# ╟─407219ae-51df-487e-a831-c6087428159c
 # ╟─4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
 # ╟─a87eb239-70a5-4da2-a8ce-4d3a93d976b4
 # ╟─330c3319-7954-466d-9100-f6ec19f43fcc
 # ╠═9acd075f-bd77-41da-8455-e54063cbc8b4
-# ╠═ed7b56a6-d9cb-4045-979f-3aa618a6b6d4
 # ╟─9abf93ab-ad22-4911-b459-fa5c6f139152
 # ╟─85d0bce1-ca15-4a86-821f-87d3ec0b715c
 # ╠═f5edd248-eb04-41d1-b435-21aa77b010b7
