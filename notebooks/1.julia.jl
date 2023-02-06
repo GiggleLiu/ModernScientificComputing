@@ -26,6 +26,9 @@ using Plots
 # ╔═╡ 8776764c-4483-476b-bfff-a3e779431a68
 using Random
 
+# ╔═╡ 292dc84c-b2ed-4a35-b817-be6266b40ff1
+using Profile
+
 # ╔═╡ 01c33da1-b98d-42dc-8725-4afb8ae6f44f
 presentmode()
 
@@ -307,6 +310,9 @@ blackboard("Compiling stages")
 # ╔═╡ 980dac9e-092a-47e0-bcca-85c7e5ededab
 md"## Measuring the performance"
 
+# ╔═╡ d31f0924-aca0-446d-b06c-92a3daa65ae2
+@profile 
+
 # ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
 md"# Missing semester (40min)"
 
@@ -457,6 +463,8 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─f559226b-98f9-487c-86a5-b5bd4a03ff7d
 # ╟─63cfa65b-ba32-46ee-ae9a-02e38385bd29
 # ╟─980dac9e-092a-47e0-bcca-85c7e5ededab
+# ╠═292dc84c-b2ed-4a35-b817-be6266b40ff1
+# ╠═d31f0924-aca0-446d-b06c-92a3daa65ae2
 # ╟─9306f25a-f4f5-4b19-973d-76845a746510
 # ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
 # ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
@@ -468,4 +476,4 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
 # ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
 # ╟─a1ff2e4c-2416-4cb1-9df7-8e2437558287
-# ╠═ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
+# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
