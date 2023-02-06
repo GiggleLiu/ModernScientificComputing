@@ -2,43 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
-    <loc>giggleliu.github.io/ModernScientificComputing/modernscientificcomputing/1.devices/index.html</loc>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/msc/2.cheatsheets/index.html</loc>
     <lastmod>2023-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>giggleliu.github.io/ModernScientificComputing/modernscientificcomputing/2.cheatsheets/index.html</loc>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/msc/1.devices/index.html</loc>
     <lastmod>2023-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>giggleliu.github.io/ModernScientificComputing/about/index.html</loc>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/msc/3.julia/index.html</loc>
     <lastmod>2023-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>giggleliu.github.io/ModernScientificComputing/msc/index.html</loc>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/msc/index.html</loc>
     <lastmod>2023-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>giggleliu.github.io/ModernScientificComputing/modernscientificcomputing/3.julia/index.html</loc>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/404/index.html</loc>
     <lastmod>2023-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
 <url>
-    <loc>giggleliu.github.io/ModernScientificComputing/404/index.html</loc>
-    <lastmod>2023-02-06</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-</url>
-<url>
-    <loc>giggleliu.github.io/ModernScientificComputing/index.html</loc>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/index.html</loc>
     <lastmod>2023-02-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
