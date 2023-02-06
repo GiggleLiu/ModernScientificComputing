@@ -18,10 +18,12 @@ end
 # ╠═╡ show_logs = false
 begin
 	using Pkg, Revise
-	Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
+	if !isdefined(@__MODULE__, :PlutoLecturing)
+		Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
+	end
 	using PlutoLecturing
 	presentmode()
-	TableOfContents()
+	TableOfContents(aside=true)
 end
 
 # ╔═╡ f8fb15f6-00ef-4c5d-929d-fa3bdd1722a6
@@ -80,7 +82,7 @@ md"""
 ## This course
 1. Programming
     - Understanding our computing devices
-    - An introduction to modern toolkit
+    - Get your computer ready for programming (Hands on)
         - Linux operating system
         - Vim, SSH and Git
     - A programming language: Julia
@@ -99,7 +101,7 @@ segments([3, 6, 4, 1], ["Programming", "Mathematical Modeling", "Scientific prob
 md" = 13 Weeks in total"
 
 # ╔═╡ 16be9535-6b9e-40fa-902f-ae7aaeb114e1
-md"Each lecture = "
+md"## Each lecture = "
 
 # ╔═╡ 1a06726c-7338-4424-81f3-eaed86a0fdb2
 segments([50, 10, 50, 10, 50], ["Lecturing", "Break", "Lecturing", "Break", "Lecturing"])
@@ -126,6 +128,9 @@ blackboard("What is inside a computer?  <br>(40min)")
 # ╔═╡ 163016e4-9133-4c61-a7ac-82e41e6db234
 md"## Get hardware information (Linux)"
 
+# ╔═╡ a3d7aa29-1099-48c5-94d8-b6148fa1e0fd
+blackboard("Get hardware information"; coding=true, subtitle="&#36; lscpu <br>&#36; lsmem <br>&#36; top")
+
 # ╔═╡ f5ad618c-0a00-475f-b05d-97deba0faaef
 @xbind show_cpuinfo CheckBox()
 
@@ -145,7 +150,7 @@ if show_meminfo run(`lsmem`) end
 if show_processinfo run(`top -n 1 -b`) end
 
 # ╔═╡ c0db86ae-d6b3-49b4-bde1-d6c2585090e8
-md"# Number system"
+md"# Number system (20min)"
 
 # ╔═╡ c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
 md"## Integers"
@@ -189,11 +194,6 @@ BigInt(9223372036854775807) - BigInt(-9223372036854775808) + 1
 
 # ╔═╡ 145808be-21ec-453b-afe2-22abd26f850f
 BigInt(2)^64
-
-# ╔═╡ 9a908d82-d4e4-496e-bca7-093d7b521c2c
-md"""
-## Fixed point numbers and logarithmic numbers
-"""
 
 # ╔═╡ 9186b86b-88b1-4165-94ac-b738882a2c23
 md"## Floating point numbers"
@@ -368,7 +368,7 @@ if benchmark_axpy
 end
 
 # ╔═╡ 0e3bfc93-33ff-487e-ac73-71922fabf660
-blackboard("FLOPS for computing axpy<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
+blackboard("FLOPS for computing axpy", subtitle="the number of floating point operations / the number of seconds")
 
 # ╔═╡ 13ff13dd-1146-46f7-99a0-c9ee7e878931
 md"## Example 3: modified axpy"
@@ -402,7 +402,7 @@ if benchmark_bad_axpy
 end
 
 # ╔═╡ d41f8743-d3ba-437e-b7db-a9b6d1756543
-blackboard("FLOPS for computing bad axpy<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
+blackboard("FLOPS for computing bad axpy", subtitle="the number of floating point operations / the number of seconds")
 
 # ╔═╡ f48ae9b5-51dd-4434-870d-4c5e73497433
 md"""
@@ -438,12 +438,6 @@ end
 # ╔═╡ f37d0016-16ab-4bdd-8728-00f26f6e87a9
 md"An instruct has a binary correspondence: [check the online decoder](https://defuse.ca/online-x86-assembler.htm#disassembly)"
 
-# ╔═╡ f559226b-98f9-487c-86a5-b5bd4a03ff7d
-md"## The gist of compiling"
-
-# ╔═╡ 63cfa65b-ba32-46ee-ae9a-02e38385bd29
-blackboard("Compiling stages")
-
 # ╔═╡ 980dac9e-092a-47e0-bcca-85c7e5ededab
 md"## Measuring the performance"
 
@@ -462,44 +456,7 @@ if profile_axpy
 end
 
 # ╔═╡ 4fc93548-0253-4e09-b2a2-61f08818105d
-blackboard("How profiler works?")
-
-# ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
-md"# Missing semester (40min)"
-
-# ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
-md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
-
-# ╔═╡ dec1a9dd-de98-4dc3-bc82-ee34efb000ab
-md"""
-* $(highlight("1/13: Course overview + the shell (1 - expert)"))
-* $(highlight("1/14: Shell Tools and Scripting (4 - basic)"))
-* $(highlight("1/15: Editors (Vim) (2 - basic)"))
-* 1/16: Data Wrangling
-* 1/21: Command-line Environment
-* $(highlight("1/22: Version Control (Git) (3 - expert)"))
-* 1/23: Debugging and Profiling
-* 1/27: Metaprogramming (build systems, dependency management, testing, CI)
-* 1/28: Security and Cryptography
-* 1/29: Potpourri
-* 1/30: Q&A
-"""
-
-# ╔═╡ a5fbf397-70d1-4dfd-a1ea-abff06007239
-md"""
-!!! note
-    *  Yellow backgrounded lectures are required by AMAT5315
-    * (n - basic) is the reading order and the level of familiarity
-"""
-
-# ╔═╡ cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
-md"## What is a Linux operating system?"
-
-# ╔═╡ 25312e41-4cab-408e-8160-c2fcb55dee2a
-md"## What is Vim?"
-
-# ╔═╡ d9e927a2-2c65-4f55-9de0-d7b5511156b5
-md"## What is Git?"
+blackboard("How does profiling work?", subtitle="* function call stack <br> * two approaches: instrumentation and sampling</span>")
 
 # ╔═╡ d7784369-1591-4c22-ad17-e9ce7d31dff0
 md"# Summarize
@@ -535,6 +492,43 @@ md"""# Homework (10min)
 ```
 List all statements not satisfied by the floating point numbers.
 """
+
+# ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
+md"# Are we ready to go? Missing semester (20min)"
+
+# ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
+md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
+
+# ╔═╡ dec1a9dd-de98-4dc3-bc82-ee34efb000ab
+md"""
+* $(highlight("1/13: Course overview + the shell (1 - expert)"))
+* $(highlight("1/14: Shell Tools and Scripting (4 - basic)"))
+* $(highlight("1/15: Editors (Vim) (2 - basic)"))
+* 1/16: Data Wrangling
+* 1/21: Command-line Environment
+* $(highlight("1/22: Version Control (Git) (3 - expert)"))
+* 1/23: Debugging and Profiling
+* 1/27: Metaprogramming (build systems, dependency management, testing, CI)
+* 1/28: Security and Cryptography
+* 1/29: Potpourri
+* 1/30: Q&A
+"""
+
+# ╔═╡ a5fbf397-70d1-4dfd-a1ea-abff06007239
+md"""
+!!! note
+    *  Yellow backgrounded lectures are required by AMAT5315
+    * (n - basic) is the reading order and the level of familiarity
+"""
+
+# ╔═╡ cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
+md"## What is a Linux operating system?"
+
+# ╔═╡ 25312e41-4cab-408e-8160-c2fcb55dee2a
+md"## What is Vim?"
+
+# ╔═╡ d9e927a2-2c65-4f55-9de0-d7b5511156b5
+md"## What is Git?"
 
 # ╔═╡ a029e179-9c01-40f9-a23c-a5dd672740cb
 md"""
@@ -579,7 +573,7 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 """
 
 # ╔═╡ Cell order:
-# ╠═84c14a09-2c9e-4919-bfb1-cdf4d5a61776
+# ╟─84c14a09-2c9e-4919-bfb1-cdf4d5a61776
 # ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
 # ╟─0fe286ff-1359-4eb4-ab6c-28b231f9d56e
 # ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
@@ -593,6 +587,7 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─f36e7b45-193e-4028-aae5-352711b8406d
 # ╟─72924c3a-0bbe-4d74-b2a9-60b250db4ec2
 # ╟─163016e4-9133-4c61-a7ac-82e41e6db234
+# ╟─a3d7aa29-1099-48c5-94d8-b6148fa1e0fd
 # ╟─f5ad618c-0a00-475f-b05d-97deba0faaef
 # ╠═d5c2f523-80dd-40df-bf11-dd58cd493606
 # ╟─d6dca51b-978e-456e-b7c0-b658d894101d
@@ -614,7 +609,6 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─c3933eb5-15e0-4069-a3b1-947aba71adf2
 # ╠═430fcfbb-55ff-4388-a914-2c1a1c2a5e27
 # ╠═145808be-21ec-453b-afe2-22abd26f850f
-# ╟─9a908d82-d4e4-496e-bca7-093d7b521c2c
 # ╟─9186b86b-88b1-4165-94ac-b738882a2c23
 # ╟─31d784e6-22b5-430a-a571-6aad7aaefee1
 # ╟─5a10796f-c084-451e-89f5-75ba8364f2d8
@@ -634,9 +628,9 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═428c7b7a-cd18-4fcf-b6bb-22b082df0fc1
 # ╟─a5249298-ecc4-41ab-8f91-0eac5f8fac53
 # ╟─3304f219-9e80-464c-8d8d-1a6f7ad4f49e
-# ╠═52668889-6385-4e7b-b12b-6d6167966f3e
-# ╠═027c7d70-422d-4605-95b4-7eee44fa9cc3
-# ╠═48c5f752-c578-4443-939e-ba976e50300a
+# ╟─52668889-6385-4e7b-b12b-6d6167966f3e
+# ╟─027c7d70-422d-4605-95b4-7eee44fa9cc3
+# ╟─48c5f752-c578-4443-939e-ba976e50300a
 # ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
 # ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
 # ╟─13dabaa8-7310-4557-ad06-e64f566ca256
@@ -672,13 +666,13 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═39c580e0-d184-4400-8562-b5ba6a2d4a81
 # ╠═b52078f1-605a-47aa-87f8-ce3b000aa10a
 # ╟─f37d0016-16ab-4bdd-8728-00f26f6e87a9
-# ╟─f559226b-98f9-487c-86a5-b5bd4a03ff7d
-# ╟─63cfa65b-ba32-46ee-ae9a-02e38385bd29
 # ╟─980dac9e-092a-47e0-bcca-85c7e5ededab
 # ╠═292dc84c-b2ed-4a35-b817-be6266b40ff1
 # ╟─56c9c50e-bb43-4c27-88a6-ea3a26288b57
 # ╠═d31f0924-aca0-446d-b06c-92a3daa65ae2
 # ╟─4fc93548-0253-4e09-b2a2-61f08818105d
+# ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
+# ╟─ab90a643-8648-400f-a1ef-90b946c76471
 # ╟─9306f25a-f4f5-4b19-973d-76845a746510
 # ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
 # ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
@@ -686,8 +680,6 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
 # ╟─25312e41-4cab-408e-8160-c2fcb55dee2a
 # ╟─d9e927a2-2c65-4f55-9de0-d7b5511156b5
-# ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
-# ╟─ab90a643-8648-400f-a1ef-90b946c76471
 # ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
 # ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
 # ╟─a1ff2e4c-2416-4cb1-9df7-8e2437558287
