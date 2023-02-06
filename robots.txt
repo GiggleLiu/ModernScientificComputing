@@ -1,4 +1,4 @@
-Sitemap: modernascientificcomputing.giggleliu.github.io/sitemap.xml
+Sitemap: giggleliu.github.io/ModernScientificComputing/sitemap.xml
 
 User-agent: *
 Disallow:
