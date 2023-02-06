@@ -22,7 +22,7 @@ AsciinemaPlayer.create('$(src[1])', target);
 end
 
 function hfun_msc()
-    generate_list("modernscientificcomputing"; reverse=false)
+    generate_list("msc"; reverse=false)
 end
 function generate_list(folder; reverse)
     lst = String[]

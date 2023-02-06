@@ -15,9 +15,7 @@ ignore = ["node_modules/", "_ignore/"]
 generate_rss = true
 website_title = "Course AMAT5315"
 website_descr = "The modern way of learning scientific computing"
-website_url   = "https://giggleliu.github.io/ModernScientificComputing"
-
-website_url = get(ENV, "PREVIEW_FRANKLIN_WEBSITE_URL", "giggleliu.github.io/ModernScientificComputing") # Just put the website name
+website_url = get(ENV, "PREVIEW_FRANKLIN_WEBSITE_URL", "https://giggleliu.github.io/ModernScientificComputing/") # Just put the website name
 +++
 
 <!--
