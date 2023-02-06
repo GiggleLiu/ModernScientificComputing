@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/about/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/modernscientificcomputing/2.1-julia/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/msc/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/modernscientificcomputing/1.1-devices/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/modernscientificcomputing/1.3-juliasetup/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/modernscientificcomputing/1.2-tools/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/404/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>modernascientificcomputing.giggleliu.github.io/index.html</loc>
+    <lastmod>2023-02-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+</urlset>

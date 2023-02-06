@@ -1,0 +1,155 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/highlight/styles/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/poole_hyde.css"> <style> html {font-size: 17px;} .franklin-content {position: relative; padding-left: 8%; padding-right: 5%; line-height: 1.35em;} @media (min-width: 940px) { .franklin-content {width: 100%; margin-left: auto; margin-right: auto;} } @media (max-width: 768px) { .franklin-content {padding-left: 6%; padding-right: 6%;} } </style> <link rel=icon  href="/assets/favicon.png"> <title>Lecture 1.2: A Minimum Introduction to Linux, Vim and Git</title> <div class=sidebar > <div class="container sidebar-sticky"> <div class=sidebar-about > <h1 style="font-size: 30px"><a href="/">Modern Scientific Computing</a></h1> <p class=lead >The modern way of learning scientific computing</p> </div> <p>&copy; Jinguo Liu.</p> </div> </div> <div class="content container"> <div class=franklin-content ><h1 id=lecture_12_a_minimum_introduction_to_linux_vim_and_git ><a href="#lecture_12_a_minimum_introduction_to_linux_vim_and_git" class=header-anchor >Lecture 1.2: A Minimum Introduction to Linux, Vim and Git</a></h1> <p>We choose the Linux operating system as the programming platform, the Github website as the place to put your code, the Julia language as the programming language for implementing algorithms, VSCode as the Julia language editor and Pluto notebooks as the slides for the course.</p> <h2 id=a_cheatsheet_for_linux_operating_system ><a href="#a_cheatsheet_for_linux_operating_system" class=header-anchor >A cheatsheet for Linux operating system</a></h2> <p>We use <code>man command_name</code> to get help information related to a certain command. Use <code>CTRL-C</code> to exit any program. Use <code>CTRL-D</code> to exit a shell, an REPL and other input streams. The following is a cheatsheet for commands that will be used in this course.</p> <pre><code class="julia hljs">ls      <span class=hljs-comment ># list directory contents</span>
+cd      <span class=hljs-comment ># change directory</span>
+mkdir   <span class=hljs-comment ># make directories</span>
+rm      <span class=hljs-comment ># remove files or directories</span>
+pwd     <span class=hljs-comment ># print name of current/working directory</span>
+
+echo    <span class=hljs-comment ># display a line of text</span>
+cat     <span class=hljs-comment ># concatenate files and print on the standard output</span>
+
+alias   <span class=hljs-comment ># create an alias for a command</span>
+
+lscpu   <span class=hljs-comment ># display information about the CPU architecture</span>
+lsmem   <span class=hljs-comment ># list the ranges of available memory with their online status</span>
+
+top     <span class=hljs-comment ># display Linux processes</span>
+ssh     <span class=hljs-comment ># the OpenSSH remote login client</span>
+vim     <span class=hljs-comment ># Vi IMproved, a programmer&#x27;s text editor</span>
+git     <span class=hljs-comment ># the stupid content tracker</span></code></pre> <p>A more detailed <a href="https://cheatography.com/davechild/cheat-sheets/linux-command-line/">cheat sheet</a> and a <a href="https://missing.csail.mit.edu/2020/shell-tools/">lecture</a> are available online.</p> <h3 id=ssh ><a href="#ssh" class=header-anchor >SSH</a></h3> <p>Connect to the AWS host for this course.</p> <p>To learn more about SSH and two factor authentication, please check <a href="https://missing.csail.mit.edu/2020/security/">this lecture</a>.</p> <h3 id=vim_editor ><a href="#vim_editor" class=header-anchor >Vim editor</a></h3> <p>You will find a vim editor in any Linux distribution, with or without a graphical user interface. To edit a file, just type <code>vim file_name</code>.</p> <pre><code class="julia hljs">i       <span class=hljs-comment ># input</span>
+:w      <span class=hljs-comment ># write</span>
+:q      <span class=hljs-comment ># quit</span>
+:q!     <span class=hljs-comment ># force quit without saving</span>
+
+u       <span class=hljs-comment ># undo</span>
+CTRL-R  <span class=hljs-comment ># redo</span></code></pre> <p>All the commands must be executed in the command mode &#40;the default mode when you start a vim editor&#41;, If you are currently in the input mode, you can alway type <code>ESC</code> to go back to the command mode.</p> <p>To learn more about Vim, please check this <a href="https://missing.csail.mit.edu/2020/editors/">lecture</a>.</p> <h2 id=a_cheatsheet_for_git_and_github ><a href="#a_cheatsheet_for_git_and_github" class=header-anchor >A cheatsheet for Git and Github</a></h2> <p>Git is a tool for version control. It is an important tool for programmers to keep track of the different versions of a program and collaborate with others. GitHub is a website and cloud-based service that helps developers store and manage their code, as well as track and control changes to their code. There are more than 100 git sub-commands, and the following is a short list to practise and keep in mind.</p> <pre><code class="julia hljs"><span class=hljs-comment ># global config</span>
+git config  <span class=hljs-comment ># Get and set repository or global options</span>
+
+<span class=hljs-comment ># initialize a repo</span>
+git init    <span class=hljs-comment ># Create an empty Git repo or reinitialize an existing one</span>
+git clone   <span class=hljs-comment ># Clone repository into new directory</span>
+
+<span class=hljs-comment ># info</span>
+git status  <span class=hljs-comment ># Show the working tree status</span>
+git log     <span class=hljs-comment ># Show commit logs</span>
+git diff    <span class=hljs-comment ># Show changes between commits, commit and working tree, etc</span>
+
+<span class=hljs-comment ># work on a branch</span>
+git add     <span class=hljs-comment ># Add file contents to the index</span>
+git rm      <span class=hljs-comment ># Remove files from the working tree and from the index</span>
+git commit  <span class=hljs-comment ># Record changes to the repository</span>
+git reset   <span class=hljs-comment ># Reset current HEAD to the specified state</span>
+
+<span class=hljs-comment ># branch manipulation</span>
+git checkout <span class=hljs-comment ># Switch branches or restore working tree files</span>
+git branch  <span class=hljs-comment ># List, create, or delete branches</span>
+git merge   <span class=hljs-comment ># Join two or more development histories together</span>
+
+<span class=hljs-comment ># remote synchronization</span>
+git remote  <span class=hljs-comment ># Manage set of tracked repositories</span>
+git pull  <span class=hljs-comment ># Fetch from and integrate with another repo or a local branch</span>
+git fetch   <span class=hljs-comment ># Download objects and refs from another repository</span>
+git push    <span class=hljs-comment ># Update remote refs along with associated objects</span></code></pre> <p>A more detailed introduction could be found in this <a href="https://missing.csail.mit.edu/2020/version-control/">lecture</a>.</p> <h3 id=examples ><a href="#examples" class=header-anchor >Examples</a></h3> <ol> <li><p>create a new git repo and make your first commit</p> </ol> <p>Go to the folder that you want to create a git repo from and type</p> <pre><code class="julia hljs">git init     <span class=hljs-comment ># will create a `.git` folder under the current directory.</span>
+git add -A   <span class=hljs-comment ># add all files to git</span>
+git commit -m &#x27;some description about the change&#x27;</code></pre> <p>Here we have used <code>-A</code> to add/remove file automatically instead of adding the files one by one. You might want to edit the <code>.gitignore</code> file to avoid adding garbage files to the commit history by accident. The following is a typical .gitignore file for a Julia package</p> <pre><code class="julia hljs">.DS_Store
+.vscode
+*.swp
+
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+
+Manifest.toml
+
+/docs/build/
+/docs/Manifest.toml</code></pre> <p>All files matching the above patterns will be ignored by <code>git add -A</code>.</p> <ol start=2 > <li><p>upload your local repository to Github</p> </ol> <p>Open your Github homepage, click new repository. &#40;check&#41; Please do not need to choose adding README or LICESE if you are creating a Julia package, because the <code>PkgTemplates</code> will generate one for you. Then you will see a detailed instruction, just follow the instruction.</p> <ol start=3 > <li><p>making a <strong>pull request</strong></p> </ol> <p><em>pull request</em> means proposing a change to a repository that you may or may not have the edit permission.</p> <p>To start making a pull request, you should find the Github repo, click the <code>fork</code> icon at the top right of the webpage. A copy of the Github repo will be created under your own account so that you can edit it freely.</p> <pre><code class="julia hljs">git clone https://github.com/my-github-name/ModernScientificComputing
+git checkout -b my-own-branch-name  <span class=hljs-comment ># create a new branch</span>
+<span class=hljs-comment ># make some edits ...</span>
+git push origin   <span class=hljs-comment ># will upload the edits to your github repository</span></code></pre> <p>Go to the forked repository under your own account, you will see a button showing up to suggest you making a pull request, just following the guide. If you did not see the button poping up, which happens if your edit is old than several hours, you can also go to the pull request page to create a pull request from there.</p> <p>&#40;missing semester link&#41;</p> <h2 id=julia_setup_guide ><a href="#julia_setup_guide" class=header-anchor >Julia setup guide</a></h2> <h3 id=installation_guide ><a href="#installation_guide" class=header-anchor >Installation Guide</a></h3> <h4 id=step_1_installupdate_julia_binary ><a href="#step_1_installupdate_julia_binary" class=header-anchor >Step 1. Install/Update Julia binary</a></h4> <p>For Linux/Mac users, please open a terminal and type the following command to install <a href="https://julialang.org/">Julia</a> with <a href="https://github.com/JuliaLang/juliaup">juliaup</a></p> <pre><code class="julia hljs">curl -fsSL https://install.julialang.org | sh</code></pre>
+<p>For Windows users, please open execute the following command in a <code>cmd</code>,</p>
+<pre><code class="julia hljs">winget install julia -s msstore</code></pre>
+<p>To open a Julia REPL, just type <code>julia</code> in a terminal or click the Julia Icon in Windows.</p>
+<h5 id=for_users_suffering_from_the_slow_download_speed ><a href="#for_users_suffering_from_the_slow_download_speed" class=header-anchor >For users suffering from the slow download speed</a></h5>
+<p>An alternative approach is downloading the corresponding Julia binary from the <a href="https://mirrors.tuna.tsinghua.edu.cn/help/julia-releases/">tuna mirror website</a>. After installing the binary, please set the Julia binary path properly if you want to start a Julia REPL from a terminal, check this <a href="https://julialang.org/downloads/platform/">manual page</a> to learn more.</p>
+<h4 id=step_2_configure_the_package_source_and_revise_in_the_startup_file ><a href="#step_2_configure_the_package_source_and_revise_in_the_startup_file" class=header-anchor >Step 2. Configure the package source and <code>Revise</code> in the startup file</a></h4>
+<p>First create a new file <code>.julia/config/startup.jl</code> with the following content</p>
+<pre><code class="julia hljs"><span class=hljs-literal >ENV</span>[<span class=hljs-string >&quot;JULIA_PKG_SERVER&quot;</span>] = <span class=hljs-string >&quot;https://mirrors.tuna.tsinghua.edu.cn/julia&quot;</span>
+<span class=hljs-keyword >try</span>
+    <span class=hljs-keyword >using</span> Revise
+<span class=hljs-keyword >catch</span> e
+    <span class=hljs-meta >@warn</span> <span class=hljs-string >&quot;fail to load Revise.&quot;</span>
+<span class=hljs-keyword >end</span></code></pre>
+<p>The contents in the startup file is executed immediately after you open a new Julia session.</p>
+<p>Then you need to install <a href="https://github.com/timholy/Revise.jl">Revise</a>, which is an Julia package that can greatly improve the using experience of Julia. To install <code>Revise</code>, open Julia REPL and type</p>
+<pre><code class="julia hljs">julia&gt; <span class=hljs-keyword >using</span> Pkg; Pkg.add(<span class=hljs-string >&quot;Revise&quot;</span>)</code></pre>
+<p>To exit Julia REPL, just press <code>CTRL</code>-<code>D</code>.</p>
+<p>As a final step, please your Julia configuration by openning a Julia REPL and type</p>
+<pre><code class="julia hljs">julia&gt; versioninfo()
+Julia Version <span class=hljs-number >1.8</span><span class=hljs-number >.2</span>
+Commit <span class=hljs-number >36034</span>abf260 (<span class=hljs-number >2022</span>-<span class=hljs-number >09</span>-<span class=hljs-number >29</span> <span class=hljs-number >15</span>:<span class=hljs-number >21</span> UTC)
+Platform Info:
+  OS: Linux (x86_64-linux-gnu)
+  CPU: <span class=hljs-number >8</span> × Intel(R) Core(TM) i7-<span class=hljs-number >10510</span>U CPU @ <span class=hljs-number >1.80</span>GHz
+  WORD_SIZE: <span class=hljs-number >64</span>
+  LIBM: libopenlibm
+  LLVM: libLLVM-<span class=hljs-number >13.0</span><span class=hljs-number >.1</span> (ORCJIT, skylake)
+  Threads: <span class=hljs-number >1</span> on <span class=hljs-number >8</span> virtual cores
+Environment:
+  LD_LIBRARY_PATH = /usr/lib/x86_64-linux-gnu/gtk-<span class=hljs-number >3.0</span>/modules:
+  JULIA_PKG_SERVER = https://mirrors.tuna.tsinghua.edu.cn/julia</code></pre>
+<p>Please make sure your <code>JULIA_PKG_SERVER</code> is set properly.</p>
+<h4 id=step_3_download_an_editor_vscode ><a href="#step_3_download_an_editor_vscode" class=header-anchor >Step 3. Download an editor: VSCode</a></h4>
+<p>Install VSCode by downloading the correct binary for your platform from <a href="https://code.visualstudio.com/download">here</a>. Open VSCode and open the <code>Extensions</code> tab on the left side-bar of the window, search <code>Julia</code> and install the most popular extension. <a href="https://github.com/julia-vscode/julia-vscode">read more...</a></p>
+<p>You are ready to go, cheers&#33;</p>
+<h3 id=a_quick_introduction_to_the_julia_repl ><a href="#a_quick_introduction_to_the_julia_repl" class=header-anchor >A quick introduction to the Julia REPL</a></h3>
+<p>A Julia REPL has four modes,</p>
+<ol>
+<li><p>Julian mode is the default mode that can interpret your Julia code.</p>
+
+<li><p>Shell mode is the mode that you can run shell commands. Press <code>;</code> in the Julian mode and type</p>
+
+</ol>
+<pre><code class="julia hljs">shell&gt; date
+Sun Nov  <span class=hljs-number >6</span> <span class=hljs-number >10</span>:<span class=hljs-number >50</span>:<span class=hljs-number >21</span> PM CST <span class=hljs-number >2022</span></code></pre>
+<p>To return to the Julian mode, type the &lt;kbd&gt;Backspace&lt;/kbd&gt; key.</p>
+<ol start=3 >
+<li><p>Package mode is the mode that you can manage packages. Press <code>&#93;</code> in the Julian mode and type</p>
+
+</ol>
+<pre><code class="julia hljs">(<span class=hljs-meta >@v1</span><span class=hljs-number >.8</span>) pkg&gt; st
+Status <span class=hljs-string >`~/.julia/environments/v1.8/Project.toml`</span>
+  [<span class=hljs-number >295</span>af30f] Revise v3<span class=hljs-number >.4</span><span class=hljs-number >.0</span></code></pre>
+<p>To return to the Julian mode, type the &lt;kbd&gt;Backspace&lt;/kbd&gt; key.</p>
+<ol start=4 >
+<li><p>Help mode is the mode that you can access the docstrings of functions. Press <code>?</code> in the Julian mode and type</p>
+
+</ol>
+<pre><code class="julia hljs">help&gt; sum
+... docstring <span class=hljs-keyword >for</span> sum ...</code></pre>
+<p>To return to the Julian mode, type the &lt;kbd&gt;Backspace&lt;/kbd&gt; key.</p>
+<p><a href="https://docs.julialang.org/en/v1/stdlib/REPL/">read more...</a> &#40;copy paste the existing one&#41;</p>
+<h3 id=using_pluto_notebooks ><a href="#using_pluto_notebooks" class=header-anchor >Using Pluto notebooks</a></h3>
+<p>To open a pluto notebook, you should have <code>Pluto</code> package installed in your global environment by typing in the Pkg mode</p>
+<pre><code class="julia hljs">pkg&gt; add Pluto</code></pre>
+<p>Copy-pasting the following command to the end of your <code>~/.bashrc</code> file enables you to open a pluto notebook from a Linux shell.</p>
+<pre><code class="bash hljs"><span class=hljs-built_in >alias</span> pluto=<span class=hljs-string >&#x27;julia -e &quot;using Pluto
+if length(ARGS) &gt; 0
+    notebook = ARGS[1]
+    Pluto.run(notebook=joinpath(pwd(), notebook))
+else
+    Pluto.run()
+end&quot;&#x27;</span></code></pre>
+<p>To open a Pluto notebook in your browser, please open a new shell and type <code>pluto path/to/pluto/file</code>. If the path is not provided, the command will open a the Pluto start up page in your browser.</p>
+<div class=page-foot >
+    <div>
+    <a href="https://github.com/GiggleLiu" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden=true ></i> Github: GiggleLiu</a>
+    <br>
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> Jinguo Liu. Last modified: February 06, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a>.
+</div>
+</div>
+    </div>  
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js" integrity="sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH" crossorigin=anonymous ></script>
+    
+    
+        <script src="/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>

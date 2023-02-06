@@ -1,0 +1,177 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/libs/katex/katex.min.css"> <link rel=stylesheet  href="/libs/highlight/styles/github.min.css"> <link rel=stylesheet  href="/css/franklin.css"> <link rel=stylesheet  href="/css/poole_hyde.css"> <style> html {font-size: 17px;} .franklin-content {position: relative; padding-left: 8%; padding-right: 5%; line-height: 1.35em;} @media (min-width: 940px) { .franklin-content {width: 100%; margin-left: auto; margin-right: auto;} } @media (max-width: 768px) { .franklin-content {padding-left: 6%; padding-right: 6%;} } </style> <link rel=icon  href="/assets/favicon.png"> <title>Lecture 1.1: Understanding our computers</title> <div class=sidebar > <div class="container sidebar-sticky"> <div class=sidebar-about > <h1 style="font-size: 30px"><a href="/">Modern Scientific Computing</a></h1> <p class=lead >The modern way of learning scientific computing</p> </div> <p>&copy; Jinguo Liu.</p> </div> </div> <div class="content container"> <div class=franklin-content ><h1 id=lecture_11_the_computational_power_of_our_devices ><a href="#lecture_11_the_computational_power_of_our_devices" class=header-anchor >Lecture 1.1: The computational power of our devices</a></h1> <p>Scientific computing is a combination of scientific applications, mathematical modeling and high performance computing. The first lecture focuses on understanding our computing devices and understand how to get high performance from them.</p> <h2 id=required_knowledge ><a href="#required_knowledge" class=header-anchor >Required knowledge</a></h2> <ul> <li><p>Knows how to open a linux shell</p> <li><p>Knows how to open a Julia REPL</p> </ul> <h2 id=what_limits_the_computing_speed ><a href="#what_limits_the_computing_speed" class=header-anchor >What limits the computing speed?</a></h2> <p>It is well known that the mathematicall modeling and algorithm is important to how fast an algorithm can run. But this is not the only important factor that related to performance. You implement your algorithm and by type a program using your keyboard, while verifying the inputs through your monitor. The string you typed is stored in the main memory. A compiler reads this string and translates it into a format that your computing device can execute: the binary, in an optimized way. The binary encodes instructions, which can be an arithematic/logical operation on registers, transfering data from the main memory to registers and vise versa, or branching. For different computing devices, the instruction sets can be very different. When you start executing the binary, the operating system creates a new process for it and allocated required computing time, memory and I/O resources for it. Even if you may have multiple processes running on the same CPU core, the operating system can schedule them properly by deviding the computing time into slices of length several milliseconds. The computing device crunch the instructions in the memory by loading them to the instruction register first. Registers are the fastest &quot;storage&quot; shiped with CPU and works in the same clock rate as CPU. When running an data manipulation instruction, i.e. arithmetic, logical or shift instructions, registers are the only memory it can operate on. The size of a general purposed register in a 64-bit machine is typically 64 bit while some wide registers for SIMD can be serveral times larger. There are only tens of such registers in a CPU. Before doing any arithematic operation, CPU must load the data from the main memory to a register through the system bus, after executing the data manipulation instruction, the result is copied back to the main memory.</p> <p>The performance is related to the algorithm implementation, the optimization done by the compiler, the scheduling mechanism of your operating system and how fast a processor process instruction. The compiler transforms your code into its equivalent form &#40;meaning giving the same output as the original form for any input&#41; with given static information in your code. The static information includes the type information and constants. Generally speaking, the more static information the compiler knows about your computation, the faster code it can generate.</p> <p>A modern CPU works in the time unit of a CPU clock cycle, which is typically 0.3ns. A CPU may have multiple cores, and each core may crunch multiple data a time, namely, single instruction multiple data &#40;SIMD&#41;. Another type of computing device is the graphical processing unit &#40;GPU&#41;. Modern GPUs are efficient at manipulating computer graphics and image processing. Their parallel structure makes them more efficient than general-purpose central processing units &#40;CPUs&#41; for algorithms that process large blocks of data in parallel.</p> <h2 id=memory_bandwidth_and_latency ><a href="#memory_bandwidth_and_latency" class=header-anchor >Memory bandwidth and latency</a></h2> <p>Memory bandwidth is the speed of data transmission speed from the main memory to the registers, which is much slower than the speed of computing devices manipulating the data. To get the designed peak performance from your computing devices, you need to perform a certain number of operations on a data before moving it out of your computing devices. The expected arithmetic indensity is defined as the ratio between the FLOPS and data rate, which is equal to the number of operations to be done on a data to equate the time spent on data transmission and manipulation.</p> <table><tr><th align=right ><th align=right >Intel<th align=right >NVIDIA A100<tr><td align=right >Peak FP64 GFLOPS<td align=right >179<td align=right >19500<tr><td align=right >Memory bandwidth &#40;GB/s&#41;<td align=right >45.8<td align=right >1555<tr><td align=right >Expected arithmetic intensity<td align=right >31<td align=right >100<tr><td align=right >Latency<td align=right ><td align=right ></table> <blockquote> <p>NOTE: FP64 data type uses 8 bytes &#40;or 64 bits&#41; to represent a floating point number. Since Intel does not provide peak GFLOPS information for its CPUs, the Peak FP64 GFLOPS for Intel CPU is measured by benchmarking as will be shown bellow.</p> </blockquote> <p>Reducing the data transmission time is not the only goal since the memory latency is often the bottleneck of a program. Memory latency is the time between the data loading requesting and the data is ready to operate. The fundamental reason why memory latency must be small is due to the speed limitation of information propagation, i.e. the speed of light.</p> <blockquote> <p>Quiz: Given information can not be propagated in a speed faster than the light and the distance between the memory stick and the CPU is 10cm, what is the lower bound of the time loading a data from the memory to a register?</p> </blockquote> <p>One of the main differences between CPUs and GPUs are their different approaches to solve the latency issue. CPUs are highly optimized for reducing the latency, i.e. to solve a task as soon as possible. Engineers designed a complicated 3-level caching system for CPUs that exists in the majority of our modern computers. Caches belongs to the static random access memory &#40;SRAM&#41;, which is much faster to access than the main memory or the dynamic random access memory &#40;DRAM&#41; we talk about in our daily life. <img src="/assets/images/arch.png" alt="" /> As is illustrated in the figure, by the order of decreasing speed and increasing size, caches include fastest L1 cache working in the same speed as CPU, slower L2 cache, and the slowest L3 cache but still faster than the DRAM. When loading data from the main memory to a register, the CPU looks up the L1 cache first. If the CPU cannot find the data it is looking for in the L1 cache &#40;or cache miss&#41;, it checks the L2 cache and L3 cache in order. Once the desired data is found in the main memory, not only the required data, but also its physical neighbors are loaded to the caches. The wisdom behind the caching system is data locality, i.e. whenever a data is used, the data physically close to it has much higher probability to be used than the rest. Locality is particularly true when a program perform elementwise operations to an array with contiguous storage.</p> <p>When loading a 32/64-bit data from the memory to a register, the computer loads a chunk of data to the caches. The wisdom behind this design is the locallity of data using, i.e. a data is much more likely to be used if it is physically close to the data currently in use.</p> <p>GPUs hide the latency issues by launching a lot of threads at the same time. When one thread gets stuck and waiting, a GPU simply trys to find another thread that is about to execute. Without enough threads, a GPU will be latency bottlenecked. In Compute Unified Device Architecture &#40;CUDA&#41; programming, the number of CUDA cores determines the number of threads that can be simultaneously executed. CUDA cores are very similar to CPU cores, while the number of which can easily go up to several thousand, they are not as independent as CPU cores. The style of the execution of CUDA programs are called single instruction multiple threads &#40;SIMT&#41;, in which multiple data can be processed by a single instruction. While the style how CPU cores work is called multiple instruction multiple data &#40;MIMD&#41;, which does not require all threads to execute the same instruction.</p> <h2 id=hands_on_get_cpu_and_memory_information ><a href="#hands_on_get_cpu_and_memory_information" class=header-anchor >Hands on: Get CPU and memory information</a></h2> <h3 id=the_computing_power_of_a_cpu ><a href="#the_computing_power_of_a_cpu" class=header-anchor >The computing power of a CPU</a></h3> <p>In the linux system, the CPU information can be printed by typing <code>lscpu</code>.</p> <pre><code class="julia hljs">$ lscpu
+Architecture:            x86_64
+  CPU op-mode(s):        <span class=hljs-number >32</span>-bit, <span class=hljs-number >64</span>-bit
+  Address sizes:         <span class=hljs-number >39</span> bits physical, <span class=hljs-number >48</span> bits virtual
+  Byte Order:            Little Endian
+CPU(s):                  <span class=hljs-number >8</span>
+  On-line CPU(s) list:   <span class=hljs-number >0</span>-<span class=hljs-number >7</span>
+Vendor ID:               GenuineIntel
+  Model name:            Intel(R) Core(TM) i7-<span class=hljs-number >10510</span>U CPU @ <span class=hljs-number >1.80</span>GHz
+    CPU family:          <span class=hljs-number >6</span>
+    Model:               <span class=hljs-number >142</span>
+    Thread(s) per core:  <span class=hljs-number >2</span>
+    Core(s) per socket:  <span class=hljs-number >4</span>
+    Socket(s):           <span class=hljs-number >1</span>
+    Stepping:            <span class=hljs-number >12</span>
+    CPU max MHz:         <span class=hljs-number >4900.0000</span>
+    CPU min MHz:         <span class=hljs-number >400.0000</span>
+    BogoMIPS:            <span class=hljs-number >4599.93</span>
+    Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mc
+                         a cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss 
+                         ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art
+                          arch_perfmon pebs bts rep_good nopl xtopology nonstop_
+                         tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cp
+                         l vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1
+                          sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsav
+                         e avx f16c rdrand lahf_lm abm <span class=hljs-number >3</span>dnowprefetch cpuid_fault
+                          epb invpcid_single ssbd ibrs ibpb stibp ibrs_enhanced 
+                         tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase t
+                         sc_adjust sgx bmi1 avx2 smep bmi2 erms invpcid mpx rdse
+                         ed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1
+                          xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_
+                         window hwp_epp md_clear flush_l1d arch_capabilities
+Virtualization features: 
+  Virtualization:        VT-x
+Caches (sum of all):     
+  L1d:                   <span class=hljs-number >128</span> KiB (<span class=hljs-number >4</span> instances)
+  L1i:                   <span class=hljs-number >128</span> KiB (<span class=hljs-number >4</span> instances)
+  L2:                    <span class=hljs-number >1</span> MiB (<span class=hljs-number >4</span> instances)
+  L3:                    <span class=hljs-number >8</span> MiB (<span class=hljs-number >1</span> instance)
+NUMA:                    
+  NUMA node(s):          <span class=hljs-number >1</span>
+  NUMA node0 CPU(s):     <span class=hljs-number >0</span>-<span class=hljs-number >7</span>
+Vulnerabilities:         
+  Itlb multihit:         KVM: Mitigation: VMX disabled
+  L1tf:                  Not affected
+  Mds:                   Not affected
+  Meltdown:              Not affected
+  Mmio stale data:       Mitigation; Clear CPU buffers; SMT vulnerable
+  Retbleed:              Mitigation; Enhanced IBRS
+  Spec store bypass:     Mitigation; Speculative Store Bypass disabled via prctl
+                          and seccomp
+  Spectre v1:            Mitigation; usercopy/swapgs barriers and __user pointer
+                          sanitization
+  Spectre v2:            Mitigation; Enhanced IBRS, IBPB conditional, RSB fillin
+                         g, PBRSB-eIBRS SW sequence
+  Srbds:                 Mitigation; Microcode
+  Tsx async abort:       Not affected</code></pre> <p>From the output of <code>lscpu</code>, one can see the L1d and L1i are the L1 caches for data and instructions, both having a size of 128 KB. The L2 and L3 caches are larger, they have size 1 MB and 8 MB respectively. Depending on the different energy strategy and the payload, the CPU clock rate can vary between 0.4 GHz and 4.9 GHz. The flags tell the information about the instruction sets, among which the <code>avx2</code> instruction set is for the single instruction multiple data &#40;SIMD&#41; parallelism. It uses a 256 wide register to pack 4 double precision floating point numbers or 8 single precision floating point numbers, and perform multiply and add operation on them in a single CPU clock cycle.</p> <p>A CPU may have multiple cores, and its theoretical upper bound of computing power can be measured by the number of floating point operations your computing device and perform in one second, namely, in floating point operations per second &#40;FLOPS&#41;. For the above CPU, the computing power can be estimated with</p> <pre><code class="julia hljs">Computing power of a CPU = <span class=hljs-number >2.9</span> GHz (CPU clock speed, we use the maximum Turbo frequency)
+			  * <span class=hljs-number >2</span> (multiplication and add can happen at the same CPU clock)
+			  * <span class=hljs-number >2</span> (number of instructions per cycle)
+		      * <span class=hljs-number >4</span> (avx instruction set has a <span class=hljs-number >256</span> with register, it can
+                   crunch <span class=hljs-number >4</span> vectorized double precision floating point
+				   operations at one CPU cycle)
+              * <span class=hljs-number >4</span> (number of cores)
+			= ? GFLOPS</code></pre> <p>An easy way to check the single/double precision FLOPS is using the matrix multiplication. Try the following code in a Julia REPL</p> <pre><code class="julia hljs">julia&gt; <span class=hljs-keyword >using</span> LinearAlgebra
+
+julia&gt; LinearAlgebra.versioninfo()
+BLAS: libblastrampoline.so (f2c_capable)
+  --&gt; /home/leo/.julia/juliaup/julia-<span class=hljs-number >1.9</span><span class=hljs-number >.0</span>-beta2+<span class=hljs-number >0.</span>x64.linux.gnu/bin/../lib/julia/libopenblas64_.so (ILP64)
+Threading:
+  Threads.threadpoolsize() = <span class=hljs-number >1</span>
+  Threads.maxthreadid() = <span class=hljs-number >1</span>
+  LinearAlgebra.BLAS.get_num_threads() = <span class=hljs-number >1</span>
+Relevant environment variables:
+  OPENBLAS_NUM_THREADS = <span class=hljs-number >1</span>
+
+julia&gt; n = <span class=hljs-number >1000</span>
+<span class=hljs-number >1000</span>
+
+julia&gt; A, B, C = randn(<span class=hljs-built_in >Float64</span>, n, n), randn(<span class=hljs-built_in >Float64</span>, n, n), zeros(<span class=hljs-built_in >Float64</span>, n, n);
+
+julia&gt; BLAS.set_num_threads(<span class=hljs-number >1</span>)
+julia&gt; <span class=hljs-meta >@benchmark</span> mul!($C, $A, $B)
+BenchmarkTools.Trial: <span class=hljs-number >108</span> samples with <span class=hljs-number >1</span> evaluation.
+ Range (min … max):  <span class=hljs-number >44.629</span> ms … <span class=hljs-number >55.949</span> ms  ┊ GC (min … max): <span class=hljs-number >0.00</span>% … <span class=hljs-number >0.00</span>%
+ Time  (median):     <span class=hljs-number >46.178</span> ms              ┊ GC (median):    <span class=hljs-number >0.00</span>%
+ Time  (mean ± σ):   <span class=hljs-number >46.571</span> ms ±  <span class=hljs-number >1.634</span> ms  ┊ GC (mean ± σ):  <span class=hljs-number >0.00</span>% ± <span class=hljs-number >0.00</span>%
+
+        ▁▁█▅▁ ▁
+  ▃▃▆▃▆██████▇█▇▇▅▅▃▁▃▄▁▁▃▃▁▄▁▁▁▁▁▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▃ ▃
+  <span class=hljs-number >44.6</span> ms         Histogram: frequency by time        <span class=hljs-number >54.1</span> ms &lt;
+
+ Memory estimate: <span class=hljs-number >0</span> bytes, allocs estimate: <span class=hljs-number >0.</span>
+
+julia&gt; BLAS.set_num_threads(<span class=hljs-number >4</span>)
+
+julia&gt; <span class=hljs-meta >@benchmark</span> mul!($C, $A, $B)
+BenchmarkTools.Trial: <span class=hljs-number >299</span> samples with <span class=hljs-number >1</span> evaluation.
+ Range (min … max):  <span class=hljs-number >15.252</span> ms … <span class=hljs-number >26.505</span> ms  ┊ GC (min … max): <span class=hljs-number >0.00</span>% … <span class=hljs-number >0.00</span>%
+ Time  (median):     <span class=hljs-number >16.303</span> ms              ┊ GC (median):    <span class=hljs-number >0.00</span>%
+ Time  (mean ± σ):   <span class=hljs-number >16.716</span> ms ±  <span class=hljs-number >1.831</span> ms  ┊ GC (mean ± σ):  <span class=hljs-number >0.00</span>% ± <span class=hljs-number >0.00</span>%</code></pre> <p>It can be shown that the computing power of a single thread is at least <span class=katex ><span class=katex-mathml ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><msup><mn>0</mn><mn>3</mn></msup><mo>×</mo><mn>2</mn><mi mathvariant=normal >/</mi><mn>0.044629</mn><mo>≈</mo><mn>44.8</mn><mrow><mi mathvariant=normal >G</mi><mi mathvariant=normal >F</mi><mi mathvariant=normal >L</mi><mi mathvariant=normal >O</mi><mi mathvariant=normal >P</mi><mi mathvariant=normal >S</mi></mrow></mrow><annotation encoding="application/x-tex">1000^3 \times 2 / 0.044629 \approx 44.8 {\rm GFLOPS}</annotation></semantics></math></span><span class=katex-html  aria-hidden=true ><span class=base ><span class=strut  style="height:0.8974em;vertical-align:-0.0833em;"></span><span class=mord >100</span><span class=mord ><span class=mord >0</span><span class=msupsub ><span class=vlist-t ><span class=vlist-r ><span class=vlist  style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class=pstrut  style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class=mspace  style="margin-right:0.2222em;"></span><span class=mbin >×</span><span class=mspace  style="margin-right:0.2222em;"></span></span><span class=base ><span class=strut  style="height:1em;vertical-align:-0.25em;"></span><span class=mord >2/0.044629</span><span class=mspace  style="margin-right:0.2778em;"></span><span class=mrel >≈</span><span class=mspace  style="margin-right:0.2778em;"></span></span><span class=base ><span class=strut  style="height:0.6833em;"></span><span class=mord >44.8</span><span class=mord ><span class=mord ><span class="mord mathrm">GFLOPS</span></span></span></span></span></span>. The computing time of a carefully implemented matrix multiplication function is dominated by the <span class=katex ><span class=katex-mathml ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><msup><mn>0</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">1000^3</annotation></semantics></math></span><span class=katex-html  aria-hidden=true ><span class=base ><span class=strut  style="height:0.8141em;"></span><span class=mord >100</span><span class=mord ><span class=mord >0</span><span class=msupsub ><span class=vlist-t ><span class=vlist-r ><span class=vlist  style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class=pstrut  style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span> multiplication operations and the same amount of addition operations. Dividing <span class=katex ><span class=katex-mathml ><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1000</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1000 \times 2</annotation></semantics></math></span><span class=katex-html  aria-hidden=true ><span class=base ><span class=strut  style="height:0.7278em;vertical-align:-0.0833em;"></span><span class=mord >1000</span><span class=mspace  style="margin-right:0.2222em;"></span><span class=mbin >×</span><span class=mspace  style="margin-right:0.2222em;"></span></span><span class=base ><span class=strut  style="height:0.6444em;"></span><span class=mord >2</span></span></span></span> floating point operations in total by the amount of time in the the unit of seconds is the peak FLOPS. Here we have used the minimum computing time because the system does not always allocate time slices to the program we want to benchmark, using the minimum time gives us the best approximate to the time we want to measure.</p> <p>For the parallel execution, although we have 4 CPU cores, the 4-thread computation does not give us a 4 time speed up. This may have different causes, the cores may share caches, the operating system may not allocate all resources to this specific computing task.</p> <p>In addition, since we are using intel CPU, MKL is slightly faster than the default OpenBLAS. If we repeat the above numerical experiment, we will get the following timing information, which measures the peak performance of a CPU more acurately.</p> <pre><code class="julia hljs">julia&gt; <span class=hljs-keyword >using</span> MKL
+
+julia&gt; LinearAlgebra.versioninfo()
+BLAS: libblastrampoline.so (f2c_capable)
+  --&gt; /home/leo/.julia/artifacts/<span class=hljs-number >347e4</span>bf25d69805922225ce6bf819ef0b8715426/lib/libmkl_rt.so (ILP64)
+  --&gt; /home/leo/.julia/artifacts/<span class=hljs-number >347e4</span>bf25d69805922225ce6bf819ef0b8715426/lib/libmkl_rt.so (LP64)
+Threading:
+  Threads.threadpoolsize() = <span class=hljs-number >1</span>
+  Threads.maxthreadid() = <span class=hljs-number >1</span>
+  LinearAlgebra.BLAS.get_num_threads() = <span class=hljs-number >4</span>
+Relevant environment variables:
+  OPENBLAS_NUM_THREADS = <span class=hljs-number >1</span>
+
+julia&gt; BLAS.set_num_threads(<span class=hljs-number >1</span>)
+
+julia&gt; <span class=hljs-meta >@benchmark</span> mul!($C, $A, $B)
+BenchmarkTools.Trial: <span class=hljs-number >113</span> samples with <span class=hljs-number >1</span> evaluation.
+ Range (min … max):  <span class=hljs-number >42.150</span> ms … <span class=hljs-number >50.687</span> ms  ┊ GC (min … max): <span class=hljs-number >0.00</span>% … <span class=hljs-number >0.00</span>%
+ Time  (median):     <span class=hljs-number >44.179</span> ms              ┊ GC (median):    <span class=hljs-number >0.00</span>%
+ Time  (mean ± σ):   <span class=hljs-number >44.434</span> ms ±  <span class=hljs-number >1.435</span> ms  ┊ GC (mean ± σ):  <span class=hljs-number >0.00</span>% ± <span class=hljs-number >0.00</span>%
+
+         ▅▅▂▂▂▅▂▂▅ ▂▃ █                                        
+  ▄▄▁▇▇▄▇████████████▅█▇▄█▄▁▄▇▁▁▅▁▁▁▁▄▄▁▁▄▁▄▁▁▁▁▁▄▁▁▁▁▁▁▁▁▁▁▄ ▄
+  <span class=hljs-number >42.1</span> ms         Histogram: frequency by time        <span class=hljs-number >50.4</span> ms &lt;
+
+ Memory estimate: <span class=hljs-number >0</span> bytes, allocs estimate: <span class=hljs-number >0.</span>
+
+julia&gt; BLAS.set_num_threads(<span class=hljs-number >4</span>)
+
+julia&gt; <span class=hljs-meta >@benchmark</span> mul!($C, $A, $B)
+BenchmarkTools.Trial: <span class=hljs-number >281</span> samples with <span class=hljs-number >1</span> evaluation.
+ Range (min … max):  <span class=hljs-number >14.882</span> ms … <span class=hljs-number >26.696</span> ms  ┊ GC (min … max): <span class=hljs-number >0.00</span>% … <span class=hljs-number >0.00</span>%
+ Time  (median):     <span class=hljs-number >15.791</span> ms              ┊ GC (median):    <span class=hljs-number >0.00</span>%
+ Time  (mean ± σ):   <span class=hljs-number >17.775</span> ms ±  <span class=hljs-number >3.766</span> ms  ┊ GC (mean ± σ):  <span class=hljs-number >0.00</span>% ± <span class=hljs-number >0.00</span>%
+
+    ▃██▄                                                       
+  ▄▇█████▄▃▃▂▁▁▁▃▃▂▂▂▁▂▁▃▂▁▁▂▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▂▂▃▄▆▆▅▃▃ ▃
+  <span class=hljs-number >14.9</span> ms         Histogram: frequency by time        <span class=hljs-number >25.4</span> ms &lt;
+
+ Memory estimate: <span class=hljs-number >0</span> bytes, allocs estimate: <span class=hljs-number >0.</span></code></pre> <pre><code class="bash hljs">$ lsmem
+RANGE                                  SIZE  STATE REMOVABLE  BLOCK
+0x0000000000000000-0x000000007fffffff    2G online       <span class=hljs-built_in >yes</span>   0-15
+0x0000000088000000-0x000000008fffffff  128M online       <span class=hljs-built_in >yes</span>     17
+0x0000000100000000-0x0000000a6fffffff 37.8G online       <span class=hljs-built_in >yes</span> 32-333
+
+Memory block size:       128M
+Total online memory:    39.9G
+Total offline memory:      0B</code></pre> <h3 id=the_computing_power_of_a_gpu ><a href="#the_computing_power_of_a_gpu" class=header-anchor >The computing power of a GPU</a></h3> <pre><code class="bash hljs">$ nvidia-smi</code></pre>
+<p>The NVIDIA V100 GPU has 5,120 CUDA cores, the theoretical computing power can be computed as</p>
+<pre><code class="julia hljs">NVIDIA V100 GPU single precision FLOPS = <span class=hljs-number >5120</span> (number of CUDA cores)
+    * <span class=hljs-number >1380</span> (GPU clock rate)
+    * <span class=hljs-number >2</span> (multiplication and add can happen at the same GPU clock)</code></pre>
+<h2 id=references ><a href="#references" class=header-anchor >References</a></h2>
+<ol>
+<li><p><a href="https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-143.pdf">https://www2.eecs.berkeley.edu/Pubs/TechRpts/2016/EECS-2016-143.pdf</a></p>
+
+<li><p><a href="">Youtube video</a></p>
+
+</ol>
+<div class=page-foot >
+    <div>
+    <a href="https://github.com/GiggleLiu" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden=true ></i> Github: GiggleLiu</a>
+    <br>
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> Jinguo Liu. Last modified: February 06, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a>.
+</div>
+</div>
+    </div>  
+    <script defer src="https://use.fontawesome.com/releases/v5.8.2/js/all.js" integrity="sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH" crossorigin=anonymous ></script>
+    
+        
+
+
+
+    
+    
+        <script src="/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>
