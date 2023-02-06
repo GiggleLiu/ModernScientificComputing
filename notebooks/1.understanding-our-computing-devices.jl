@@ -4,15 +4,28 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 84c14a09-2c9e-4919-bfb1-cdf4d5a61776
-using Pkg, Revise
-
-# ╔═╡ 41ff9fda-a597-420b-93a9-b281d42acfb1
 # ╠═╡ show_logs = false
-Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
+begin
+	using Pkg, Revise
+	Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
+	using PlutoLecturing
+	presentmode()
+	TableOfContents()
+end
 
-# ╔═╡ a319ad61-9b51-412b-a186-797150a579ab
-using PlutoLecturing
+# ╔═╡ f8fb15f6-00ef-4c5d-929d-fa3bdd1722a6
+using Plots
 
 # ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
 using BenchmarkTools
@@ -25,12 +38,6 @@ using Random
 
 # ╔═╡ 292dc84c-b2ed-4a35-b817-be6266b40ff1
 using Profile
-
-# ╔═╡ 01c33da1-b98d-42dc-8725-4afb8ae6f44f
-presentmode()
-
-# ╔═╡ 59cf2bc4-acf0-47ac-aa05-9e9a41ba783e
-TableOfContents()
 
 # ╔═╡ 5c5f6214-61c5-4532-ac05-85a43e5639cc
 md"""
@@ -137,41 +144,138 @@ if show_meminfo run(`lsmem`) end
 # ╔═╡ 96c87a95-ca76-4cf5-8920-8d1f014ba47b
 if show_processinfo run(`top -n 1 -b`) end
 
-# ╔═╡ f676b4b7-fe66-4d67-827f-9943a41ddf58
-md"""# Numbers"""
+# ╔═╡ c0db86ae-d6b3-49b4-bde1-d6c2585090e8
+md"# Number system"
 
-# ╔═╡ 080f84a2-a740-4917-acb6-d0329d7855e5
+# ╔═╡ c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
 md"## Integers"
 
-# ╔═╡ f860fd57-7cb9-47b0-84ab-30d71a812ee0
-bitstring(35)
+# ╔═╡ 17f877cd-3958-4b49-a0cc-fb0529800223
+md"Integer type range is"
 
-# ╔═╡ 97e5ec37-b014-49fa-8dee-a5c2a62b49df
-bitstring(-35)
+# ╔═╡ 5a5fd311-4c9f-4fa0-8f5a-d3f5acba3106
+typemin(Int64)
 
-# ╔═╡ d168062c-2add-49ca-9a9b-b0cadad6fd60
-bitstring(Int32(35))
+# ╔═╡ 24684e2a-e99e-43f3-ba66-881634e4ba1b
+bitstring(typemin(Int64))
 
-# ╔═╡ ad14ab2b-5c29-44b7-8153-a7ffd7b781d5
+# ╔═╡ 79565487-c1fb-47d7-b50d-a0a39a8849d9
+bitstring(typemin(Int64) + 1)
+
+# ╔═╡ baeefdd1-09ef-4b5d-8cf4-c4eeb98d3335
+bitstring(0)
+
+# ╔═╡ 4cf1e164-c510-47da-a138-f4582bfa0270
+md" $(@bind show_minus1 CheckBox()) Show the bitstring for -1 (binded to `show_minus1`)"
+
+# ╔═╡ 07b3e56b-78fd-4894-b310-096281009764
+show_minus1 && bitstring(-1)
+
+# ╔═╡ cc2e0ab8-83cc-44fe-9782-eabee896bcc0
 typemax(Int64)
 
-# ╔═╡ 9a79ac1a-f98f-4cdd-9dad-fb89fed6475c
-typemax(Int32)
+# ╔═╡ e51adfeb-3868-43c2-8f64-21bd1a4e8522
+bitstring(typemax(Int64))
 
-# ╔═╡ 32026c57-02be-4609-b0fa-8e03065ca4ba
-md"The reason why x64 machine is becoming the main stream."
+# ╔═╡ db99eaf3-4405-4a9d-8829-a87d9b7f2173
+# the following expression can not 
+9223372036854775807 - (-9223372036854775808) + 1
 
-# ╔═╡ 2bd6082c-385a-4be0-a050-746a98377c94
-typemax(UInt32) / 1e9
+# ╔═╡ c3933eb5-15e0-4069-a3b1-947aba71adf2
+md"Use arbitrary precision integers to show the data range."
 
-# ╔═╡ 5088b983-d8d6-4d42-8785-9127856d3fba
+# ╔═╡ 430fcfbb-55ff-4388-a914-2c1a1c2a5e27
+BigInt(9223372036854775807) - BigInt(-9223372036854775808) + 1
+
+# ╔═╡ 145808be-21ec-453b-afe2-22abd26f850f
+BigInt(2)^64
+
+# ╔═╡ 9a908d82-d4e4-496e-bca7-093d7b521c2c
+md"""
+## Fixed point numbers and logarithmic numbers
+"""
+
+# ╔═╡ 9186b86b-88b1-4165-94ac-b738882a2c23
 md"## Floating point numbers"
 
-# ╔═╡ 01fb4139-e3c9-4d3a-b95b-cd10181ea6ac
+# ╔═╡ 31d784e6-22b5-430a-a571-6aad7aaefee1
 LocalResource("float-format.png")
 
-# ╔═╡ 9da10c5a-cc91-4663-bbe1-39c5296e7d4a
+# ╔═╡ 5a10796f-c084-451e-89f5-75ba8364f2d8
 md"image source: https://en.wikipedia.org/wiki/IEEE_754"
+
+# ╔═╡ 8eff13e4-1d93-4add-b516-46307fca965a
+bitstring(0.15625f0)
+
+# ╔═╡ c3db170e-20f0-4488-98b0-7a65090728a1
+exponent(0.15625f0)
+
+# ╔═╡ 2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
+md"The significant is in range [1, 2)"
+
+# ╔═╡ 27212a7a-fdd0-423d-a008-83c6f6e257c6
+significand(0.15625f0)
+
+# ╔═╡ eb85aadf-4df9-4bf4-86c2-6fcf7f51d8d2
+@xbind generate_random_float Button("Generate!")
+
+# ╔═╡ f3906df3-0c39-4de0-8412-722e48fce03b
+random_float = let
+	generate_random_float
+	randn(Float32)
+end
+
+# ╔═╡ 92fac25b-a031-4a1e-9205-76e077cb2197
+exponent(random_float)
+
+# ╔═╡ a464fd5f-eecf-4350-b9de-b50471a2e3f2
+significand(random_float)
+
+# ╔═╡ 444d4e29-954a-4f37-afcc-e9cc85b7bf7b
+let
+	s = bitstring(random_float)
+	Markdown.parse("""
+```
+   $(s[1])  -  $(s[2:9])  -  $(s[10:end])
+
+(sign)  (exponent)          (mantissa)
+```
+""")
+end
+
+# ╔═╡ ae52c04f-d5db-451d-b57f-da8c6564c4ab
+md"Floating point numbers is a poor approximation to field, but having balanced absolute error and relative error."
+
+# ╔═╡ 718af44f-b2ca-4544-8368-bfe35ae0f52f
+md"The distribution of floating point numbers"
+
+# ╔═╡ 4d67d9e3-b6fa-4083-acbd-42372d1453f0
+@xbind npoints Slider(1:10000; default=1000, show_value=true)
+
+# ╔═╡ 428c7b7a-cd18-4fcf-b6bb-22b082df0fc1
+xs = filter(!isnan, reinterpret(Float64, rand(Int64, npoints)));
+
+# ╔═╡ a5249298-ecc4-41ab-8f91-0eac5f8fac53
+md"From the linear scale plot, you will see data concentrated around 0
+(each vertical bar is a sample)"
+
+# ╔═╡ 3304f219-9e80-464c-8d8d-1a6f7ad4f49e
+scatter(xs, zeros(length(xs)), xlim=(-1e300, 1e300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
+
+# ╔═╡ 52668889-6385-4e7b-b12b-6d6167966f3e
+md"If we use logarithmic x-axis"
+
+# ╔═╡ 027c7d70-422d-4605-95b4-7eee44fa9cc3
+@xbind smearing_factor Slider(0.1:0.1:5.0; show_value=true, default=0.5)
+
+# ╔═╡ 48c5f752-c578-4443-939e-ba976e50300a
+let
+	logxs = sign.(xs) .* log10.(abs.(xs))
+	ax = scatter(logxs, zeros(length(xs)), xlim=(-300, 300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
+	a = -300:300
+	m = 1/π/smearing_factor ./ (((a' .- logxs) ./ smearing_factor) .^ 2 .+ 1)
+	plot!(ax, a, dropdims(sum(m, dims=1), dims=1); label="probability")
+end
 
 # ╔═╡ 16dc1e93-9f16-4299-9e8e-59dff16b6fd9
 md"# Estimating the computing power of your devices (20min)"
@@ -343,8 +447,22 @@ blackboard("Compiling stages")
 # ╔═╡ 980dac9e-092a-47e0-bcca-85c7e5ededab
 md"## Measuring the performance"
 
+# ╔═╡ 56c9c50e-bb43-4c27-88a6-ea3a26288b57
+@xbind profile_axpy CheckBox()
+
 # ╔═╡ d31f0924-aca0-446d-b06c-92a3daa65ae2
-@profile 
+if profile_axpy
+	with_terminal() do
+		# clear previous profiling data
+		Profile.init(; n=10^6, delay=0.001)
+		x, y = randn(100000000), randn(100000000)
+		@profile axpy!(2.0, x, y)
+		Profile.print()
+	end
+end
+
+# ╔═╡ 4fc93548-0253-4e09-b2a2-61f08818105d
+blackboard("How profiler works?")
 
 # ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
 md"# Missing semester (40min)"
@@ -383,12 +501,40 @@ md"## What is Vim?"
 # ╔═╡ d9e927a2-2c65-4f55-9de0-d7b5511156b5
 md"## What is Git?"
 
+# ╔═╡ d7784369-1591-4c22-ad17-e9ce7d31dff0
+md"# Summarize
+1. understanding the components of our computing devices
+2. the bottlenecks of our computing devices
+3. how to get our program compiled and executed
+3. how to measure the performance of a program with profiling
+"
+
 # ╔═╡ ab90a643-8648-400f-a1ef-90b946c76471
-md"# Homework (10min)
+md"""# Homework (10min)
 1. Estimate the computing power of your computing devices in unit of GFLOPS, you need to use `lscpu` and `lsmem` to support your result.
 2. Let us assume the distance between CPU and main memory is 10cm, show the minimum latency time (hint: information can not propagate fater than the light) and compare this time with the CPU clock time of your device.
-3. Google Neural Network Processing Unit (NPU) and Tensor Processing Unit (TPU), and write a report about their differences (Recommended length: 500 words).
-"
+3. Google Neural Network Processing Unit (NPU), Field-Programmable Gate Array (FPGA)  and Tensor Processing Unit (TPU), and write a report about their features (Recommended length: 500 words).
+4. Is floating point numbers a well defined field? To define a field with the addition operation $+$ and the multiplication operation $\times$ on a set $S$, the following field axioms must hold.
+```math
+\begin{align*}
+&\text{Closure of +: }(∀ a, b ∈ S) (a + b ∈ S)\\
+&\text{Existence of Inverses for +: }(∀ a ∈ S) (∃ (–a) ∈ S) (a + (–a) = e)\\
+&\text{Associativity of +: }(∀ a, b, c ∈ S) (a + b + c = (a + b) + c = a + (b + c))\\
+&\text{Existence of Identity for +: }(∃ e ∈ S) (∀ x ∈ S) (e + x = x + e = x)\\
+&\\
+&\text{Commutativity of +: }(∀ a, b ∈ S) (a + b = b + a)\\
+&\text{Closure of ×: }(∀ a, b ∈ S) (a × b ∈ S)\\
+&\text{Associativity of ×: }(∀ a, b, c ∈ S) (a × b × c = (a × b) × c = a × (b × c))\\
+&\text{Existence of Identity for ×: }(∃ 1∈ S) (∀ x ∈ S) (1 × x = x × 1 = x)\\
+&\\
+&\text{Left Distributive Property: }(∀a, b, c ∈ S)(a × (b + c) = a × b + a × c)\\
+&\text{Right Distributive Property: }(∀a, b, c ∈ S)((a + b) × c = a × c + b × c)\\
+&\text{Existence of Inverses for ×: }(∀ a ∈ S) (a ≠ 0) (∃ a⁻¹ ∈ S) (a × a⁻¹ = 1)\\
+&\text{Commutativity of ×: }(∀ a, b ∈ S) (a × b = b × a)
+\end{align*}
+```
+List all statements not satisfied by the floating point numbers.
+"""
 
 # ╔═╡ a029e179-9c01-40f9-a23c-a5dd672740cb
 md"""
@@ -434,10 +580,6 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 
 # ╔═╡ Cell order:
 # ╠═84c14a09-2c9e-4919-bfb1-cdf4d5a61776
-# ╠═41ff9fda-a597-420b-93a9-b281d42acfb1
-# ╠═a319ad61-9b51-412b-a186-797150a579ab
-# ╠═01c33da1-b98d-42dc-8725-4afb8ae6f44f
-# ╠═59cf2bc4-acf0-47ac-aa05-9e9a41ba783e
 # ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
 # ╟─0fe286ff-1359-4eb4-ab6c-28b231f9d56e
 # ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
@@ -457,18 +599,44 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═c0aa6f21-47d5-4f03-8b9b-a8df5c18a1b8
 # ╟─2c92ab20-c105-4623-83c2-239462d59707
 # ╠═96c87a95-ca76-4cf5-8920-8d1f014ba47b
-# ╟─f676b4b7-fe66-4d67-827f-9943a41ddf58
-# ╟─080f84a2-a740-4917-acb6-d0329d7855e5
-# ╠═f860fd57-7cb9-47b0-84ab-30d71a812ee0
-# ╠═97e5ec37-b014-49fa-8dee-a5c2a62b49df
-# ╠═d168062c-2add-49ca-9a9b-b0cadad6fd60
-# ╠═ad14ab2b-5c29-44b7-8153-a7ffd7b781d5
-# ╠═9a79ac1a-f98f-4cdd-9dad-fb89fed6475c
-# ╟─32026c57-02be-4609-b0fa-8e03065ca4ba
-# ╠═2bd6082c-385a-4be0-a050-746a98377c94
-# ╟─5088b983-d8d6-4d42-8785-9127856d3fba
-# ╟─01fb4139-e3c9-4d3a-b95b-cd10181ea6ac
-# ╟─9da10c5a-cc91-4663-bbe1-39c5296e7d4a
+# ╟─c0db86ae-d6b3-49b4-bde1-d6c2585090e8
+# ╟─c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
+# ╟─17f877cd-3958-4b49-a0cc-fb0529800223
+# ╠═5a5fd311-4c9f-4fa0-8f5a-d3f5acba3106
+# ╠═24684e2a-e99e-43f3-ba66-881634e4ba1b
+# ╠═79565487-c1fb-47d7-b50d-a0a39a8849d9
+# ╠═baeefdd1-09ef-4b5d-8cf4-c4eeb98d3335
+# ╟─4cf1e164-c510-47da-a138-f4582bfa0270
+# ╠═07b3e56b-78fd-4894-b310-096281009764
+# ╠═cc2e0ab8-83cc-44fe-9782-eabee896bcc0
+# ╠═e51adfeb-3868-43c2-8f64-21bd1a4e8522
+# ╠═db99eaf3-4405-4a9d-8829-a87d9b7f2173
+# ╟─c3933eb5-15e0-4069-a3b1-947aba71adf2
+# ╠═430fcfbb-55ff-4388-a914-2c1a1c2a5e27
+# ╠═145808be-21ec-453b-afe2-22abd26f850f
+# ╟─9a908d82-d4e4-496e-bca7-093d7b521c2c
+# ╟─9186b86b-88b1-4165-94ac-b738882a2c23
+# ╟─31d784e6-22b5-430a-a571-6aad7aaefee1
+# ╟─5a10796f-c084-451e-89f5-75ba8364f2d8
+# ╠═8eff13e4-1d93-4add-b516-46307fca965a
+# ╠═c3db170e-20f0-4488-98b0-7a65090728a1
+# ╟─2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
+# ╠═27212a7a-fdd0-423d-a008-83c6f6e257c6
+# ╟─eb85aadf-4df9-4bf4-86c2-6fcf7f51d8d2
+# ╠═f3906df3-0c39-4de0-8412-722e48fce03b
+# ╠═92fac25b-a031-4a1e-9205-76e077cb2197
+# ╠═a464fd5f-eecf-4350-b9de-b50471a2e3f2
+# ╟─444d4e29-954a-4f37-afcc-e9cc85b7bf7b
+# ╟─ae52c04f-d5db-451d-b57f-da8c6564c4ab
+# ╠═f8fb15f6-00ef-4c5d-929d-fa3bdd1722a6
+# ╟─718af44f-b2ca-4544-8368-bfe35ae0f52f
+# ╟─4d67d9e3-b6fa-4083-acbd-42372d1453f0
+# ╠═428c7b7a-cd18-4fcf-b6bb-22b082df0fc1
+# ╟─a5249298-ecc4-41ab-8f91-0eac5f8fac53
+# ╟─3304f219-9e80-464c-8d8d-1a6f7ad4f49e
+# ╠═52668889-6385-4e7b-b12b-6d6167966f3e
+# ╠═027c7d70-422d-4605-95b4-7eee44fa9cc3
+# ╠═48c5f752-c578-4443-939e-ba976e50300a
 # ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
 # ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
 # ╟─13dabaa8-7310-4557-ad06-e64f566ca256
@@ -508,7 +676,9 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─63cfa65b-ba32-46ee-ae9a-02e38385bd29
 # ╟─980dac9e-092a-47e0-bcca-85c7e5ededab
 # ╠═292dc84c-b2ed-4a35-b817-be6266b40ff1
+# ╟─56c9c50e-bb43-4c27-88a6-ea3a26288b57
 # ╠═d31f0924-aca0-446d-b06c-92a3daa65ae2
+# ╟─4fc93548-0253-4e09-b2a2-61f08818105d
 # ╟─9306f25a-f4f5-4b19-973d-76845a746510
 # ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
 # ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
@@ -516,6 +686,7 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
 # ╟─25312e41-4cab-408e-8160-c2fcb55dee2a
 # ╟─d9e927a2-2c65-4f55-9de0-d7b5511156b5
+# ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
 # ╟─ab90a643-8648-400f-a1ef-90b946c76471
 # ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
 # ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
