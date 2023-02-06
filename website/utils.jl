@@ -38,7 +38,7 @@ function generate_list(folder; reverse)
                 else
                     name = "($date) " * title
                 end
-                push!(lst, """<p><a href="/$(path[1:prevind(path, length(path)-2)])">$(name)</a></p>""")
+                push!(lst, """<p><a href="$(path[1:prevind(path, length(path)-2)])">$(name)</a></p>""")
             end
         end
     end
