@@ -221,7 +221,7 @@ let
 	logxs = sign.(xs) .* log10.(abs.(xs))
 	ax = scatter(logxs, zeros(length(xs)), xlim=(-300, 300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
 	a = -300:300
-	# Smoothen the distribution with Lorentz function
+	# smoothen the distribution with Lorentz function
 	m = 1/π/smearing_factor ./ (((a' .- logxs) ./ smearing_factor) .^ 2 .+ 1)
 	plot!(ax, a, dropdims(sum(m, dims=1), dims=1); label="probability")
 end
@@ -442,8 +442,8 @@ md"""# Homework (10min)
 List all statements not satisfied by the floating point numbers.
 """
 
-# ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
-md"# To get started: Missing semester (20min)"
+# ╔═╡ 68176e03-544b-4a30-a096-c117c6625113
+md"## Strongly recommended reading"
 
 # ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
 md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
@@ -470,22 +470,6 @@ md"""
     * (n - basic) is the reading order and the level of familiarity
 """
 
-# ╔═╡ cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
-md"## What is a Linux operating system?"
-
-# ╔═╡ 25312e41-4cab-408e-8160-c2fcb55dee2a
-md"## What is Vim?"
-
-# ╔═╡ d9e927a2-2c65-4f55-9de0-d7b5511156b5
-md"## What is Git?"
-
-# ╔═╡ a029e179-9c01-40f9-a23c-a5dd672740cb
-md"""
-#### Rules:
-Collaboration is allowed, but you should acknowledge your collaborators.
-You collaborator will get a `+1` score in the course accessment (the final score can not be greater than 100).
-"""
-
 # ╔═╡ 752a7d31-5065-4d13-86b8-63eb279d1f7b
 md"""
 # Next time
@@ -499,18 +483,6 @@ I will show you some cheatsheets about
 
 Please bring your laptops and get your hands dirty!
 If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
-"""
-
-# ╔═╡ ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
-md"""## Pluto notebook using guide:
-### How to play this notebook?
-1. Clone this Github repo to your local host.
-$(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git"))
-
-### Controls
-
-* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to toggle the presentation mode.
-* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
 """
 
 # ╔═╡ Cell order:
@@ -609,13 +581,8 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─4fc93548-0253-4e09-b2a2-61f08818105d
 # ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
 # ╟─ab90a643-8648-400f-a1ef-90b946c76471
-# ╟─9306f25a-f4f5-4b19-973d-76845a746510
+# ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
+# ╟─68176e03-544b-4a30-a096-c117c6625113
 # ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
 # ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
 # ╟─a5fbf397-70d1-4dfd-a1ea-abff06007239
-# ╟─cd07cfcf-243e-4d24-86fa-3c39eda2ce1b
-# ╟─25312e41-4cab-408e-8160-c2fcb55dee2a
-# ╟─d9e927a2-2c65-4f55-9de0-d7b5511156b5
-# ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
-# ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
-# ╠═ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
