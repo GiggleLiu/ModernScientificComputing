@@ -54,6 +54,6 @@ where the `"path/to/notebook.jl"` should be replaced by the path to the file und
 
 ### Controls
 
-* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to toggle the presentation mode.
-* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
+* Use <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>P</kbd> to toggle the presentation mode.
+* Use <kbd>Ctrl</kbd> + <kbd>→</kbd> / <kbd>←</kbd> to play the previous/next slide.
 """
