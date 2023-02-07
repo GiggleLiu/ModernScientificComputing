@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.19
 
 using Markdown
 using InteractiveUtils
@@ -26,7 +26,7 @@ begin
 	TableOfContents(aside=true)
 end
 
-# ╔═╡ f8fb15f6-00ef-4c5d-929d-fa3bdd1722a6
+# ╔═╡ a88e6865-235b-428a-9546-5da2daa3e03c
 using Plots
 
 # ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
@@ -76,48 +76,6 @@ $(localimage("images/textbook.jpg"))
 12. Fast fourier transform
 13. Random numbers and stochastic simulation
 """; width=660, left=0.4)
-
-# ╔═╡ af0db2a7-41ca-4baf-89f3-4a416a062382
-md"""
-## This course
-1. Programming
-    - Understanding our computing devices
-    - Get your computer ready for programming (Hands on)
-        - Linux operating system
-        - Vim, SSH and Git
-    - A programming language: Julia
-2. Mathematical modeling and algorithms
-    - See the textbook
-3. State of the art problems
-    - probabilistic modeling
-    - sparsity detection (in dataset)
-    - computational hard problems
-"""
-
-# ╔═╡ 26c56925-c43b-4116-9e17-16e8be2b0631
-segments([3, 6, 4, 1], ["Programming", "Mathematical Modeling", "Scientific problems", "Exam"])
-
-# ╔═╡ 4d23d2f6-eb42-4d83-ad0d-bf6ab70973fd
-md" = 13 Weeks in total"
-
-# ╔═╡ 16be9535-6b9e-40fa-902f-ae7aaeb114e1
-md"## Each lecture = "
-
-# ╔═╡ 1a06726c-7338-4424-81f3-eaed86a0fdb2
-segments([50, 10, 50, 10, 50], ["Lecturing", "Break", "Lecturing", "Break", "Lecturing"])
-
-# ╔═╡ ce633741-5a25-4eda-a0f4-9050be226255
-md"""
-## Assessment
-1. 70% by course assignment
-2. 30% by final exam
-## $(highlight("Our communication channel!"))
-(Zulip link to be added)
-## My email
-Jinguo Liu
-
-[jinguoliu@hkust-gz.edu.cn](mailto:jinguoliu@hkust-gz.edu.cn)
-"""
 
 # ╔═╡ f36e7b45-193e-4028-aae5-352711b8406d
 md"# Lecture 1: Understanding our computing devices"
@@ -174,26 +132,13 @@ bitstring(0)
 md" $(@bind show_minus1 CheckBox()) Show the bitstring for -1 (binded to `show_minus1`)"
 
 # ╔═╡ 07b3e56b-78fd-4894-b310-096281009764
-show_minus1 && bitstring(-1)
+if show_minus1 bitstring(-1) end
 
 # ╔═╡ cc2e0ab8-83cc-44fe-9782-eabee896bcc0
 typemax(Int64)
 
 # ╔═╡ e51adfeb-3868-43c2-8f64-21bd1a4e8522
 bitstring(typemax(Int64))
-
-# ╔═╡ db99eaf3-4405-4a9d-8829-a87d9b7f2173
-# the following expression can not 
-9223372036854775807 - (-9223372036854775808) + 1
-
-# ╔═╡ c3933eb5-15e0-4069-a3b1-947aba71adf2
-md"Use arbitrary precision integers to show the data range."
-
-# ╔═╡ 430fcfbb-55ff-4388-a914-2c1a1c2a5e27
-BigInt(9223372036854775807) - BigInt(-9223372036854775808) + 1
-
-# ╔═╡ 145808be-21ec-453b-afe2-22abd26f850f
-BigInt(2)^64
 
 # ╔═╡ 9186b86b-88b1-4165-94ac-b738882a2c23
 md"## Floating point numbers"
@@ -214,65 +159,69 @@ exponent(0.15625f0)
 md"The significant is in range [1, 2)"
 
 # ╔═╡ 27212a7a-fdd0-423d-a008-83c6f6e257c6
-significand(0.15625f0)
+significand(0.15625f0)  # the fraction
 
-# ╔═╡ eb85aadf-4df9-4bf4-86c2-6fcf7f51d8d2
-@xbind generate_random_float Button("Generate!")
+# ╔═╡ e5c3c192-e398-4bb1-9933-6c6070b10756
+typemax(Float64)
 
-# ╔═╡ f3906df3-0c39-4de0-8412-722e48fce03b
-random_float = let
-	generate_random_float
-	randn(Float32)
-end
+# ╔═╡ c761fcf3-7386-437a-b37c-af256e189a10
+bitstring(Inf)
 
-# ╔═╡ 92fac25b-a031-4a1e-9205-76e077cb2197
-exponent(random_float)
+# ╔═╡ 9f58f7f1-ab35-499b-aefe-6bdecd137e1d
+prevfloat(Inf)
 
-# ╔═╡ a464fd5f-eecf-4350-b9de-b50471a2e3f2
-significand(random_float)
+# ╔═╡ 5f27ff9c-2d86-4d8c-9d95-025e72e56c95
+typemin(Float64)
 
-# ╔═╡ 444d4e29-954a-4f37-afcc-e9cc85b7bf7b
-let
-	s = bitstring(random_float)
-	Markdown.parse("""
-```
-   $(s[1])  -  $(s[2:9])  -  $(s[10:end])
+# ╔═╡ 21bfac50-1d7d-4737-bf1e-aef799353734
+bitstring(-Inf)
 
-(sign)  (exponent)          (mantissa)
-```
-""")
-end
+# ╔═╡ 129207a7-b88a-47bd-a853-e5db71ed65c5
+prevfloat(0.0)
 
-# ╔═╡ ae52c04f-d5db-451d-b57f-da8c6564c4ab
-md"Floating point numbers is a poor approximation to field, but having balanced absolute error and relative error."
+# ╔═╡ d49a05c0-e60d-471d-ba19-e5e9708fa4f7
+nextfloat(0.0)
 
-# ╔═╡ 718af44f-b2ca-4544-8368-bfe35ae0f52f
+# ╔═╡ 7275c2ec-996a-4335-ac8b-9b94719a765f
+Inf-Inf
+
+# ╔═╡ 1eab94a9-c00d-4d12-95fb-08f26d05b4d4
+0 * NaN
+
+# ╔═╡ ccc49ad6-e8c2-479c-8341-fc16877b50cf
+bitstring(NaN)
+
+# ╔═╡ 1d75ba45-2b66-47b2-a528-0e30e982c5e7
+md"## The distribution of floating point numbers"
+
+# ╔═╡ 1baa4439-9325-4e7f-bdd5-53410a200d41
 md"The distribution of floating point numbers"
 
-# ╔═╡ 4d67d9e3-b6fa-4083-acbd-42372d1453f0
+# ╔═╡ 9513bd15-5789-4a56-961b-175f8dabfdaf
 @xbind npoints Slider(1:10000; default=1000, show_value=true)
 
-# ╔═╡ 428c7b7a-cd18-4fcf-b6bb-22b082df0fc1
+# ╔═╡ 38e23738-f7fb-4b9e-9067-200d42f6a1e4
 xs = filter(!isnan, reinterpret(Float64, rand(Int64, npoints)));
 
-# ╔═╡ a5249298-ecc4-41ab-8f91-0eac5f8fac53
+# ╔═╡ 8fd31129-f150-4114-afa5-8106dba8009f
 md"From the linear scale plot, you will see data concentrated around 0
 (each vertical bar is a sample)"
 
-# ╔═╡ 3304f219-9e80-464c-8d8d-1a6f7ad4f49e
+# ╔═╡ e59b8bb2-95df-492e-bd15-24a1de2573f5
 scatter(xs, zeros(length(xs)), xlim=(-1e300, 1e300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
 
-# ╔═╡ 52668889-6385-4e7b-b12b-6d6167966f3e
+# ╔═╡ c64ed02d-0c62-4cab-9bcf-35dfbfedddc6
 md"If we use logarithmic x-axis"
 
-# ╔═╡ 027c7d70-422d-4605-95b4-7eee44fa9cc3
-@xbind smearing_factor Slider(0.1:0.1:5.0; show_value=true, default=0.5)
+# ╔═╡ c13955ef-4986-4d56-8e1e-48c6becd213a
+@xbind smearing_factor Slider(0.1:0.1:5.0; show_value=true, default=1.0)
 
-# ╔═╡ 48c5f752-c578-4443-939e-ba976e50300a
+# ╔═╡ be7247b8-ac5d-4b3a-ba3b-e8da37ef1e08
 let
 	logxs = sign.(xs) .* log10.(abs.(xs))
 	ax = scatter(logxs, zeros(length(xs)), xlim=(-300, 300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
 	a = -300:300
+	# Smoothen the distribution with Lorentz function
 	m = 1/π/smearing_factor ./ (((a' .- logxs) ./ smearing_factor) .^ 2 .+ 1)
 	plot!(ax, a, dropdims(sum(m, dims=1), dims=1); label="probability")
 end
@@ -494,7 +443,7 @@ List all statements not satisfied by the floating point numbers.
 """
 
 # ╔═╡ 9306f25a-f4f5-4b19-973d-76845a746510
-md"# Are we ready to go? Missing semester (20min)"
+md"# To get started: Missing semester (20min)"
 
 # ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
 md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
@@ -550,15 +499,7 @@ I will show you some cheatsheets about
 
 Please bring your laptops and get your hands dirty!
 If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
-
-## Prepare better
-If you want to install Linux operating system before coming to the lecture. You can use either of the following two approaches
-* [Ubuntu 22.04 system](https://releases.ubuntu.com/22.04/)
-* [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install)
 """
-
-# ╔═╡ a1ff2e4c-2416-4cb1-9df7-8e2437558287
-md"# Resources"
 
 # ╔═╡ ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
 md"""## Pluto notebook using guide:
@@ -578,12 +519,6 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─0fe286ff-1359-4eb4-ab6c-28b231f9d56e
 # ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
 # ╟─d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-# ╟─af0db2a7-41ca-4baf-89f3-4a416a062382
-# ╟─26c56925-c43b-4116-9e17-16e8be2b0631
-# ╟─4d23d2f6-eb42-4d83-ad0d-bf6ab70973fd
-# ╟─16be9535-6b9e-40fa-902f-ae7aaeb114e1
-# ╟─1a06726c-7338-4424-81f3-eaed86a0fdb2
-# ╟─ce633741-5a25-4eda-a0f4-9050be226255
 # ╟─f36e7b45-193e-4028-aae5-352711b8406d
 # ╟─72924c3a-0bbe-4d74-b2a9-60b250db4ec2
 # ╟─163016e4-9133-4c61-a7ac-82e41e6db234
@@ -605,10 +540,6 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═07b3e56b-78fd-4894-b310-096281009764
 # ╠═cc2e0ab8-83cc-44fe-9782-eabee896bcc0
 # ╠═e51adfeb-3868-43c2-8f64-21bd1a4e8522
-# ╠═db99eaf3-4405-4a9d-8829-a87d9b7f2173
-# ╟─c3933eb5-15e0-4069-a3b1-947aba71adf2
-# ╠═430fcfbb-55ff-4388-a914-2c1a1c2a5e27
-# ╠═145808be-21ec-453b-afe2-22abd26f850f
 # ╟─9186b86b-88b1-4165-94ac-b738882a2c23
 # ╟─31d784e6-22b5-430a-a571-6aad7aaefee1
 # ╟─5a10796f-c084-451e-89f5-75ba8364f2d8
@@ -616,21 +547,26 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╠═c3db170e-20f0-4488-98b0-7a65090728a1
 # ╟─2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
 # ╠═27212a7a-fdd0-423d-a008-83c6f6e257c6
-# ╟─eb85aadf-4df9-4bf4-86c2-6fcf7f51d8d2
-# ╠═f3906df3-0c39-4de0-8412-722e48fce03b
-# ╠═92fac25b-a031-4a1e-9205-76e077cb2197
-# ╠═a464fd5f-eecf-4350-b9de-b50471a2e3f2
-# ╟─444d4e29-954a-4f37-afcc-e9cc85b7bf7b
-# ╟─ae52c04f-d5db-451d-b57f-da8c6564c4ab
-# ╠═f8fb15f6-00ef-4c5d-929d-fa3bdd1722a6
-# ╟─718af44f-b2ca-4544-8368-bfe35ae0f52f
-# ╟─4d67d9e3-b6fa-4083-acbd-42372d1453f0
-# ╠═428c7b7a-cd18-4fcf-b6bb-22b082df0fc1
-# ╟─a5249298-ecc4-41ab-8f91-0eac5f8fac53
-# ╟─3304f219-9e80-464c-8d8d-1a6f7ad4f49e
-# ╟─52668889-6385-4e7b-b12b-6d6167966f3e
-# ╟─027c7d70-422d-4605-95b4-7eee44fa9cc3
-# ╟─48c5f752-c578-4443-939e-ba976e50300a
+# ╠═e5c3c192-e398-4bb1-9933-6c6070b10756
+# ╠═c761fcf3-7386-437a-b37c-af256e189a10
+# ╠═9f58f7f1-ab35-499b-aefe-6bdecd137e1d
+# ╠═5f27ff9c-2d86-4d8c-9d95-025e72e56c95
+# ╠═21bfac50-1d7d-4737-bf1e-aef799353734
+# ╠═129207a7-b88a-47bd-a853-e5db71ed65c5
+# ╠═d49a05c0-e60d-471d-ba19-e5e9708fa4f7
+# ╠═7275c2ec-996a-4335-ac8b-9b94719a765f
+# ╠═1eab94a9-c00d-4d12-95fb-08f26d05b4d4
+# ╠═ccc49ad6-e8c2-479c-8341-fc16877b50cf
+# ╟─1d75ba45-2b66-47b2-a528-0e30e982c5e7
+# ╟─1baa4439-9325-4e7f-bdd5-53410a200d41
+# ╟─9513bd15-5789-4a56-961b-175f8dabfdaf
+# ╠═38e23738-f7fb-4b9e-9067-200d42f6a1e4
+# ╟─8fd31129-f150-4114-afa5-8106dba8009f
+# ╠═a88e6865-235b-428a-9546-5da2daa3e03c
+# ╠═e59b8bb2-95df-492e-bd15-24a1de2573f5
+# ╟─c64ed02d-0c62-4cab-9bcf-35dfbfedddc6
+# ╟─c13955ef-4986-4d56-8e1e-48c6becd213a
+# ╠═be7247b8-ac5d-4b3a-ba3b-e8da37ef1e08
 # ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
 # ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
 # ╟─13dabaa8-7310-4557-ad06-e64f566ca256
@@ -682,5 +618,4 @@ $(copycode("git clone https://github.com/GiggleLiu/ModernScientificComputing.git
 # ╟─d9e927a2-2c65-4f55-9de0-d7b5511156b5
 # ╟─a029e179-9c01-40f9-a23c-a5dd672740cb
 # ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
-# ╟─a1ff2e4c-2416-4cb1-9df7-8e2437558287
-# ╟─ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a
+# ╠═ea04c76e-df32-4bfe-a40c-6cd9a9c9a21a

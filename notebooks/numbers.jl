@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.19
 
 using Markdown
 using InteractiveUtils
@@ -17,7 +17,9 @@ end
 # ╔═╡ d0ce80b6-5a9c-4fb1-9bf0-b6046a756335
 begin
 	using Pkg
-	Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
+	if !isdefined(@__MODULE__, :PlutoLecturing)
+		Pkg.develop(path="https://github.com/GiggleLiu/PlutoLecturing.jl.git")
+	end
 	using PlutoLecturing
 	TableOfContents(aside=true)
 end
@@ -167,31 +169,6 @@ let
 	plot!(ax, a, dropdims(sum(m, dims=1), dims=1); label="probability")
 end
 
-# ╔═╡ d67e75b6-e728-4be3-bf5d-a3917f01e2c8
-md"""
-## Quiz: Field
-To define a commutative semiring with the addition operation $\oplus$ and the multiplication operation $\odot$ on a set $S$, the following relations must hold for any arbitrary three elements $a, b, c \in S$.
-
-```math
-\begin{align*}
-&\text{Closure of +: }(∀ a, b ∈ S) (a + b ∈ S)\\
-&\color{red}{\text{Existence of Inverses for +: }(∀ a ∈ S) (∃ (–a) ∈ S) (a + (–a) = e)}\\
-&\color{red}{\text{Associativity of +: }(∀ a, b, c ∈ S) (a + b + c = (a + b) + c = a + (b + c))}\\
-&\text{Existence of Identity for +: }(∃ e ∈ S) (∀ x ∈ S) (e + x = x + e = x)\\
-&\\
-&\text{Commutativity of +: }(∀ a, b ∈ S) (a + b = b + a)\\
-&\text{Closure of ×: }(∀ a, b ∈ S) (a × b ∈ S)\\
-&\color{red}{\text{Associativity of ×: }(∀ a, b, c ∈ S) (a × b × c = (a × b) × c = a × (b × c))}\\
-&\text{Existence of Identity for ×: }(∃ 1∈ S) (∀ x ∈ S) (1 × x = x × 1 = x)\\
-&\\
-&\text{Left Distributive Property: }(∀a, b, c ∈ S)(a × (b + c) = a × b + a × c)\\
-&\text{Right Distributive Property: }(∀a, b, c ∈ S)((a + b) × c = a × c + b × c)\\
-&\color{red}{\text{Existence of Inverses for ×: }(∀ a ∈ S) (a ≠ 0) (∃ a⁻¹ ∈ S) (a × a⁻¹ = 1)}\\
-&\text{Commutativity of ×: }(∀ a, b ∈ S) (a × b = b × a)
-\end{align*}
-```
-"""
-
 # ╔═╡ b3510c08-a39d-45a6-824b-1853a1b1df4d
 bitstring(Inf)
 
@@ -218,12 +195,6 @@ Inf-Inf
 
 # ╔═╡ 603fc7fc-65b4-46c9-821f-14b74422f278
 0 * NaN
-
-# ╔═╡ 6890826d-ec2f-4224-bf4d-bebeb74abf47
-2.31 + 1.2 - 1.2 == 2.31
-
-# ╔═╡ c126d10b-8d23-47cd-9e3c-567678f551f4
-0.1113 / 4.21e35 * 4.21e35 == 0.1113
 
 # ╔═╡ c87d26c2-0fd4-4abf-8161-7c68c269ea53
 md"## Roundoff error of floating point numbers"
@@ -443,7 +414,6 @@ fib_superfast(40)
 # ╟─982a2888-ae28-4114-98a4-6585dec65f0c
 # ╟─185ee1f1-98e4-4e89-80b2-1d810df8cf75
 # ╟─deaf96c2-6cb2-4c07-937f-b7d15633eb95
-# ╟─d67e75b6-e728-4be3-bf5d-a3917f01e2c8
 # ╠═b3510c08-a39d-45a6-824b-1853a1b1df4d
 # ╠═0b29449a-37ac-42b2-a6c9-38c7743e5a7d
 # ╠═342ea0f9-77d7-47d9-94d8-f1762ba7cae4
@@ -453,8 +423,6 @@ fib_superfast(40)
 # ╠═0ba0b49b-b8fa-417b-a5cf-3d629d26cc8f
 # ╠═c45109f1-06aa-490a-84f6-0904c192bbb7
 # ╠═603fc7fc-65b4-46c9-821f-14b74422f278
-# ╠═6890826d-ec2f-4224-bf4d-bebeb74abf47
-# ╠═c126d10b-8d23-47cd-9e3c-567678f551f4
 # ╟─c87d26c2-0fd4-4abf-8161-7c68c269ea53
 # ╟─79643734-c48c-47aa-a9f6-dc1ff010e843
 # ╟─761dc0c7-7cf2-4def-a404-bd1393df15b9

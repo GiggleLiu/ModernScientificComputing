@@ -36,3 +36,24 @@ Please check the following book as a reference.
 ### Week 12: Computational hard problems
 
 ### Week 13: Final exam
+
+# Tips
+
+1. How to open a Pluto notebook
+### How to play a notebook?
+1. Clone this Github repo to your local host.
+```bash
+git clone https://github.com/GiggleLiu/ModernScientificComputing.git
+```
+2. Install Pluto in Julia with `using Pkg; Pkg.add("Pluto")` and open it in a Julia REPL with
+```julia
+julia> using Pluto; Pluto.run(notebook="path/to/notebook.jl")
+```
+
+where the `"path/to/notebook.jl"` should be replaced by the path to the file under the `notebooks` folder.
+
+### Controls
+
+* Use $(kbd("Ctrl")) + $(kbd("Alt")) + $(kbd("P")) to toggle the presentation mode.
+* Use $(kbd("Ctrl")) + $(kbd("→")) / $(kbd("←")) to play the previous/next slide.
+"""
