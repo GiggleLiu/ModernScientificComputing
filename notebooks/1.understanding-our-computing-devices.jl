@@ -415,35 +415,23 @@ md"# Summarize
 3. how to measure the performance of a program with profiling
 "
 
-# ╔═╡ ab90a643-8648-400f-a1ef-90b946c76471
-md"""# Homework (10min)
-1. Estimate the computing power of your computing devices in unit of GFLOPS, you need to use `lscpu` and `lsmem` to support your result.
-2. Let us assume the distance between CPU and main memory is 10cm, show the minimum latency time (hint: information can not propagate fater than the light) and compare this time with the CPU clock time of your device.
-3. Google Neural Network Processing Unit (NPU), Field-Programmable Gate Array (FPGA)  and Tensor Processing Unit (TPU), and write a report about their features (Recommended length: 500 words).
-4. Is floating point numbers a well defined field? To define a field with the addition operation $+$ and the multiplication operation $\times$ on a set $S$, the following field axioms must hold.
-```math
-\begin{align*}
-&\text{Closure of +: }(∀ a, b ∈ S) (a + b ∈ S)\\
-&\text{Existence of Inverses for +: }(∀ a ∈ S) (∃ (–a) ∈ S) (a + (–a) = e)\\
-&\text{Associativity of +: }(∀ a, b, c ∈ S) (a + b + c = (a + b) + c = a + (b + c))\\
-&\text{Existence of Identity for +: }(∃ e ∈ S) (∀ x ∈ S) (e + x = x + e = x)\\
-&\\
-&\text{Commutativity of +: }(∀ a, b ∈ S) (a + b = b + a)\\
-&\text{Closure of ×: }(∀ a, b ∈ S) (a × b ∈ S)\\
-&\text{Associativity of ×: }(∀ a, b, c ∈ S) (a × b × c = (a × b) × c = a × (b × c))\\
-&\text{Existence of Identity for ×: }(∃ 1∈ S) (∀ x ∈ S) (1 × x = x × 1 = x)\\
-&\\
-&\text{Left Distributive Property: }(∀a, b, c ∈ S)(a × (b + c) = a × b + a × c)\\
-&\text{Right Distributive Property: }(∀a, b, c ∈ S)((a + b) × c = a × c + b × c)\\
-&\text{Existence of Inverses for ×: }(∀ a ∈ S) (a ≠ 0) (∃ a⁻¹ ∈ S) (a × a⁻¹ = 1)\\
-&\text{Commutativity of ×: }(∀ a, b ∈ S) (a × b = b × a)
-\end{align*}
-```
-List all statements not satisfied by the floating point numbers.
+# ╔═╡ 752a7d31-5065-4d13-86b8-63eb279d1f7b
+md"""
+# Next lecture
+We have have a $(highlight("coding seminar")).
+I will show you some cheatsheets about
+* Linux operation system
+* Vim
+* Git
+* SSH
+* Julia installation Guide
+
+Please bring your laptops and get your hands dirty!
+If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
 """
 
 # ╔═╡ 68176e03-544b-4a30-a096-c117c6625113
-md"## Strongly recommended reading"
+md"## Pre-reading"
 
 # ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
 md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
@@ -468,21 +456,6 @@ md"""
 !!! note
     *  Yellow backgrounded lectures are required by AMAT5315
     * (n - basic) is the reading order and the level of familiarity
-"""
-
-# ╔═╡ 752a7d31-5065-4d13-86b8-63eb279d1f7b
-md"""
-# Next time
-We have have a $(highlight("coding seminar")).
-I will show you some cheatsheets about
-* Linux operation system
-* Vim
-* Git
-* SSH
-* Julia installation Guide
-
-Please bring your laptops and get your hands dirty!
-If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
 """
 
 # ╔═╡ Cell order:
@@ -580,7 +553,6 @@ If you are already an expert, please let me know, I need some help in preparing 
 # ╠═d31f0924-aca0-446d-b06c-92a3daa65ae2
 # ╟─4fc93548-0253-4e09-b2a2-61f08818105d
 # ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
-# ╟─ab90a643-8648-400f-a1ef-90b946c76471
 # ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
 # ╟─68176e03-544b-4a30-a096-c117c6625113
 # ╟─103bf89d-c74a-4666-bfcb-8e50695ae971

@@ -5,7 +5,7 @@
 # *PART 1: Computing*
 ### Week 1: Understanding our computing devices
 * [Lecture notes](#)
-* [Pluto notebook](notebooks/1.understanding-our-computing-devices.jl) [[pdf](notebooks/1.understanding-our-computing-devices.pdf)]
+* [Pluto notebook](notebooks/1.understanding-our-computing-devices.jl) [[pdf](notebooks/1.understanding-our-computing-devices.pdf), [source](notebooks/1.understanding-our-computing-devices.jl)]
 
 ### Week 2: Get your computer ready for programming (Hands on)
 
