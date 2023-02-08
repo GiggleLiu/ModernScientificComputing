@@ -144,7 +144,7 @@ bitstring(typemax(Int64))
 md"## Floating point numbers"
 
 # ╔═╡ 31d784e6-22b5-430a-a571-6aad7aaefee1
-LocalResource("float-format.png")
+LocalResource("images/float-format.png")
 
 # ╔═╡ 5a10796f-c084-451e-89f5-75ba8364f2d8
 md"image source: https://en.wikipedia.org/wiki/IEEE_754"
