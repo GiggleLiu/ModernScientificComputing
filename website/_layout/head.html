@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {{if hasmath}} {{insert head_katex.html }}     {{end}}
   {{if hascode}} {{insert head_highlight.html }}   {{end}}
-  {{ifdef asciinema}}<link rel="stylesheet" href="/libs/asciinema/asciinema-player.css" type="text/css"/>{{end}}
-  {{ifdef asciinema}}<script src="/libs/asciinema/asciinema-player.min.js"></script>{{end}}
-  {{insert style.html}}
+  <link rel="stylesheet" href="/css/franklin.css">
+  <link rel="stylesheet" href="/css/basic.css">
+  <link rel="icon" href="/assets/favicon.png">
   {{isdef title}} <title>{{fill title}}</title>  {{end}}
 </head>
 <body>
-{{insert sidebar.html}}
+  {{insert header.html}}
+
 <!-- Content appended here -->

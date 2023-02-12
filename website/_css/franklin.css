@@ -334,3 +334,11 @@ code {
   border-radius: 0 10px 10px 0;
   border-left: 5px solid #4c9cf1;
 }
+
+ul {
+  margin-left: 15px;
+}
+
+ul li {
+  padding-left: 20px;
+}
