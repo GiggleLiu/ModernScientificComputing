@@ -15,6 +15,7 @@ ignore = ["node_modules/", "_ignore/"]
 generate_rss = true
 website_title = "Course AMAT5315"
 website_descr = "The modern way of learning scientific computing"
+prepath = "ModernScientificComputing"
 website_url = "https://giggleliu.github.io/ModernScientificComputing"
 +++
 
