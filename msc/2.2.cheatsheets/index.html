@@ -1,0 +1,92 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/ModernScientificComputing/libs/highlight/styles/github.min.css"> <link rel=stylesheet  href="/ModernScientificComputing/css/franklin.css"> <link rel=stylesheet  href="/ModernScientificComputing/css/basic.css"> <link rel=icon  href="/ModernScientificComputing/assets/favicon.jpg"> <title>2.2. Hands on: Linux, Vim and Git</title> <header> <div class=blog-name ><a href="/ModernScientificComputing/">Modern Scientific Computing</a></div> <nav> <ul> <li><a href="/ModernScientificComputing/">Home</a> </ul> <img src="/ModernScientificComputing/assets/msc2.jpg" id=menu-icon > </nav> </header> <div class=franklin-content ><h1 id=a_minimum_introduction_to_linux_vim_and_git ><a href="#a_minimum_introduction_to_linux_vim_and_git" class=header-anchor >A Minimum Introduction to Linux, Vim and Git</a></h1> <h2 id=a_cheatsheet_for_bash_scripting ><a href="#a_cheatsheet_for_bash_scripting" class=header-anchor >A cheatsheet for Bash scripting</a></h2> <p>Bash is a Unix shell and command language written by Brian Fox for the GNU Project. in Ubuntu, one can use <code>Ctrl</code> &#43; <code>Alt</code> &#43; <code>T</code> to open a bash shell. In a bash shell, we use <code>man command_name</code> to get help information related to a command, use <code>CTRL-C</code> to break a program and <code>CTRL-D</code> to exit a shell or an REPL.</p> <p>The bash grammar is well summarized in <a href="https://devhints.io/bash">this cheatsheet</a>. The following is a short list for commands that will be used in this course.</p> <pre><code class="julia hljs">man     <span class=hljs-comment ># an interface to the system reference manuals</span>
+
+ls      <span class=hljs-comment ># list directory contents</span>
+cd      <span class=hljs-comment ># change directory</span>
+mkdir   <span class=hljs-comment ># make directories</span>
+rm      <span class=hljs-comment ># remove files or directories</span>
+pwd     <span class=hljs-comment ># print name of current/working directory</span>
+
+echo    <span class=hljs-comment ># display a line of text</span>
+cat     <span class=hljs-comment ># concatenate files and print on the standard output</span>
+
+alias   <span class=hljs-comment ># create an alias for a command</span>
+
+lscpu   <span class=hljs-comment ># display information about the CPU architecture</span>
+lsmem   <span class=hljs-comment ># list the ranges of available memory with their online status</span>
+
+top     <span class=hljs-comment ># display Linux processes</span>
+ssh     <span class=hljs-comment ># the OpenSSH remote login client</span>
+vim     <span class=hljs-comment ># Vi IMproved, a programmer&#x27;s text editor</span>
+git     <span class=hljs-comment ># the stupid content tracker</span>
+
+useradd <span class=hljs-comment ># create a new user or update default new user information</span>
+passwd  <span class=hljs-comment ># change user password</span>
+
+tar     <span class=hljs-comment ># an archiving utility</span></code></pre> <p>A more detailed <a href="https://cheatography.com/davechild/cheat-sheets/linux-command-line/">cheat sheet</a> and a <a href="https://missing.csail.mit.edu/2020/shell-tools/">lecture</a> are available online.</p> <h3 id=ssh ><a href="#ssh" class=header-anchor >SSH</a></h3> <p><a href="https://en.wikipedia.org/wiki/Secure_Shell">SSH</a> is a cryptographic network protocol for operating network services securely over an unsecured network. Its most notable applications are remote login and command-line execution. To learn more about SSH and two factor authentication, please check <a href="https://missing.csail.mit.edu/2020/security/">this lecture</a>.</p> <p>With a host name &#40;the IP of the target machine to login&#41; and a user name, one can use the following command to login,</p> <pre><code class="bash hljs">ssh &lt;username&gt;@&lt;hostname&gt;</code></pre>
+<p>You will get logged in after inputting the password.</p>
+<h3 id=vim_editor ><a href="#vim_editor" class=header-anchor >Vim editor</a></h3>
+<p>A vim editor can be found in any Linux distribution, with or without a graphical user interface. To edit a file, just type <code>vim file_name</code>.</p>
+<pre><code class="julia hljs">i       <span class=hljs-comment ># input</span>
+:w      <span class=hljs-comment ># write</span>
+:q      <span class=hljs-comment ># quit</span>
+:q!     <span class=hljs-comment ># force quit without saving</span>
+
+u       <span class=hljs-comment ># undo</span>
+CTRL-R  <span class=hljs-comment ># redo</span></code></pre>
+<p>All the commands must be executed in the command mode &#40;the default mode when you start a vim editor&#41;, If you are currently in the input mode, you can alway type <code>ESC</code> to go back to the command mode.</p>
+<p>To learn more about Vim, please check this <a href="https://missing.csail.mit.edu/2020/editors/">lecture</a>.</p>
+<h2 id=a_cheatsheet_for_git_and_github ><a href="#a_cheatsheet_for_git_and_github" class=header-anchor >A cheatsheet for Git and Github</a></h2>
+<p>Git is a tool for version control. It is an important tool for programmers to keep track of the different versions of a program and collaborate with others. GitHub is a website and cloud-based service that helps developers store and manage their code, as well as track and control changes to their code. There are more than 100 git sub-commands, and the following is a short list to keep in mind.</p>
+<pre><code class="julia hljs"><span class=hljs-comment ># global config</span>
+git config  <span class=hljs-comment ># Get and set repository or global options</span>
+
+<span class=hljs-comment ># initialize a repo</span>
+git init    <span class=hljs-comment ># Create an empty Git repo or reinitialize an existing one</span>
+git clone   <span class=hljs-comment ># Clone repository into new directory</span>
+
+<span class=hljs-comment ># info</span>
+git status  <span class=hljs-comment ># Show the working tree status</span>
+git log     <span class=hljs-comment ># Show commit logs</span>
+git diff    <span class=hljs-comment ># Show changes between commits, commit and working tree, etc</span>
+
+<span class=hljs-comment ># work on a branch</span>
+git add     <span class=hljs-comment ># Add file contents to the index</span>
+git rm      <span class=hljs-comment ># Remove files from the working tree and from the index</span>
+git commit  <span class=hljs-comment ># Record changes to the repository</span>
+git reset   <span class=hljs-comment ># Reset current HEAD to the specified state</span>
+
+<span class=hljs-comment ># branch manipulation</span>
+git checkout <span class=hljs-comment ># Switch branches or restore working tree files</span>
+git branch  <span class=hljs-comment ># List, create, or delete branches</span>
+git merge   <span class=hljs-comment ># Join two or more development histories together</span>
+
+<span class=hljs-comment ># remote synchronization</span>
+git remote  <span class=hljs-comment ># Manage set of tracked repositories</span>
+git pull  <span class=hljs-comment ># Fetch from and integrate with another repo or a local branch</span>
+git fetch   <span class=hljs-comment ># Download objects and refs from another repository</span>
+git push    <span class=hljs-comment ># Update remote refs along with associated objects</span></code></pre>
+<p>A more detailed introduction could be found in this <a href="https://missing.csail.mit.edu/2020/version-control/">lecture</a>.</p>
+<h2 id=resources ><a href="#resources" class=header-anchor >Resources</a></h2>
+<ul>
+<li><p><a href="https://www.learnshell.org/">Learn Bash Shell</a></p>
+
+<li><p><a href="https://learngitbranching.js.org/">Learn Git</a></p>
+
+<li><p><a href="https://docs.github.com/en/get-started/quickstart/create-a-repo">How to create a new github repo</a></p>
+
+<li><p><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request">How to create a pull request</a></p>
+
+<li><p><a href="https://www.markdowntutorial.com/">Markdown Tutorial</a></p>
+
+<li><p>MIT online course <a href="https://missing.csail.mit.edu/2020/">missing semester</a>.</p>
+
+</ul>
+<div class=page-foot >
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> Jinguo Liu. Last modified: February 14, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div>
+    
+    
+        <script src="/ModernScientificComputing/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>
