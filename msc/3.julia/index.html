@@ -1,0 +1,82 @@
+<!doctype html> <html lang=en > <meta charset=UTF-8 > <meta name=viewport  content="width=device-width, initial-scale=1"> <link rel=stylesheet  href="/ModernScientificComputing/libs/highlight/styles/github.min.css"> <link rel=stylesheet  href="/ModernScientificComputing/css/franklin.css"> <link rel=stylesheet  href="/ModernScientificComputing/css/basic.css"> <link rel=icon  href="/ModernScientificComputing/assets/favicon.jpg"> <title>Julia setup guide</title> <header> <div class=blog-name ><a href="/ModernScientificComputing/">Modern Scientific Computing</a></div> <nav> <ul> <li><a href="/ModernScientificComputing/">Home</a> </ul> <img src="/ModernScientificComputing/assets/msc2.jpg" id=menu-icon > </nav> </header> <div class=franklin-content ><h1 id=julia_setup_guide ><a href="#julia_setup_guide" class=header-anchor >Julia setup guide</a></h1> <h2 id=installation_guide ><a href="#installation_guide" class=header-anchor >Installation Guide</a></h2> <h3 id=step_1_installupdate_julia_binary ><a href="#step_1_installupdate_julia_binary" class=header-anchor >Step 1. Install/Update Julia binary</a></h3> <p>For Linux/Mac users, the easiest way to install Julia language is to open a terminal and type the following command to install <a href="https://julialang.org/">Julia</a> with <a href="https://github.com/JuliaLang/juliaup">juliaup</a></p> <pre><code class="julia hljs">curl -fsSL https://install.julialang.org | sh</code></pre>
+<p>If you are suffering from the slow download speed. An alternative approach is downloading the corresponding Julia binary from the <a href="https://mirrors.tuna.tsinghua.edu.cn/help/julia-releases/">tuna mirror website</a>. After installing the binary, please set the Julia binary path properly if you want to start the Julia REPL by typing <code>julia</code> a bash shell.  To add Julia&#39;s bin folder &#40;with full path&#41; to <code>PATH</code> environment variable, you can edit the <code>~/.bashrc</code> &#40;or <code>~/.bash_profile</code>&#41; file. Open the file in your favourite editor and add a new line as follows:</p>
+<pre><code class="bash hljs"><span class=hljs-built_in >export</span> PATH=<span class=hljs-string >&quot;<span class=hljs-variable >$PATH</span>:/path/to/&lt;Julia directory&gt;/bin&quot;</span></code></pre>
+<p>Please check this <a href="https://julialang.org/downloads/platform/">official setup guide</a> to learn more.</p>
+<h3 id=step_2_configure_the_package_source_and_revise_in_the_startup_file ><a href="#step_2_configure_the_package_source_and_revise_in_the_startup_file" class=header-anchor >Step 2. Configure the package source and <code>Revise</code> in the startup file</a></h3>
+<p>First create a new file <code>.julia/config/startup.jl</code> with the following content</p>
+<pre><code class="julia hljs"><span class=hljs-literal >ENV</span>[<span class=hljs-string >&quot;JULIA_PKG_SERVER&quot;</span>] = <span class=hljs-string >&quot;http://cn-southeast.pkg.juliacn.com&quot;</span>
+<span class=hljs-keyword >try</span>
+    <span class=hljs-keyword >using</span> Revise
+<span class=hljs-keyword >catch</span> e
+    <span class=hljs-meta >@warn</span> <span class=hljs-string >&quot;fail to load Revise.&quot;</span>
+<span class=hljs-keyword >end</span></code></pre>
+<p>The contents in the startup file is executed immediately after you open a new Julia session.</p>
+<p>Then you need to install <a href="https://github.com/timholy/Revise.jl">Revise</a>, which is an Julia package that can greatly improve the using experience of Julia. To install <code>Revise</code>, open Julia REPL and type</p>
+<pre><code class="julia hljs">julia&gt; <span class=hljs-keyword >using</span> Pkg; Pkg.add(<span class=hljs-string >&quot;Revise&quot;</span>)</code></pre>
+<p>To exit Julia REPL, just press <code>CTRL</code>-<code>D</code>.</p>
+<p>As a final step, please check your Julia configuration by openning a Julia REPL and type</p>
+<pre><code class="julia hljs">julia&gt; versioninfo()
+Julia Version <span class=hljs-number >1.8</span><span class=hljs-number >.2</span>
+Commit <span class=hljs-number >36034</span>abf260 (<span class=hljs-number >2022</span>-<span class=hljs-number >09</span>-<span class=hljs-number >29</span> <span class=hljs-number >15</span>:<span class=hljs-number >21</span> UTC)
+Platform Info:
+  OS: Linux (x86_64-linux-gnu)
+  CPU: <span class=hljs-number >8</span> × Intel(R) Core(TM) i7-<span class=hljs-number >10510</span>U CPU @ <span class=hljs-number >1.80</span>GHz
+  WORD_SIZE: <span class=hljs-number >64</span>
+  LIBM: libopenlibm
+  LLVM: libLLVM-<span class=hljs-number >13.0</span><span class=hljs-number >.1</span> (ORCJIT, skylake)
+  Threads: <span class=hljs-number >1</span> on <span class=hljs-number >8</span> virtual cores
+Environment:
+  LD_LIBRARY_PATH = /usr/lib/x86_64-linux-gnu/gtk-<span class=hljs-number >3.0</span>/modules:
+  JULIA_PKG_SERVER = http://cn-southeast.pkg.juliacn.com</code></pre>
+<p>Please make sure your <code>JULIA_PKG_SERVER</code> is set properly.</p>
+<h4 id=step_3_download_an_editor_vscode ><a href="#step_3_download_an_editor_vscode" class=header-anchor >Step 3. Download an editor: VSCode</a></h4>
+<p>Install VSCode by downloading the correct binary for your platform from <a href="https://code.visualstudio.com/download">here</a>. Open VSCode and open the <code>Extensions</code> tab on the left side-bar of the window, search <code>Julia</code> and install the <a href="https://github.com/julia-vscode/julia-vscode">Julia extension</a>.</p>
+<p>You are ready to go, cheers&#33;</p>
+<h2 id=an_introduction_to_the_julia_repl ><a href="#an_introduction_to_the_julia_repl" class=header-anchor >An introduction to the Julia REPL</a></h2>
+<p>A Julia REPL has four modes,</p>
+<ol>
+<li><p>Julian mode is the default mode that can interpret your Julia code.</p>
+
+<li><p>Shell mode is the mode that you can run shell commands. Press <code>;</code> in the Julian mode and type</p>
+
+</ol>
+<pre><code class="julia hljs">shell&gt; date
+Sun Nov  <span class=hljs-number >6</span> <span class=hljs-number >10</span>:<span class=hljs-number >50</span>:<span class=hljs-number >21</span> PM CST <span class=hljs-number >2022</span></code></pre>
+<p>To return to the Julian mode, type the <code>Backspace</code> key.</p>
+<ol start=3 >
+<li><p>Package mode is the mode that you can manage packages. Press <code>&#93;</code> in the Julian mode and type</p>
+
+</ol>
+<pre><code class="julia hljs">(<span class=hljs-meta >@v1</span><span class=hljs-number >.8</span>) pkg&gt; st
+Status <span class=hljs-string >`~/.julia/environments/v1.8/Project.toml`</span>
+  [<span class=hljs-number >295</span>af30f] Revise v3<span class=hljs-number >.4</span><span class=hljs-number >.0</span></code></pre>
+<p>To return to the Julian mode, type the <code>Backspace</code> key.</p>
+<ol start=4 >
+<li><p>Help mode is the mode that you can access the docstrings of functions. Press <code>?</code> in the Julian mode and type</p>
+
+</ol>
+<pre><code class="julia hljs">help&gt; sum
+... docstring <span class=hljs-keyword >for</span> sum ...</code></pre>
+<p>To return to the Julian mode, type the <code>Backspace</code> key.</p>
+<p>Learn more from <a href="https://docs.julialang.org/en/v1/stdlib/REPL/">the official documentation about Julia REPL</a>.</p>
+<h2 id=using_pluto_notebooks ><a href="#using_pluto_notebooks" class=header-anchor >Using Pluto notebooks</a></h2>
+<p>To open a pluto notebook, you should have <code>Pluto</code> package installed in your global environment by typing in the Pkg mode</p>
+<pre><code class="julia hljs">pkg&gt; add Pluto</code></pre>
+<p>Copy-pasting the following command to the end of your <code>~/.bashrc</code> file enables you to open a pluto notebook from a Linux shell.</p>
+<pre><code class="bash hljs"><span class=hljs-built_in >alias</span> pluto=<span class=hljs-string >&#x27;julia -e &quot;using Pluto
+if length(ARGS) &gt; 0
+    notebook = ARGS[1]
+    Pluto.run(notebook=joinpath(pwd(), notebook))
+else
+    Pluto.run()
+end&quot;&#x27;</span></code></pre>
+<p>To open a Pluto notebook in your browser, please open a new shell and type <code>pluto path/to/pluto/file</code>. If the path is not provided, the command will open a the Pluto start up page in your browser.</p>
+<div class=page-foot >
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> Jinguo Liu. Last modified: February 14, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div>
+    
+    
+        <script src="/ModernScientificComputing/libs/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();hljs.configure({tabReplace: '    '});</script>
