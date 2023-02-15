@@ -1,0 +1,21 @@
+[ Info: (('j', 'i'), ('j', 'k'), ('k', 'i'), false)
+[ Info: c, c -> cc
+[ Info: c, cc -> c
+[ Info: cc, c -> cc
+[ Info: cc, cc -> cc
+[ Info: cc, cb -> bc
+[ Info: cb, bc -> cc
+[ Info: ac, cc -> ac
+┌ Warning: `timespacereadwrite_complexity(code, size_dict::Dict)` is deprecated, use `(contraction_complexity(code, size_dict)...,)` instead.
+│   caller = macro expansion at einsequence.jl:58 [inlined]
+└ @ Core ~/.julia/dev/OMEinsum/test/einsequence.jl:58
+[ Info: SetupBuildDirectory: setting up build directory.
+[ Info: Doctest: running doctests.
+[ Info: Skipped ExpandTemplates step (doctest only).
+[ Info: Skipped CrossReferences step (doctest only).
+[ Info: Skipped CheckDocument step (doctest only).
+[ Info: Skipped Populate step (doctest only).
+[ Info: Skipped RenderDocument step (doctest only).
+Test Summary: | Pass  Total     Time
+OMEinsum.jl   |  600    600  1m28.8s
+     Testing OMEinsum tests passed
