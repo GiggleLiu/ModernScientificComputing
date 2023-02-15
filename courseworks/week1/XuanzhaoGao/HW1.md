@@ -9,7 +9,7 @@
    $$
    and one loop on my CPU takes
    $$
-   t_{loop} = 1/(2.6e9) \sim 3.8 \times 10^{-8} s
+   t_{loop} = 1/(2.6e9) \sim 3.8 \times 10^{-10} s
    $$
    and these two times are almost the same.
 
