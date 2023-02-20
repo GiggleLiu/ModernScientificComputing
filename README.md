@@ -4,10 +4,12 @@
 
 # *PART 1: Computing*
 ### Week 1: Understanding our computing devices
-* Lecture notes [online soon]
+* [Lecture notes](https://giggleliu.github.io/ModernScientificComputing/msc/1.devices/)
 * Pluto notebook [[pdf](notebooks/1.understanding-our-computing-devices.pdf), [source](notebooks/1.understanding-our-computing-devices.jl)]
 
-### Week 2: Get your computer ready for programming (Hands on)
+### Week 2: Linux and Git (Hands on)
+* [Lecture notes](https://giggleliu.github.io/ModernScientificComputing/msc/2.1.opensource/)
+* [Cheat sheet](https://giggleliu.github.io/ModernScientificComputing/msc/2.2.cheatsheets/)
 
 ### Week 3: The Julia programming language
 
