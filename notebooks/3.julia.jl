@@ -133,11 +133,14 @@ c_factorial(1000)
 # ╔═╡ b460f115-2d18-4e0f-8732-0e8766c96888
 if benchmark_ccode @benchmark c_factorial(1000) end
 
-# ╔═╡ 3b840c20-cf23-4ccc-b6a9-f0fe34c10925
-md"## Executing a Pyhton Program"
-
 # ╔═╡ e7d36996-6a74-4183-aade-3f34b8fe4074
 md"[learn more about calling C code in Julia](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)"
+
+# ╔═╡ 28382c69-e63d-4b2a-851d-b05f5779b2b1
+md"Discussion: not all type specifications are nessesary."
+
+# ╔═╡ 3b840c20-cf23-4ccc-b6a9-f0fe34c10925
+md"## Executing a Pyhton Program"
 
 # ╔═╡ 652f473f-3ab5-417f-8ab9-8f3fd9d4f754
 md"Dynamic programming language does not require compiling"
@@ -200,7 +203,7 @@ md"## Julia compiling stages"
 md"### 1. You computer gets a Julia program"
 
 # ╔═╡ d2429055-58e9-4d84-894f-2e639723e078
-function jlfactorial(n::Int)
+function jlfactorial(n)
 	x = 1
 	for i in 1:n
     	x = x * i
@@ -234,7 +237,10 @@ with_terminal() do
 end
 
 # ╔═╡ 96af110d-ac2d-410a-bf6b-b0f40c09b883
-md"Sometimes, type can not be uniquely determined at the runtime."
+md"
+`::` means type assertion in Julia.
+
+Sometimes, type can not be uniquely determined at the runtime."
 
 # ╔═╡ f4667fb0-fd98-458e-bd3b-1c23d50209ed
 with_terminal() do
@@ -288,10 +294,86 @@ md"""## The key ingredients of performance
 * **JIT** compilation using the **LLVM** compiler framework.
 """
 
+# ╔═╡ 897abf5d-e9c8-446a-b2fc-64d43c7025b1
+md"# Multiple dispatch"
+
+# ╔═╡ ccdebde5-5d7e-4395-9a47-e6c82ff7d72e
+# the definition of an abstract type
+# L is the number of legs
+abstract type AbstractAnimal{L} end
+
+# ╔═╡ 992fd82a-a77e-42dd-a778-2eb38c4e82cd
+# the definition of a concrete type
+struct Dog <: AbstractAnimal{4}
+	color::String
+end
+
+# ╔═╡ cfdab8b5-e6b4-47b7-9e50-c2f6742ee35d
+md"`<:` is the symbol for sybtyping， `A <: B` means A is a subtype of B。"
+
+# ╔═╡ bac1adb2-6952-4d52-bdac-dd6a0879b770
+struct Cat <: AbstractAnimal{4}
+	color::String
+end
+
+# ╔═╡ 0b13e7f8-c101-4dec-9904-1ebc3231b3d6
+struct Cock <: AbstractAnimal{2}
+	gender::Bool
+end
+
+# ╔═╡ 86169c92-0891-4516-8c5d-ebcfcee128dc
+struct Human{FT <: Real} <: AbstractAnimal{2}
+	height::FT
+	function Human(height::T) where T <: Real
+		if height <= 0 || height > 300
+			error("The tall of a Human being must be in range 0~300, got $(height)")
+		end
+		return new{T}(height)
+	end
+end
+
+# ╔═╡ bb2445b8-35b5-4ae2-a688-308c7fafc497
+fight(a::AbstractAnimal, b::AbstractAnimal) = "draw"
+
+# ╔═╡ e6fc61d7-b163-481c-8a47-7697a24af1a8
+fight(dog::Dog, cat::Cat) = "win"
+
+# ╔═╡ 73dc694f-23c2-4816-9c72-65336e89c1c2
+fight(hum::Human, a::AbstractAnimal) = "win"
+
+# ╔═╡ a95c6a36-95df-487c-b98f-42431033930e
+fight(hum::AbstractAnimal, a::Human) = "loss"
+
+# ╔═╡ 4bed73a0-8ac6-40fc-8ece-58ed51092e6f
+@xbind define_human_fight CheckBox()
+
+# ╔═╡ ee7ae309-121e-424d-aa71-b020d4048595
+if define_human_fight
+	fight(hum::Human{T}, hum2::Human{T}) where T<:Real = hum.height > hum2.height ? "win" : "loss"
+end
+
+# ╔═╡ 0946c055-4b0c-4058-b073-15b9963dbacc
+md"The combination of two types."
+
+# ╔═╡ a703d5b9-0123-4a93-878b-2f9ca6791601
+fight(hum::Human, a::Union{Dog, Cat}) = "loss"
+
+# ╔═╡ 8e87ab3f-68b1-421a-b204-74ee71a3ab41
+fight(Human(170), Human(180))
+
+# ╔═╡ 3ca1d598-aefb-4d80-b8ff-8c5d0ec359cf
+fight(Dog("blue"), Cat("white"))
+
+# ╔═╡ fa5dd8c8-8f57-4b0a-86b9-6b1de7e4cff4
+md"`Union{TYPE1, TYPE2, ...}` can not be subtyped."
+
+# ╔═╡ c9e88a31-e7af-4884-a2a3-ccd147225f2f
+fight(Human(180), Cat("white"))
+
 # ╔═╡ 41f7fa54-647a-4223-94c6-4801cfd3b2c0
 md"""
-## Should a method be owned by a type/class?
-Implement function addition in Python.
+## Multiple dispatch is more powerful than object-oriented programming!
+Implement addition in Python.
 ```python
 class X:
   def __init__(self, num):
@@ -323,6 +405,9 @@ print(Y(3) + X(5))
 
 ```
 """
+
+# ╔═╡ 60a4cd54-da72-469b-986d-da7126990046
+md"Implement addition in Julia"
 
 # ╔═╡ 85d3e8a3-502e-4423-95de-b4dd599035aa
 # Julian style
@@ -425,7 +510,7 @@ Z(3) + Y(5)
 
 # ╔═╡ 2b3d5fa3-7b53-4dbb-bb80-586e98c082ec
 md"""
-## Julia function space is exponetially large!
+### Julia function space is exponetially large!
 Quiz: If a function $f$ has $k$ parameters, and the module has $t$ types, how many different functions can be generated?
 ```jula
 f(x::T1, y::T2, z::T3...)
@@ -440,80 +525,114 @@ class T1:
 ```
 """
 
+# ╔═╡ 976795fe-2d86-432a-b053-7425958ff349
+md"""
+## Summary
+* *Multiple dispatch* is a feature of some programming languages in which a function or method can be dynamically dispatched based on the $(highlight("run-time")) type.
+* Julia's mutiple dispatch provides exponential abstraction power comparing with an object-oriented language.
+* By carefully designed type system, we can program in an exponentially large function space.
+"""
+
 # ╔═╡ 8c355756-0524-4ac4-92e3-a164605b53a5
-md"""## Julia type system
+md"""# More on Julia's type system
 """
 
 # ╔═╡ 7b5418cb-f30a-42b7-a2d4-9db9166ed5bf
 md"""
-* primitive type, e.g. Float64, Int32, UInt8, Bool,
-* abstract type, a type for subtyping,
-* concrete type, leaf nodes of a type system.
+1. Abstract types, which may have declared subtypes and supertypes (a subtype relation is declared using the notation Sub <: Super) 
+2. Composite types (similar to C structs1), which have named fields and declared supertypes 
+3. Bits types, whose values are represented as bit strings, and which have declared supertypes 
+4. Tuples, immutable ordered collections of values 
+5. Union types, abstract types constructed from other types via set union
 """
-
-# ╔═╡ 2435a0f0-b146-4c28-9f51-7ed2aa3a9f9f
-md"""
-## Example
-"""
-
-# ╔═╡ ccdebde5-5d7e-4395-9a47-e6c82ff7d72e
-# the definition of an abstract type
-abstract type A end
-
-# ╔═╡ 992fd82a-a77e-42dd-a778-2eb38c4e82cd
-# the definition of a concrete type
-struct C <: A
-	member1::Float64
-	member2::Int
-end
 
 # ╔═╡ 8a1b06e6-c146-42db-ac79-b98bfe59e6d5
 md"""
 ### Numbers
 """
 
+# ╔═╡ e170eeea-0e8d-4932-aaea-fe306537a189
+md"#### Type hierachy in Julia is a tree (without multiple inheritance)"
+
 # ╔═╡ dd37e58c-6687-4c3e-87fa-677117113065
 PlutoLecturing.print_type_tree(Number)
 
-# ╔═╡ cfdab8b5-e6b4-47b7-9e50-c2f6742ee35d
-md"`<:` is the symbol for sybtyping， `A <: B` means A is a subtype of B。"
+# ╔═╡ 82975999-1fb9-4638-9218-5751d28bd420
+subtypes(AbstractFloat)
+
+# ╔═╡ 663946a8-7c04-431e-954b-79c43cca73a3
+supertype(Float64)
 
 # ╔═╡ bfb02ae8-1725-4446-a8f6-8a398765785a
-AbstractFloat <: Number
+AbstractFloat <: Real
+
+# ╔═╡ 3131a388-702d-4e79-960a-225650ca396b
+md"#### Abstract types does not have fields, while composite types have"
+
+# ╔═╡ f2d766d4-030e-4f98-838b-12e7610a658f
+Base.isabstracttype(Number)
+
+# ╔═╡ 05d70420-6b43-4877-b47a-558f95067a94
+# concrete type is more strict than composit
+Base.isconcretetype(Complex{Float64})
+
+# ╔═╡ 9e09ebdf-02ee-45c5-b242-c0bafc7f4426
+fieldnames(Number)
+
+# ╔═╡ 8d4c3a8a-a735-4924-a00b-a30ae8e206d0
+fieldnames(Complex)
+
+# ╔═╡ 1357484e-06e5-4536-9a8e-972e2fb84c8c
+md"#### We have only finite primitive types on a machine, they are those supported natively by computer instruction."
+
+# ╔═╡ ec549f07-b8b1-4938-8e80-895d587c41a9
+Base.isprimitivetype(Float64)
 
 # ╔═╡ cfc426d8-95dc-4d1b-8655-5b260ac6eafd
-md"`Any` is a parent type of any other type"
+md"#### `Any` is a super type of any other type"
 
 # ╔═╡ b83882d5-5c40-449d-b926-c87d191e504f
 Number <: Any
 
 # ╔═╡ 68f786f5-0f81-4185-8da6-8ac029831316
-md"A type contains two parts: type name and type parameters"
+md"#### A type contains two parts: type name and type parameters"
 
 # ╔═╡ e5a16795-bd1c-44f4-8676-2edb525cfa3a
 # TypeName{type parameters...}
 Complex{Float64}  # a commplex number with real and imaginary parts being Float64
 
-# ╔═╡ 8d4c3a8a-a735-4924-a00b-a30ae8e206d0
-fieldnames(Complex)
+# ╔═╡ c2e6de83-80f2-45a2-83a7-ba330df9bde1
+md"#### ComplexF64 is a bits type, it has fixed size."
 
-# ╔═╡ ec549f07-b8b1-4938-8e80-895d587c41a9
-Base.isprimitivetype(Float64)
+# ╔═╡ 0330f4a2-fbed-432c-8357-d7b6664ca983
+isbitstype(Complex{Float64})
 
-# ╔═╡ f2d766d4-030e-4f98-838b-12e7610a658f
-Base.isabstracttype(AbstractFloat)
+# ╔═╡ 702de85e-143f-4594-96c4-9745867f7b77
+sizeof(Complex{Float32})
 
-# ╔═╡ 05d70420-6b43-4877-b47a-558f95067a94
-Base.isconcretetype(Complex{Float64})
+# ╔═╡ 686fb408-819a-424c-ad24-47e7604fad34
+sizeof(Complex{Float64})
+
+# ╔═╡ 45dadca0-ee12-490d-b7a5-124d7b2123a8
+md"But `Complex{BigFloat}` is not"
+
+# ╔═╡ 99a7acc6-1d9e-4efb-a0e4-98abfcf238cc
+sizeof(Complex{BigFloat})
+
+# ╔═╡ 167fdd9b-cca3-4c9d-bd95-cb17055fd6aa
+md"The size of Complex{BigFloat} is not true! It returns the pointer size!"
 
 # ╔═╡ 3e60f6c6-059a-4623-8684-b97f2864aff9
 md"Quiz: Is complex number a concrete type?"
 
+# ╔═╡ f0a6bafc-25d0-4e75-b8de-91794c45f9bc
+md"#### A type can be neither abstract nor concrete."
+
 # ╔═╡ 835a120e-6495-40a1-81dc-9dc82dde33b3
 Base.isconcretetype(Complex)
 
-# ╔═╡ 7565059d-01cd-44bb-940b-b0bf4f42a366
-Base.isconcretetype(Complex{Float64})
+# ╔═╡ 9c88ca66-43e1-436f-b2ea-58d0e3a844a2
+Base.isabstracttype(Complex)
 
 # ╔═╡ ee9a30fe-2dd8-41d0-930d-a69df76d6fb2
 md"To represent a complex number with its real and imaginary parts being floating point numbers"
@@ -527,41 +646,11 @@ Complex{Float64} <: Complex{<:AbstractFloat}
 # ╔═╡ 38e615e7-de6b-4d98-b643-c288ab2a636f
 Complex{Float64} <: Complex{AbstractFloat}
 
-# ╔═╡ 077c6e89-e2f5-44d2-b116-b2be5e1f8f1a
-md"true or false？"
-
-# ╔═╡ ebab5603-29a0-43c2-847d-858b31438180
-isconcretetype(Complex{AbstractFloat})
-
-# ╔═╡ f6b6ad42-ffe6-4550-b600-ed1f9f76c75b
-md"They are different!"
-
-# ╔═╡ db6a0eb0-f296-483c-8202-71ba41112e84
-vany = Any[]
-
-# ╔═╡ 5fe33249-e003-4f7a-b3ee-dcf377bf179a
-vany isa Vector{Any}
-
-# ╔═╡ 6f2cc362-e645-4f88-b6a9-d2133294416c
-vany isa Vector{<:Any}
-
-# ╔═╡ 1020a949-d3a0-46b2-9f67-a518a59c481d
-push!(vany, "a")
-
-# ╔═╡ 9b7c0da5-0f77-43c4-bcfa-541ab47c99df
-vfloat64 = Float64[]
-
-# ╔═╡ 1efcfa4a-7cb9-487b-a50d-752eebc3d796
-vfloat64 isa Vector{<:Any}
-
-# ╔═╡ 1ca44ba4-cdaa-4af8-896f-8f4ee3d28cd0
-vfloat64 isa Vector{Any}
-
-# ╔═╡ b48d3acd-79ca-430c-8856-90c1638325e4
-push!(vfloat64, "a")
+# ╔═╡ ce9b4b44-c486-4db2-a222-4b322b1c5aa0
+Base.isconcretetype(Complex{<:AbstractFloat})
 
 # ╔═╡ c9541faf-58e6-4e7f-b5d1-9dbdf88ec1ff
-md"We use `Union` to represent the union of two types"
+md"#### We use `Union` to represent the union of two types"
 
 # ╔═╡ 3eb0b70e-8c24-4f4b-8a93-f578800cbf98
 Union{AbstractFloat, Complex} <: Number
@@ -569,90 +658,74 @@ Union{AbstractFloat, Complex} <: Number
 # ╔═╡ 75e320db-ab50-4bd3-9d7a-5b02b0612c80
 Union{AbstractFloat, Complex} <: Real
 
+# ╔═╡ 98d415e8-80fd-487c-b1c3-d561ae254967
+md"NOTE: it is similar to multiple inheritance, but `Union` can not have subtype!"
+
 # ╔═╡ e7dacddd-7122-4b85-b582-68c5c4d5e5c9
-md"Make an alias for a type name"
+md"#### You can make an alias for a type name if you think it is too long"
 
 # ╔═╡ fd4b6587-ae17-4bee-9e1b-e8f3f512304e
 FloatAndComplex{T} = Union{T, Complex{T}} where T<:AbstractFloat
 
-# ╔═╡ 77cbbe31-43a7-4f96-8138-fbaff26a3a01
-md"## Defining functions"
+# ╔═╡ 8eb05a38-63ba-4660-a034-20cbf38101be
+md"## Array types and speed"
 
-# ╔═╡ 5f39a607-7154-4043-9c24-e0c93e89d97c
-begin
-	# fallback
-	function roughly_equal(x::Number, y::Number)
-		@info "(::Number, ::Number)"
-		x ≈ y   # type with \approx<TAB>
-	end
-	function roughly_equal(x::AbstractFloat, y::Number)
-		@info "(::AbstractFloat, ::Number)"
-		-10 * eps(x) < x - y < 10 * eps(x)
-	end
-	function roughly_equal(x::Number, y::AbstractFloat)
-		@info "(::Number, ::AbstractFloat)"
-		-10 * eps(y) < x - y < 10 * eps(y)
-	end
-end
+# ╔═╡ fce7d595-2787-4aae-a2cf-867586c64a1a
+md"#### Any type vector is flexible. You can add any element into it."
 
-# ╔═╡ 7eb69246-261e-491b-9762-325c9e5563bd
-# `methods` is different from `methodinstances` in MethodAnalysis. It returns method definitions rather than compiled binaries.
-methods(roughly_equal)
+# ╔═╡ db6a0eb0-f296-483c-8202-71ba41112e84
+vany = Any[]  # same as vany = []
 
-# ╔═╡ cb81069a-6e39-42e3-ac4b-a90f0f062e1c
-roughly_equal(3.0, 3)  # case 1
+# ╔═╡ 5fe33249-e003-4f7a-b3ee-dcf377bf179a
+typeof(vany)
 
-# ╔═╡ 68da59a5-0e50-4eb9-8f3c-774033309817
-md"The most concrete one wins"
+# ╔═╡ 1020a949-d3a0-46b2-9f67-a518a59c481d
+push!(vany, "a")
 
-# ╔═╡ dbe03d81-ac8c-40cc-b5de-d64ced95b5eb
-roughly_equal(3, 3)    # case 2
+# ╔═╡ 3964d728-5e17-4200-b2ec-9a010657cfa4
+push!(vany, 1)
 
-# ╔═╡ 5e1b9705-d086-4654-9af3-de8e2a1bfb67
-roughly_equal(3.0, 3.0)
+# ╔═╡ b9adf808-11cc-484d-862b-1e624aebe8a2
+md"#### Fixed typed vector is more restrictive."
 
-# ╔═╡ dea0f941-9e26-43bd-b846-066c2af579f9
-md"""Exponential abstraction power brings the ambiguity error
-```julia
-function roughly_equal(x::AbstractFloat, y::AbstractFloat)
-	@info "(::AbstractFloat, ::AbstractFloat)"
-	-10 * eps(y) < x - y < 10 * eps(y)
-end
-```"""
+# ╔═╡ 9b7c0da5-0f77-43c4-bcfa-541ab47c99df
+vfloat64 = Float64[]
 
-# ╔═╡ 2484c94c-9bcc-4096-a138-7c9e4fefddf7
-md"Quiz: how many `f` method instances do we have now?"
+# ╔═╡ 1efcfa4a-7cb9-487b-a50d-752eebc3d796
+vfloat64 |> typeof
 
-# ╔═╡ 3b620367-9d60-49d4-b274-10e510be354f
-methodinstances(roughly_equal)
+# ╔═╡ b48d3acd-79ca-430c-8856-90c1638325e4
+push!(vfloat64, "a")
 
-# ╔═╡ f35cb384-17c5-43f0-95c8-68a43fdc657e
-md"Align the type parameters"
+# ╔═╡ a4158324-82ef-4d09-8fd7-59867d301c14
+md"#### But type stable vectors are faster!"
 
-# ╔═╡ de071f25-4188-4066-a87c-9e6ee2b987e6
-begin
-	function lmul(x::Complex{T1}, y::AbstractArray{<:Complex{T2}}) where {T1<:Real, T2<:Real}
-		@info "(::Complex{T1}, ::AbstractArray{<:Complex{T2}}) where {T1<:Real, T2<:Real}"
-		x .* y
-	end
-	function lmul(x::Complex{T}, y::AbstractArray{<:Complex{T}}) where T<:Real
-		@info "(::Complex{T}, ::AbstractArray{<:Complex{T}}) where T<:Real"
-		x .* y
+# ╔═╡ 08a86fcb-da29-407b-9914-73379c703b86
+@xbind run_any_benchmark CheckBox()
+
+# ╔═╡ a252de65-257b-422d-a612-5e85a30ea0c9
+if run_any_benchmark
+	let biganyv = collect(Any, 1:2:20000)
+		@benchmark for i=1:length($biganyv)
+			$biganyv[i] += 1
+		end
 	end
 end
 
-# ╔═╡ 020744e9-e13f-4947-b339-e2c846f1b26c
-lmul(3.0im, randn(ComplexF64, 3, 3))
+# ╔═╡ 26a8f8bb-de04-459e-b4e4-8e01b14328a7
+@xbind run_float_benchmark CheckBox()
 
-# ╔═╡ 9c434355-bb49-42e5-b766-d8820dd2bf7a
-lmul(3im, randn(ComplexF64, 3, 3))
+# ╔═╡ 8fe44a3b-7c42-4f93-87b0-6b2110d453f7
+if run_float_benchmark
+	let bigfloatv = collect(Float64, 1:2:20000)
+		@benchmark for i=1:length($bigfloatv)
+			$bigfloatv[i] += 1
+		end
+	end
+end
 
-# ╔═╡ 976795fe-2d86-432a-b053-7425958ff349
-md"""
-# Summary
-* Julia's mutiple dispatch provides exponential abstraction power comparing with an object-oriented language.
-* By carefully designed type system, we can program in an exponentially large function space.
-"""
+# ╔═╡ 28f4a4eb-5bf6-4583-8bb7-34d387a6e0db
+md"# Array and broadcasting"
 
 # ╔═╡ b379b6e0-0f20-43ab-aa1e-5fca3ccfb190
 md"""
@@ -727,23 +800,60 @@ end
 # ╔═╡ e7330666-d05e-4dc5-91da-2375351d0c54
 md"[Learn more](https://docs.julialang.org/en/v1/stdlib/Test/)"
 
-# ╔═╡ b05835b0-f111-42e7-bf62-c20bb1fbbba0
-md"""
-## Version control and dependency resolving
-"""
-
-# ╔═╡ 043a14db-7a97-464d-94f5-fb690b869d18
-md"`Yao` as an example"
-
-# ╔═╡ 51090bfe-b5c6-4529-936f-d79babd44009
-md"## PkgTemplates
-"
-
 # ╔═╡ 3907b528-0d42-4b8e-b16b-1e66a27d8eaf
 md"""
-## Case study: Happy Molecules
+## Case study: Create a package like HappyMolecules
+With `PkgTemplates`.
+
 [https://github.com/CodingThrust/HappyMolecules.jl](https://github.com/CodingThrust/HappyMolecules.jl)
 """
+
+# ╔═╡ 8f378774-ee4f-4778-b677-147209254164
+md"
+# Homework
+##### 0. Fill the following form
+|    | is concrete |  is primitive | is abstract | is bits type | is super type |
+| --- | --- | --- | --- | --- | --- |
+| ComplexF64 |
+| Complex{AbstractFloat} |
+| Complex{<:AbstractFloat} |
+| AbstractFloat |
+| Union{Float64, ComplexF64} |
+| Int32 |
+| Array{Float32, 2} |
+| Matrix{Float32} |
+
+##### 1. Implement the two dimensional brownian motion
+ Brownian motion in two dimension is composed of cumulated sumummation of a sequence of normally distributed random displacements, that is Brownian motion can be simulated by successive adding terms of random normal distribute numbernamely:
+```math
+\begin{align}
+& \mathbf x(t=0) \sim N(\mathbf{0}, \mathbf{I})\\
+& \mathbf x(t=1) \sim \mathbf x(t=0) + N(\mathbf{0}, \mathbf{I})\\
+& \mathbf x(t=2) \sim \mathbf x(t=1) + N(\mathbf{0}, \mathbf{I})\\
+&\ldots
+\end{align}
+```
+where $N(\mathbf \mu, \mathbf{\Sigma})$ is a [multivariate normal distribution](https://en.wikipedia.org/wiki/Multivariate_normal_distribution).
+
+Task: Implement the algorithm and plot the path in a two dimensional space.
+
+Hint: you can make a plot with [`Makie`](https://docs.makie.org/stable/).
+
+##### 2. Solve the `3x+1` problem?
+
+The 3x+1 problem asks the following:
+> Suppose we start with a positive integer, and if it is odd then multiply it by 3 and add 1, and if it is even, divide it by 2. Then repeat this process as long as you can. Do you eventually reach the integer 1, no matter what you started with?
+
+For instance, starting with 5, it is odd, so we apply 3x+1. We get 16, which is even, so we divide by 2. We get 8, and then 4, and then 2, and then 1. So yes, in this case, we eventually end up at 1.
+
+Task: Verify this hypothesis to some big number.
+"
+
+# ╔═╡ ab2d522a-14ab-43b3-9eb0-0c4015e04679
+md"# Live coding"
+
+# ╔═╡ 930e39d2-80b9-4250-bdfe-477857b2f6ea
+livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/1.basic/main.cast")
 
 # ╔═╡ dca6c9d8-0074-45bf-b840-d36c24855174
 md"""
@@ -802,12 +912,6 @@ TropicalGEMM: A BLAS for tropical numbers.
 ![](https://github.com/TensorBFS/TropicalGEMM.jl/raw/master/benchmarks/benchmark-float64.png)
 """
 
-# ╔═╡ ab2d522a-14ab-43b3-9eb0-0c4015e04679
-md"# Live coding"
-
-# ╔═╡ 930e39d2-80b9-4250-bdfe-477857b2f6ea
-livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/1.basic/main.cast")
-
 # ╔═╡ Cell order:
 # ╠═39479e02-fc99-4b27-ae04-b2ef94f24cf0
 # ╠═cb5259ae-ce92-4197-8f51-bf6d9e371a25
@@ -831,8 +935,9 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 # ╠═bd50a691-503a-4ab0-a836-ea380a1931ae
 # ╟─63fe0c9a-365c-4c9b-a26d-56faf24a5f85
 # ╠═b460f115-2d18-4e0f-8732-0e8766c96888
-# ╟─3b840c20-cf23-4ccc-b6a9-f0fe34c10925
 # ╟─e7d36996-6a74-4183-aade-3f34b8fe4074
+# ╟─28382c69-e63d-4b2a-851d-b05f5779b2b1
+# ╟─3b840c20-cf23-4ccc-b6a9-f0fe34c10925
 # ╟─652f473f-3ab5-417f-8ab9-8f3fd9d4f754
 # ╠═0cbe52d2-6661-4712-b367-0f57c5e4e3c2
 # ╠═dfd977be-12cb-4f68-9425-2c09cf69232a
@@ -867,7 +972,27 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 # ╟─8d726b29-6215-49b8-a93b-6966702ecc16
 # ╠═6b6d4a14-f6cf-4cbe-87eb-7e5f6874fb2e
 # ╟─ac46f30f-a86a-481d-af18-b0ea5129e949
+# ╟─897abf5d-e9c8-446a-b2fc-64d43c7025b1
+# ╠═ccdebde5-5d7e-4395-9a47-e6c82ff7d72e
+# ╠═992fd82a-a77e-42dd-a778-2eb38c4e82cd
+# ╟─cfdab8b5-e6b4-47b7-9e50-c2f6742ee35d
+# ╠═bac1adb2-6952-4d52-bdac-dd6a0879b770
+# ╠═0b13e7f8-c101-4dec-9904-1ebc3231b3d6
+# ╠═86169c92-0891-4516-8c5d-ebcfcee128dc
+# ╠═bb2445b8-35b5-4ae2-a688-308c7fafc497
+# ╠═e6fc61d7-b163-481c-8a47-7697a24af1a8
+# ╠═73dc694f-23c2-4816-9c72-65336e89c1c2
+# ╠═a95c6a36-95df-487c-b98f-42431033930e
+# ╠═8e87ab3f-68b1-421a-b204-74ee71a3ab41
+# ╟─4bed73a0-8ac6-40fc-8ece-58ed51092e6f
+# ╠═ee7ae309-121e-424d-aa71-b020d4048595
+# ╠═3ca1d598-aefb-4d80-b8ff-8c5d0ec359cf
+# ╟─0946c055-4b0c-4058-b073-15b9963dbacc
+# ╠═a703d5b9-0123-4a93-878b-2f9ca6791601
+# ╟─fa5dd8c8-8f57-4b0a-86b9-6b1de7e4cff4
+# ╠═c9e88a31-e7af-4884-a2a3-ccd147225f2f
 # ╟─41f7fa54-647a-4223-94c6-4801cfd3b2c0
+# ╟─60a4cd54-da72-469b-986d-da7126990046
 # ╠═85d3e8a3-502e-4423-95de-b4dd599035aa
 # ╠═513b6cf8-de61-4245-8cdb-91ad1f1a485e
 # ╠═5295d636-51af-4c65-a9a8-e379cd52d52d
@@ -887,61 +1012,64 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 # ╠═bb6bd575-690f-4165-84f7-3126eefc2ce4
 # ╠═a6dba5a5-d27f-48fa-880a-cfa87de22a93
 # ╟─2b3d5fa3-7b53-4dbb-bb80-586e98c082ec
+# ╟─976795fe-2d86-432a-b053-7425958ff349
 # ╟─8c355756-0524-4ac4-92e3-a164605b53a5
 # ╟─7b5418cb-f30a-42b7-a2d4-9db9166ed5bf
-# ╟─2435a0f0-b146-4c28-9f51-7ed2aa3a9f9f
-# ╠═ccdebde5-5d7e-4395-9a47-e6c82ff7d72e
-# ╠═992fd82a-a77e-42dd-a778-2eb38c4e82cd
 # ╟─8a1b06e6-c146-42db-ac79-b98bfe59e6d5
+# ╟─e170eeea-0e8d-4932-aaea-fe306537a189
 # ╠═dd37e58c-6687-4c3e-87fa-677117113065
-# ╟─cfdab8b5-e6b4-47b7-9e50-c2f6742ee35d
+# ╠═82975999-1fb9-4638-9218-5751d28bd420
+# ╠═663946a8-7c04-431e-954b-79c43cca73a3
 # ╠═bfb02ae8-1725-4446-a8f6-8a398765785a
+# ╟─3131a388-702d-4e79-960a-225650ca396b
+# ╠═f2d766d4-030e-4f98-838b-12e7610a658f
+# ╠═05d70420-6b43-4877-b47a-558f95067a94
+# ╠═9e09ebdf-02ee-45c5-b242-c0bafc7f4426
+# ╠═8d4c3a8a-a735-4924-a00b-a30ae8e206d0
+# ╟─1357484e-06e5-4536-9a8e-972e2fb84c8c
+# ╠═ec549f07-b8b1-4938-8e80-895d587c41a9
 # ╟─cfc426d8-95dc-4d1b-8655-5b260ac6eafd
 # ╠═b83882d5-5c40-449d-b926-c87d191e504f
 # ╟─68f786f5-0f81-4185-8da6-8ac029831316
 # ╠═e5a16795-bd1c-44f4-8676-2edb525cfa3a
-# ╠═8d4c3a8a-a735-4924-a00b-a30ae8e206d0
-# ╠═ec549f07-b8b1-4938-8e80-895d587c41a9
-# ╠═f2d766d4-030e-4f98-838b-12e7610a658f
-# ╠═05d70420-6b43-4877-b47a-558f95067a94
+# ╟─c2e6de83-80f2-45a2-83a7-ba330df9bde1
+# ╠═0330f4a2-fbed-432c-8357-d7b6664ca983
+# ╠═702de85e-143f-4594-96c4-9745867f7b77
+# ╠═686fb408-819a-424c-ad24-47e7604fad34
+# ╟─45dadca0-ee12-490d-b7a5-124d7b2123a8
+# ╠═99a7acc6-1d9e-4efb-a0e4-98abfcf238cc
+# ╟─167fdd9b-cca3-4c9d-bd95-cb17055fd6aa
 # ╟─3e60f6c6-059a-4623-8684-b97f2864aff9
+# ╟─f0a6bafc-25d0-4e75-b8de-91794c45f9bc
 # ╠═835a120e-6495-40a1-81dc-9dc82dde33b3
-# ╠═7565059d-01cd-44bb-940b-b0bf4f42a366
+# ╠═9c88ca66-43e1-436f-b2ea-58d0e3a844a2
 # ╟─ee9a30fe-2dd8-41d0-930d-a69df76d6fb2
 # ╠═0fb42584-110c-479b-afb4-22b7d7ffca96
 # ╠═dfeff985-cd21-4171-b974-af4f8a159268
 # ╠═38e615e7-de6b-4d98-b643-c288ab2a636f
-# ╠═077c6e89-e2f5-44d2-b116-b2be5e1f8f1a
-# ╠═ebab5603-29a0-43c2-847d-858b31438180
-# ╟─f6b6ad42-ffe6-4550-b600-ed1f9f76c75b
-# ╠═db6a0eb0-f296-483c-8202-71ba41112e84
-# ╠═5fe33249-e003-4f7a-b3ee-dcf377bf179a
-# ╠═6f2cc362-e645-4f88-b6a9-d2133294416c
-# ╠═1020a949-d3a0-46b2-9f67-a518a59c481d
-# ╠═9b7c0da5-0f77-43c4-bcfa-541ab47c99df
-# ╠═1efcfa4a-7cb9-487b-a50d-752eebc3d796
-# ╠═1ca44ba4-cdaa-4af8-896f-8f4ee3d28cd0
-# ╠═b48d3acd-79ca-430c-8856-90c1638325e4
+# ╠═ce9b4b44-c486-4db2-a222-4b322b1c5aa0
 # ╟─c9541faf-58e6-4e7f-b5d1-9dbdf88ec1ff
 # ╠═3eb0b70e-8c24-4f4b-8a93-f578800cbf98
 # ╠═75e320db-ab50-4bd3-9d7a-5b02b0612c80
+# ╟─98d415e8-80fd-487c-b1c3-d561ae254967
 # ╟─e7dacddd-7122-4b85-b582-68c5c4d5e5c9
 # ╠═fd4b6587-ae17-4bee-9e1b-e8f3f512304e
-# ╟─77cbbe31-43a7-4f96-8138-fbaff26a3a01
-# ╠═5f39a607-7154-4043-9c24-e0c93e89d97c
-# ╠═7eb69246-261e-491b-9762-325c9e5563bd
-# ╠═cb81069a-6e39-42e3-ac4b-a90f0f062e1c
-# ╟─68da59a5-0e50-4eb9-8f3c-774033309817
-# ╠═dbe03d81-ac8c-40cc-b5de-d64ced95b5eb
-# ╠═5e1b9705-d086-4654-9af3-de8e2a1bfb67
-# ╟─dea0f941-9e26-43bd-b846-066c2af579f9
-# ╟─2484c94c-9bcc-4096-a138-7c9e4fefddf7
-# ╠═3b620367-9d60-49d4-b274-10e510be354f
-# ╟─f35cb384-17c5-43f0-95c8-68a43fdc657e
-# ╠═de071f25-4188-4066-a87c-9e6ee2b987e6
-# ╠═020744e9-e13f-4947-b339-e2c846f1b26c
-# ╠═9c434355-bb49-42e5-b766-d8820dd2bf7a
-# ╟─976795fe-2d86-432a-b053-7425958ff349
+# ╟─8eb05a38-63ba-4660-a034-20cbf38101be
+# ╟─fce7d595-2787-4aae-a2cf-867586c64a1a
+# ╠═db6a0eb0-f296-483c-8202-71ba41112e84
+# ╠═5fe33249-e003-4f7a-b3ee-dcf377bf179a
+# ╠═1020a949-d3a0-46b2-9f67-a518a59c481d
+# ╠═3964d728-5e17-4200-b2ec-9a010657cfa4
+# ╟─b9adf808-11cc-484d-862b-1e624aebe8a2
+# ╠═9b7c0da5-0f77-43c4-bcfa-541ab47c99df
+# ╠═1efcfa4a-7cb9-487b-a50d-752eebc3d796
+# ╠═b48d3acd-79ca-430c-8856-90c1638325e4
+# ╟─a4158324-82ef-4d09-8fd7-59867d301c14
+# ╟─08a86fcb-da29-407b-9914-73379c703b86
+# ╠═a252de65-257b-422d-a612-5e85a30ea0c9
+# ╟─26a8f8bb-de04-459e-b4e4-8e01b14328a7
+# ╠═8fe44a3b-7c42-4f93-87b0-6b2110d453f7
+# ╟─28f4a4eb-5bf6-4583-8bb7-34d387a6e0db
 # ╟─b379b6e0-0f20-43ab-aa1e-5fca3ccfb190
 # ╠═fdcb76f5-479f-410a-bdaa-a95216ca9ec9
 # ╟─60a6710d-103b-4276-8073-6b342cc4d084
@@ -958,10 +1086,10 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 # ╟─95a6f8b7-fbc8-400a-b3db-8dcee60a6c7c
 # ╠═b468100c-3508-456a-9c31-a1e1c28175b6
 # ╟─e7330666-d05e-4dc5-91da-2375351d0c54
-# ╟─b05835b0-f111-42e7-bf62-c20bb1fbbba0
-# ╟─043a14db-7a97-464d-94f5-fb690b869d18
-# ╟─51090bfe-b5c6-4529-936f-d79babd44009
 # ╟─3907b528-0d42-4b8e-b16b-1e66a27d8eaf
+# ╟─8f378774-ee4f-4778-b677-147209254164
+# ╟─ab2d522a-14ab-43b3-9eb0-0c4015e04679
+# ╟─930e39d2-80b9-4250-bdfe-477857b2f6ea
 # ╟─dca6c9d8-0074-45bf-b840-d36c24855174
 # ╟─eabf205e-3d1c-4d42-907a-050207490995
 # ╟─a72562cc-ea4e-4e01-9cb3-d84785dd5a92
@@ -971,5 +1099,3 @@ livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial
 # ╟─804c81b6-61ea-4817-a062-0ac93406ba85
 # ╟─bd728688-28e1-42fc-a316-53b41587e255
 # ╟─54142ab7-ad54-4844-8499-67a39d6a3007
-# ╟─ab2d522a-14ab-43b3-9eb0-0c4015e04679
-# ╟─930e39d2-80b9-4250-bdfe-477857b2f6ea
