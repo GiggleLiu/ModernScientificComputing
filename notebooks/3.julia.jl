@@ -985,10 +985,13 @@ With `PkgTemplates`.
 """
 
 # ╔═╡ 8f378774-ee4f-4778-b677-147209254164
-md"
+md"""
 # Homework
-##### 0. Fill the following form
-|    | is concrete |  is primitive | is abstract | is bits type | is super type |
+
+Submit by making a **pull request** to the course github repository (the `courseworks/week2` folder).
+
+##### 1. Fill the following form
+|    | is concrete |  is primitive | is abstract | is bits type | is mutable|
 | --- | --- | --- | --- | --- | --- |
 | ComplexF64 |
 | Complex{AbstractFloat} |
@@ -996,10 +999,21 @@ md"
 | AbstractFloat |
 | Union{Float64, ComplexF64} |
 | Int32 |
-| Array{Float32, 2} |
 | Matrix{Float32} |
+| Base.RefValue |
 
-##### 1. Implement the two dimensional brownian motion
+Task: Fill the form in a markdown file and include it in your pull request.
+
+Hint: [how to create a table in markdown](https://www.markdownguide.org/extended-syntax/).
+
+##### 2. Coding
+
+Choose one: (a), (b) or (c).
+
+**(a - Easy).** Task: Bellow you will find a live coding. Open an Julia REPL and type what the live coding types. Submit the `~/.julia/logs/repl_history.jl` file (only the related portion) as a proof of work.
+
+
+**(b - Hard).** Two dimensional brownian motion
  Brownian motion in two dimension is composed of cumulated sumummation of a sequence of normally distributed random displacements, that is Brownian motion can be simulated by successive adding terms of random normal distribute numbernamely:
 ```math
 \begin{align}
@@ -1011,82 +1025,31 @@ md"
 ```
 where $N(\mathbf \mu, \mathbf{\Sigma})$ is a [multivariate normal distribution](https://en.wikipedia.org/wiki/Multivariate_normal_distribution).
 
-Task: Implement the algorithm and plot the path in a two dimensional space.
+Task: Simulate 2D brownian motion for 10000 steps, and include the code in your pull request. Please include the following content in the pull request description:
+* the benchmark result
+* a plot of the particle trajectory,
 
-Hint: you can make a plot with [`Makie`](https://docs.makie.org/stable/).
+Hint: you can make a plot with [`Plots`](https://github.com/JuliaPlots/Plots.jl) or [`Makie`](https://docs.makie.org/stable/).
 
-##### 2. Solve the `3x+1` problem?
+**(c - Harder).** The `3x+1` problem
 
-The 3x+1 problem asks the following:
 > Suppose we start with a positive integer, and if it is odd then multiply it by 3 and add 1, and if it is even, divide it by 2. Then repeat this process as long as you can. Do you eventually reach the integer 1, no matter what you started with?
 
 For instance, starting with 5, it is odd, so we apply 3x+1. We get 16, which is even, so we divide by 2. We get 8, and then 4, and then 2, and then 1. So yes, in this case, we eventually end up at 1.
 
-Task: Verify this hypothesis to some big number.
-"
+Task: Verifier this hypothesis for all positive integers of Int32 type, and include your code with test in your pull request.
+
+Hint: [how to write tests](https://docs.julialang.org/en/v1/stdlib/Test/).
+"""
 
 # ╔═╡ ab2d522a-14ab-43b3-9eb0-0c4015e04679
 md"# Live coding"
 
+# ╔═╡ d5121deb-1873-446a-b66a-bf65ef992ea6
+md"This script is for Julia code training"
+
 # ╔═╡ 930e39d2-80b9-4250-bdfe-477857b2f6ea
 livecoding("https://raw.githubusercontent.com/GiggleLiu/notebooks/julia-tutorial/livecoding/1.basic/main.cast")
-
-# ╔═╡ dca6c9d8-0074-45bf-b840-d36c24855174
-md"""
-## A brief tour of Julia scientific computing ecosystem
-"""
-
-# ╔═╡ eabf205e-3d1c-4d42-907a-050207490995
-md"### [SciML](https://github.com/SciML) ecosystem
-Differential equation
-[![](https://camo.githubusercontent.com/97bf407cc473d22b3d9ef63c861e8dba6dd3b4579728c342c49be86b48ea180e/687474703a2f2f7777772e73746f636861737469636c6966657374796c652e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031392f30382f64655f736f6c7665725f736f6674776172655f636f6d70617273696f6e2d312e706e67)](https://camo.githubusercontent.com/97bf407cc473d22b3d9ef63c861e8dba6dd3b4579728c342c49be86b48ea180e/687474703a2f2f7777772e73746f636861737469636c6966657374796c652e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031392f30382f64655f736f6c7665725f736f6674776172655f636f6d70617273696f6e2d312e706e67)
-"
-
-# ╔═╡ a72562cc-ea4e-4e01-9cb3-d84785dd5a92
-md"""### [JuMP](https://github.com/jump-dev) ecosystem
-Linear Programming, Mixed Integer Programming, Quadratic Programming 等。
-![](https://user-images.githubusercontent.com/6257240/204845810-702108b0-e5db-4b5c-9378-0aa0896af6de.png)
-"""
-
-# ╔═╡ 237a3f56-9458-449d-92b0-3135bce85fb7
-md"### [Yao](https://github.com/QuantumBFS) ecosystem
-Quantum Computing
-"
-
-# ╔═╡ 565745ca-b000-4ec0-b53e-a5062abc4b1b
-md"""
-![](https://github.com/Roger-luo/quantum-benchmarks/raw/master/images/pcircuit.png)
-"""
-
-# ╔═╡ 19c6976f-3bf5-4485-bd55-3e6a0eee3580
-md"""
-More such ecosystems are [BioJulia](https://github.com/BioJulia),
-[JuliaDynamics](https://github.com/JuliaDynamics),
-[EcoJulia](https://github.com/EcoJulia),
-[JuliaAstro](https://github.com/JuliaAstro),
-[QuantEcon](https://github.com/QuantEcon).
-"""
-
-# ╔═╡ 804c81b6-61ea-4817-a062-0ac93406ba85
-md"## High performance computing ecosystem"
-
-# ╔═╡ bd728688-28e1-42fc-a316-53b41587e255
-md"""
-### [CUDA](https://github.com/JuliaGPU/CUDA.jl) ecosystem
-CUDA programming in Julia.
-
-![](https://juliagpu.org/assets/img/cuda-performance.png)
-"""
-
-# ╔═╡ 54142ab7-ad54-4844-8499-67a39d6a3007
-md"""
-### [LoopVectorization](https://github.com/JuliaSIMD/LoopVectorization.jl) ecosystem
-Macro(s) for vectorizing loops (SIMD).
-![](https://raw.githubusercontent.com/JuliaSIMD/LoopVectorization.jl/docsassets/docs/src/assets/bench_dot_v2.svg)
-
-TropicalGEMM: A BLAS for tropical numbers.
-![](https://github.com/TensorBFS/TropicalGEMM.jl/raw/master/benchmarks/benchmark-float64.png)
-"""
 
 # ╔═╡ Cell order:
 # ╠═39479e02-fc99-4b27-ae04-b2ef94f24cf0
@@ -1321,13 +1284,5 @@ TropicalGEMM: A BLAS for tropical numbers.
 # ╟─3907b528-0d42-4b8e-b16b-1e66a27d8eaf
 # ╟─8f378774-ee4f-4778-b677-147209254164
 # ╟─ab2d522a-14ab-43b3-9eb0-0c4015e04679
+# ╟─d5121deb-1873-446a-b66a-bf65ef992ea6
 # ╟─930e39d2-80b9-4250-bdfe-477857b2f6ea
-# ╟─dca6c9d8-0074-45bf-b840-d36c24855174
-# ╟─eabf205e-3d1c-4d42-907a-050207490995
-# ╟─a72562cc-ea4e-4e01-9cb3-d84785dd5a92
-# ╟─237a3f56-9458-449d-92b0-3135bce85fb7
-# ╟─565745ca-b000-4ec0-b53e-a5062abc4b1b
-# ╟─19c6976f-3bf5-4485-bd55-3e6a0eee3580
-# ╟─804c81b6-61ea-4817-a062-0ac93406ba85
-# ╟─bd728688-28e1-42fc-a316-53b41587e255
-# ╟─54142ab7-ad54-4844-8499-67a39d6a3007
