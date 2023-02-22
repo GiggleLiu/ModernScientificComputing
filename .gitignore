@@ -25,3 +25,4 @@ _*.pdf
 unweighted/images/gadgets/
 unweighted/images/*.tex
 *.thm
+*.so
