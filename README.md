@@ -12,6 +12,8 @@
 * [Cheat sheet](https://giggleliu.github.io/ModernScientificComputing/msc/2.2.cheatsheets/)
 
 ### Week 3: The Julia programming language
+* We use [arXiv:1209.5145](https://arxiv.org/abs/1209.5145) as the reference.
+* Pluto notebook [[pdf](notebooks/3.julia.pdf), [source](notebooks/3.julia.jl)]
 
 # *PART 2: Mathematical modeling*
 This part does not contain any lecture note.
