@@ -47,14 +47,4 @@ end
 - I did it.
 
 ** Part b
-#+begin_src julia :results output :exports both
-using Random,Distributions
-begin
-    xs = [0.0 , 0.0]
-
-    for _ in 1:10000
-
-    end
-
-end
-#+end_src
+- See ~brownian.jl~
