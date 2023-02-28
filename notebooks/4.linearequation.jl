@@ -23,14 +23,11 @@ using LinearAlgebra
 # ╔═╡ 8dc256a3-06be-4df9-aa88-1ef1e574055e
 using Test
 
-# ╔═╡ d959c85c-0895-475c-b9f8-57368fc5e744
-using Plots
-
 # ╔═╡ c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
 using BenchmarkTools
 
-# ╔═╡ 7e58727b-92fb-456c-bbe8-84eee30d83cf
-using Profile
+# ╔═╡ d959c85c-0895-475c-b9f8-57368fc5e744
+using Plots
 
 # ╔═╡ cdaafdfa-9252-410f-af0c-e47a145fbfe3
 TableOfContents(; depth=2)
@@ -52,6 +49,7 @@ md"1. You must submit your homework through Github pull request,
 * PR #4
 ```
 5. You will not be failed if you submit all your homeworks (completed or not).
+6. Separate PRs for different assignments.
 "
 
 # ╔═╡ 78b6f5be-0aec-4e40-8512-fb58c253a7e9
@@ -73,7 +71,7 @@ md"* Gaussian elimination algorithm
 * Condition number
 * Pivoting technique
 * Getting matrix inverse with Gauss-Jordan elimination
-* Solving linear equations for special matrices
+* Solving linear equations for special matrices (optional)
 "
 
 # ╔═╡ a7203d10-cffd-4f08-80c2-f6b1465210bd
@@ -354,207 +352,6 @@ md"A better approach"
 # ╔═╡ a4c024e4-83a7-4356-9b8e-168ce9ee1cbf
 lufact(small_diagonal_matrix[end:-1:1, :])
 
-# ╔═╡ e113247a-b2a5-4acc-8714-342ecb191ac4
-md"# Sensitivity Analysis"
-
-# ╔═╡ 7bb9fda5-7951-40e7-a98b-bbbec4be8229
-md"## Forward Error and Backward Error"
-
-# ╔═╡ dab03daa-99fa-4b1a-9415-395cd4686222
-md"""
-Forward error:
-```math
-{\rm dist}(f(x), \hat f (x))
-```
-
-Backward error
-```math
-{\rm dist}(x, f^{-1}(\hat f(x)))
-```
-
-"""
-
-# ╔═╡ 51433b0f-8fce-4241-bb84-bcea9a687abe
-md"## Absolute Error and Relative Error"
-
-# ╔═╡ 26207f81-1f6e-4708-8c04-422a1133c5ac
-md"""
-Absolute error: $\|x - \hat x\|$
-
-Relative error: $\frac{\|x - \hat x\|}{\|x\|}$
-
-
-where $\|\cdot\|$ is a measure of size.
-"""
-
-# ╔═╡ 025101f0-a1c4-47da-bff0-c0ae0cd0da6e
-md"## Coding: Floating point numbers have \"constant\" relative error"
-
-# ╔═╡ 424638de-6651-4fe2-bc44-82f9675dc43d
-eps(Float64)
-
-# ╔═╡ 26978647-a790-4ba2-be21-60251c47d919
-let
-	n = 1000
-	reltol = zeros(2n+1)
-	for i=-n:n
-		f = 2.0^i
-		reltol[i+n+1] = log10(eps(f)) - log10(f)
-	end
-	plot(-n:n, reltol; label="relative error")
-end
-
-# ╔═╡ c10acde5-e22a-4f79-be4f-f7b3bbb0ece9
-eps(1.0)/1.0
-
-# ╔═╡ 8e055682-baef-4c78-b044-d22d51676844
-eps(2.0)/2.0
-
-# ╔═╡ ee1aba8e-5992-4ff1-9ae1-09d35a2abf00
-eps(sqrt(2))/sqrt(2)
-
-# ╔═╡ d1c29e2e-e67d-41d3-bbff-9f384cf0c84d
-md"## (Relative) Condition Number"
-
-# ╔═╡ df17edcb-8b98-4c2e-a628-1a1381b7cf3e
-md"""
-```math
-\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|\delta f(x)\|/\|f(x)\|}{\|\delta x\|/\|x\|}}
-```
-"""
-
-# ╔═╡ 46176c75-f23e-4aef-a54b-58aa43941855
-md"## Quantify Error of a Scalar Operator"
-
-# ╔═╡ fe41dd53-f69f-4382-bde1-af86a3a92aef
-md"""
-```math
-y = \exp(x)
-```
-"""
-
-# ╔═╡ 8651c71c-eb8b-467b-9c9c-f2a173e5b91d
-md"## Why we should avoid using floating point numbers being too big/small?"
-
-# ╔═╡ d9d88d11-0dd0-4e80-b476-e9b008dfb84c
-md"""
-```math
-a + b
-```
-"""
-
-# ╔═╡ bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
-md"## Measuring the size of a vector: Norms"
-
-# ╔═╡ f256bf0d-e2bb-49f4-882f-12508e68ff07
-md"""
-```math
-\|v\|_p = \left(\sum_i{|v_i|^p}\right)^{1/p}
-```
-"""
-
-# ╔═╡ f2da27a2-af5f-4f2a-a6d5-fb98b8dcd261
-md"""## Measure the size of a matrix
-```math
-\|A\| = \max_{x\neq 0} \frac{\|Ax\|}{\|x\|}
-```
-"""
-
-# ╔═╡ 49d62ec4-bce0-4620-93cc-278f149f848f
-md"## Coding: Vector and Matrix Norms"
-
-# ╔═╡ 33a6261a-2b21-4b37-bcd8-b5c0db6b509f
-norm([3, 4], 2)
-
-# ╔═╡ 1956af2c-c88f-483d-8e1c-8ed4004e996d
-norm([3, 4], 1)
-
-# ╔═╡ 61c1c35c-f7be-495b-90f5-9a3772f254f5
-norm([3, 4], Inf)
-
-# ╔═╡ 43731510-dfe7-48c8-8a4d-d8313d1d762b
-# l0 norm is not a true norm
-norm([3, 4], 0)
-
-# ╔═╡ a0af42b2-1bba-423c-b5f7-0a9d1a2adbb1
-norm([3, 0], 0)
-
-# ╔═╡ 79bc3efb-61a1-4241-b787-2726fb2a4a97
-mat = randn(2, 2)
-
-# ╔═╡ 9854ad79-d06e-4d60-86d5-54ade042d49a
-opnorm(mat, 1)
-
-# ╔═╡ 4628cb4b-649f-4e84-a6d5-e50109f8cc6c
-opnorm(mat, Inf)
-
-# ╔═╡ 424f63ce-f5b2-456f-8c4a-63f18877d730
-opnorm(mat, 2)
-
-# ╔═╡ 71e6ed15-bb0f-4510-901c-c9f53b3e701c
-opnorm(mat, 0)
-
-# ╔═╡ 898a511d-7c18-4eb0-b68b-3c1dd8208cfe
-cond(mat)
-
-# ╔═╡ 5653168f-80b5-4435-a711-d8a1d8f9c429
-md"## Condition Number of a Linear Operator"
-
-# ╔═╡ a1a55972-4baa-4a29-8c3f-ac7e13036136
-md"""
-```math
-{\rm cond}(A) = \|A\| \|A^{-1}\|
-```
-"""
-
-# ╔═╡ 25f870c1-e70a-48b1-a0ce-4c2b9a523d60
-md"## Example: A Ill Conditioned Matrix"
-
-# ╔═╡ b333fc58-0981-4d0f-ba49-0ee15cc78aad
-md"""
-```math
-A = \left(\begin{matrix}
-0.913 & 0.659\\
-0.457 & 0.330
-\end{matrix}
-\right)
-```
-"""
-
-# ╔═╡ 0beab22f-5411-403c-a116-cf552083382e
-ill_conditioned_matrix = [0.913 0.659; 0.457 0.330]
-
-# ╔═╡ 63cddfd1-bdef-4601-ab57-48314952fb73
-lures2 = lufact(ill_conditioned_matrix)
-
-# ╔═╡ c5b109da-ab9c-4a44-ab2d-168b9711c2cc
-lures2
-
-# ╔═╡ 713267d1-08f0-4c41-9523-46128ce40430
-cond(ill_conditioned_matrix)
-
-# ╔═╡ 8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
-md"""## Coding: Numeric experiment on condition number"""
-
-# ╔═╡ b71889e3-85d0-4873-a94a-63a9c4c0c009
-let
-	n = 1000
-	p = 2
-	errors = zeros(n)
-	conds = zeros(n)
-	for k = 1:n
-		A = rand(10, 10)
-		b = rand(10)
-		dx = A \ b
-		sx = Float32.(A) \ Float32.(b)
-		errors[k] = (norm(sx - dx, p)/norm(dx, p)) / (norm(b-Float32.(b), p)/norm(b, p))
-		conds[k] = cond(A, p)
-	end
-	plt = plot(conds, conds; label="upper bound", xlim=(1, 10000), ylim=(1, 10000), xscale=:log10, yscale=:log10)
-	scatter!(plt, conds, errors; label="samples")
-end
-
-
 # ╔═╡ 54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
 md"""
 ## Pivoting technique
@@ -564,6 +361,24 @@ md"""
 md"""
 ```math
 P A = L U
+```
+"""
+
+# ╔═╡ c8399254-ab8f-45ec-8b4e-10860274e8e0
+[10^(ϵ) 1; 1 1][end:-1:1, :]
+
+# ╔═╡ 9bd48ccc-549a-4057-aa91-16ad79536583
+md"""
+## Gaussian Elimination process with Partial Pivoting
+```math
+A = \left(\begin{matrix}
+a_{11} & a_{12} & a_{13} \\
+a_{21} & a_{22} & a_{23} \\
+a_{31} & a_{32} & a_{33}
+\end{matrix}\right)
+```
+```math
+\ldots M_2P_2M_1P_1 A = U
 ```
 """
 
@@ -651,6 +466,121 @@ P A Q = L U
 ```
 """
 
+# ╔═╡ e113247a-b2a5-4acc-8714-342ecb191ac4
+md"# Sensitivity Analysis"
+
+# ╔═╡ 25f870c1-e70a-48b1-a0ce-4c2b9a523d60
+md"## Issue: An Ill Conditioned Matrix"
+
+# ╔═╡ b333fc58-0981-4d0f-ba49-0ee15cc78aad
+md"""
+```math
+A = \left(\begin{matrix}
+0.913 & 0.659\\
+0.457 & 0.330
+\end{matrix}
+\right)
+```
+"""
+
+# ╔═╡ 0beab22f-5411-403c-a116-cf552083382e
+ill_conditioned_matrix = [0.913 0.659; 0.457 0.330]
+
+# ╔═╡ 63cddfd1-bdef-4601-ab57-48314952fb73
+lures2 = lufact(ill_conditioned_matrix)
+
+# ╔═╡ c5b109da-ab9c-4a44-ab2d-168b9711c2cc
+lures2
+
+# ╔═╡ 713267d1-08f0-4c41-9523-46128ce40430
+cond(ill_conditioned_matrix)
+
+# ╔═╡ 7bb9fda5-7951-40e7-a98b-bbbec4be8229
+md"## Forward Error and Backward Error"
+
+# ╔═╡ dab03daa-99fa-4b1a-9415-395cd4686222
+md"""
+Forward error:
+```math
+{\rm dist}(f(x), \hat f (x))
+```
+
+Backward error
+```math
+{\rm dist}(x, f^{-1}(\hat f(x)))
+```
+
+"""
+
+# ╔═╡ 51433b0f-8fce-4241-bb84-bcea9a687abe
+md"## Absolute Error and Relative Error"
+
+# ╔═╡ 26207f81-1f6e-4708-8c04-422a1133c5ac
+md"""
+Absolute error: $\|x - \hat x\|$
+
+Relative error: $\frac{\|x - \hat x\|}{\|x\|}$
+
+
+where $\|\cdot\|$ is a measure of size.
+"""
+
+# ╔═╡ 025101f0-a1c4-47da-bff0-c0ae0cd0da6e
+md"## Coding: Floating point numbers have \"constant\" relative error"
+
+# ╔═╡ 424638de-6651-4fe2-bc44-82f9675dc43d
+eps(Float64)
+
+# ╔═╡ 26978647-a790-4ba2-be21-60251c47d919
+let
+	n = 1000
+	reltol = zeros(2n+1)
+	for i=-n:n
+		f = 2.0^i
+		reltol[i+n+1] = log10(eps(f)) - log10(f)
+	end
+	plot(-n:n, reltol; label="relative error")
+end
+
+# ╔═╡ c10acde5-e22a-4f79-be4f-f7b3bbb0ece9
+eps(1.0)/1.0
+
+# ╔═╡ 8e055682-baef-4c78-b044-d22d51676844
+eps(2.0)/2.0
+
+# ╔═╡ ee1aba8e-5992-4ff1-9ae1-09d35a2abf00
+eps(sqrt(2))/sqrt(2)
+
+# ╔═╡ d1c29e2e-e67d-41d3-bbff-9f384cf0c84d
+md"## (Relative) Condition Number"
+
+# ╔═╡ df17edcb-8b98-4c2e-a628-1a1381b7cf3e
+md"""
+```math
+\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|\delta f(x)\|/\|f(x)\|}{\|\delta x\|/\|x\|}}
+```
+"""
+
+# ╔═╡ 46176c75-f23e-4aef-a54b-58aa43941855
+md"## Quantify Error of a Scalar Operator"
+
+# ╔═╡ fe41dd53-f69f-4382-bde1-af86a3a92aef
+md"""
+```math
+y = \exp(x)
+```
+"""
+
+# ╔═╡ 8651c71c-eb8b-467b-9c9c-f2a173e5b91d
+md"## Why we should avoid using floating point numbers being too big/small?"
+
+# ╔═╡ d9d88d11-0dd0-4e80-b476-e9b008dfb84c
+md"""
+```math
+a + b
+```
+"""
+
 # ╔═╡ d5c75146-50a2-4cd3-a2f8-4d743f54c448
 md"# Computing Matrix Inverse"
 
@@ -676,13 +606,99 @@ where $m_i = a_i/a_k$.
 # ╔═╡ ca87e541-b520-4231-b949-4675456f6c0b
 md"""## Computing the inverse
 ```math
-N_{n}N_{n-1}\ldots N_1 A = I
+SN_{n}N_{n-1}\ldots N_1 A = I
 ```
 Then
 ```math
-A^{-1} = N_{n}N_{n-1}\ldots N_1
+A^{-1} = SN_{n}N_{n-1}\ldots N_1
 ```
 """
+
+# ╔═╡ bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
+md"## Measuring the size of a vector: Norms"
+
+# ╔═╡ f256bf0d-e2bb-49f4-882f-12508e68ff07
+md"""
+```math
+\|v\|_p = \left(\sum_i{|v_i|^p}\right)^{1/p}
+```
+"""
+
+# ╔═╡ f2da27a2-af5f-4f2a-a6d5-fb98b8dcd261
+md"""## Measure the size of a matrix
+```math
+\|A\| = \max_{x\neq 0} \frac{\|Ax\|}{\|x\|}
+```
+"""
+
+# ╔═╡ 49d62ec4-bce0-4620-93cc-278f149f848f
+md"## Coding: Vector and Matrix Norms"
+
+# ╔═╡ 33a6261a-2b21-4b37-bcd8-b5c0db6b509f
+norm([3, 4], 2)
+
+# ╔═╡ 1956af2c-c88f-483d-8e1c-8ed4004e996d
+norm([3, 4], 1)
+
+# ╔═╡ 61c1c35c-f7be-495b-90f5-9a3772f254f5
+norm([3, 4], Inf)
+
+# ╔═╡ 43731510-dfe7-48c8-8a4d-d8313d1d762b
+# l0 norm is not a true norm
+norm([3, 4], 0)
+
+# ╔═╡ a0af42b2-1bba-423c-b5f7-0a9d1a2adbb1
+norm([3, 0], 0)
+
+# ╔═╡ 79bc3efb-61a1-4241-b787-2726fb2a4a97
+mat = randn(2, 2)
+
+# ╔═╡ 9854ad79-d06e-4d60-86d5-54ade042d49a
+opnorm(mat, 1)
+
+# ╔═╡ 4628cb4b-649f-4e84-a6d5-e50109f8cc6c
+opnorm(mat, Inf)
+
+# ╔═╡ 424f63ce-f5b2-456f-8c4a-63f18877d730
+opnorm(mat, 2)
+
+# ╔═╡ 71e6ed15-bb0f-4510-901c-c9f53b3e701c
+opnorm(mat, 0)
+
+# ╔═╡ 898a511d-7c18-4eb0-b68b-3c1dd8208cfe
+cond(mat)
+
+# ╔═╡ 5653168f-80b5-4435-a711-d8a1d8f9c429
+md"## Condition Number of a Linear Operator"
+
+# ╔═╡ a1a55972-4baa-4a29-8c3f-ac7e13036136
+md"""
+```math
+{\rm cond}(A) = \|A\| \|A^{-1}\|
+```
+"""
+
+# ╔═╡ 8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
+md"""## Coding: Numeric experiment on condition number"""
+
+# ╔═╡ b71889e3-85d0-4873-a94a-63a9c4c0c009
+let
+	n = 1000
+	p = 2
+	errors = zeros(n)
+	conds = zeros(n)
+	for k = 1:n
+		A = rand(10, 10)
+		b = rand(10)
+		dx = A \ b
+		sx = Float32.(A) \ Float32.(b)
+		errors[k] = (norm(sx - dx, p)/norm(dx, p)) / (norm(b-Float32.(b), p)/norm(b, p))
+		conds[k] = cond(A, p)
+	end
+	plt = plot(conds, conds; label="upper bound", xlim=(1, 10000), ylim=(1, 10000), xscale=:log10, yscale=:log10)
+	scatter!(plt, conds, errors; label="samples")
+end
+
 
 # ╔═╡ c98ed46e-31da-49fc-9ed4-776aaff7d6d1
 md"# Special Matrices"
@@ -762,7 +778,6 @@ BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
@@ -777,7 +792,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "beed1d7b6b8c2be392186f2babbb609aa107cbcf"
+project_hash = "2fa32da7d4dd328c33d253ffedd635bb8436b01a"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1806,7 +1821,25 @@ version = "1.4.1+0"
 # ╠═1201b122-b071-4f13-83e0-6bec0de08e2b
 # ╟─7a7e8ac0-2af9-42ec-ab17-54d4f86baf70
 # ╠═a4c024e4-83a7-4356-9b8e-168ce9ee1cbf
+# ╟─54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
+# ╟─178c4193-a45d-460f-a22e-b15f6604b5dd
+# ╠═c8399254-ab8f-45ec-8b4e-10860274e8e0
+# ╟─9bd48ccc-549a-4057-aa91-16ad79536583
+# ╟─e9ba7dc4-1494-4601-8eb7-72127e92815d
+# ╠═9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
+# ╠═13493579-9189-4c9a-9361-430868427b59
+# ╠═c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
+# ╠═d1b7f00e-2b7e-4c15-8231-a816c59472f9
+# ╠═3bcf8d78-3678-4749-99ac-0a7e43830d2d
+# ╠═e206e554-64cd-422d-963d-8284eb9625fe
+# ╟─ed52cf76-ed66-44af-b98b-b58551bd217f
 # ╟─e113247a-b2a5-4acc-8714-342ecb191ac4
+# ╟─25f870c1-e70a-48b1-a0ce-4c2b9a523d60
+# ╠═b333fc58-0981-4d0f-ba49-0ee15cc78aad
+# ╠═0beab22f-5411-403c-a116-cf552083382e
+# ╠═63cddfd1-bdef-4601-ab57-48314952fb73
+# ╠═c5b109da-ab9c-4a44-ab2d-168b9711c2cc
+# ╠═713267d1-08f0-4c41-9523-46128ce40430
 # ╟─7bb9fda5-7951-40e7-a98b-bbbec4be8229
 # ╟─dab03daa-99fa-4b1a-9415-395cd4686222
 # ╟─51433b0f-8fce-4241-bb84-bcea9a687abe
@@ -1840,26 +1873,9 @@ version = "1.4.1+0"
 # ╠═898a511d-7c18-4eb0-b68b-3c1dd8208cfe
 # ╟─5653168f-80b5-4435-a711-d8a1d8f9c429
 # ╟─a1a55972-4baa-4a29-8c3f-ac7e13036136
-# ╟─25f870c1-e70a-48b1-a0ce-4c2b9a523d60
-# ╟─b333fc58-0981-4d0f-ba49-0ee15cc78aad
-# ╠═0beab22f-5411-403c-a116-cf552083382e
-# ╠═63cddfd1-bdef-4601-ab57-48314952fb73
-# ╠═c5b109da-ab9c-4a44-ab2d-168b9711c2cc
-# ╠═713267d1-08f0-4c41-9523-46128ce40430
 # ╟─8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
 # ╠═d959c85c-0895-475c-b9f8-57368fc5e744
 # ╠═b71889e3-85d0-4873-a94a-63a9c4c0c009
-# ╟─54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
-# ╟─178c4193-a45d-460f-a22e-b15f6604b5dd
-# ╟─e9ba7dc4-1494-4601-8eb7-72127e92815d
-# ╠═9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
-# ╠═13493579-9189-4c9a-9361-430868427b59
-# ╠═c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
-# ╠═7e58727b-92fb-456c-bbe8-84eee30d83cf
-# ╠═d1b7f00e-2b7e-4c15-8231-a816c59472f9
-# ╠═3bcf8d78-3678-4749-99ac-0a7e43830d2d
-# ╠═e206e554-64cd-422d-963d-8284eb9625fe
-# ╟─ed52cf76-ed66-44af-b98b-b58551bd217f
 # ╟─d5c75146-50a2-4cd3-a2f8-4d743f54c448
 # ╟─c50dbe8c-6c09-47aa-a798-0673875e1e42
 # ╟─ca87e541-b520-4231-b949-4675456f6c0b
