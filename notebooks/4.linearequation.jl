@@ -39,17 +39,14 @@ html"<button onclick='present();'>present</button>"
 md"## About assignments"
 
 # ╔═╡ a0fa8273-cf22-4cb4-ad4b-b83aee874556
-md"1. You must submit your homework through Github pull request,
-2. Xuanzhao Gao will comment on your PR, you need to resolve the issues to get your PR merged,
-3. We will make a final assessment based on your PRs,
+md"1. You should submit your homework through Github pull request. Xuanzhao Gao will comment on your PR, then you should resolve the issues to get your PR merged. You should submit different PRs for different assignments. [Open repo](https://github.com/GiggleLiu/ModernScientificComputing)
+2. We will grade based on your merged PRs. You will not be failed if your submition is complete.
 4. You may check the answers of other students, but you must credit him in your PR description, e.g.
 ```
 ### Reference:
 * PR #3
 * PR #4
 ```
-5. You will not be failed if you submit all your homeworks (completed or not).
-6. Separate PRs for different assignments.
 "
 
 # ╔═╡ 78b6f5be-0aec-4e40-8512-fb58c253a7e9
@@ -67,9 +64,8 @@ md"### Table of contents"
 
 # ╔═╡ e5c4aeef-5818-406c-be55-b6b010c960db
 md"* Gaussian elimination algorithm
-* Sensitivity analysis
-* Condition number
 * Pivoting technique
+* Sensitivity analysis and condition number
 * Getting matrix inverse with Gauss-Jordan elimination
 * Solving linear equations for special matrices (optional)
 "
@@ -92,6 +88,17 @@ md"""
 ## Solving tridiagonal linear equation
 ```math
 Lx = b
+```
+"""
+
+# ╔═╡ 53e51d33-9d03-4473-8ed8-aba1ef9ef105
+md"""
+```math
+L = \left(\begin{matrix}
+l_{11} & 0 & 0\\
+l_{21} & l_{22} & 0\\
+l_{31} & l_{32} & l_{33}\\
+\end{matrix}\right)
 ```
 """
 
@@ -180,15 +187,14 @@ a_{11} & a_{12} & \ldots \\
 """
 
 # ╔═╡ af1f932e-a6db-41ce-ace3-170228bb183b
+# ```math
+# (M_k)_{ij} = \begin{cases}
+# 	\delta_{ij} & i= j,\\
+# 	- a_{ik}/a_{kk} & i > j \land j = k, \\
+#	0 & {\rm otherwise}.
+#\end{cases}
+#```
 md"""
-```math
-(M_k)_{ij} = \begin{cases}
-	\delta_{ij} & i= j,\\
-	- a_{ik}/a_{kk} & i > j \land j = k, \\
-	0 & {\rm otherwise}.
-\end{cases}
-```
-or equivalently
 ```math
 M_k = \left(\begin{matrix}
 
@@ -235,24 +241,35 @@ function elementary_elimination_matrix(A::AbstractMatrix{T}, k::Int) where T
 	@assert size(A, 2) == n
 	# create Elementary Elimination Matrices
 	M = Matrix{Float64}(I, n, n)
-	M[k+1:end, k] .=  -A[k+1:end, k] ./ A[k, k]
+	for i=k+1:n
+		M[i, k] =  -A[i, k] ./ A[k, k]
+	end
 	return M
 end
 
-# ╔═╡ fc286cee-c912-4395-8af6-77702d5fef31
-inv(elementary_elimination_matrix(A3, 1))
-
-# ╔═╡ 2a8da2fe-f21e-44ac-9253-583c06dd5134
-inv(elementary_elimination_matrix(A3, 1)) * inv(elementary_elimination_matrix(A3, 2))
-
-# ╔═╡ 32ce956f-a90f-44fb-8473-438dd2a6ba78
-elementary_elimination_matrix(A3, 2)
+# ╔═╡ 416f9a74-2d88-4788-92b1-847eda6539cc
+md"The elimination"
 
 # ╔═╡ b8379e6d-768d-4a43-8370-1583324750f3
 elementary_elimination_matrix(A3, 1)
 
 # ╔═╡ e478efbc-a75f-4fb4-8ea8-f24ea7f8a9c2
 elementary_elimination_matrix(A3, 1) * A3
+
+# ╔═╡ 73fa4829-33dc-46e7-935d-b4c78bdb02d3
+md"The inverse"
+
+# ╔═╡ fc286cee-c912-4395-8af6-77702d5fef31
+inv(elementary_elimination_matrix(A3, 1))
+
+# ╔═╡ b4282280-a825-456f-90ec-cfc274c68864
+md"The multiplication"
+
+# ╔═╡ 32ce956f-a90f-44fb-8473-438dd2a6ba78
+elementary_elimination_matrix(A3, 2)
+
+# ╔═╡ 2a8da2fe-f21e-44ac-9253-583c06dd5134
+inv(elementary_elimination_matrix(A3, 1)) * inv(elementary_elimination_matrix(A3, 2))
 
 # ╔═╡ 87de48b5-4d4e-4b8a-9f2c-4b6dc328a502
 md"## Algorithm 2.3: LU Factorization by Gaussian Elimination"
@@ -262,7 +279,7 @@ function lufact_naive!(A::AbstractMatrix{T}) where T
 	n = size(A, 1)
 	@assert size(A, 2) == n
 	M = Matrix{T}(I, n, n)
-	for k=1:2
+	for k=1:n-1
 		m = elementary_elimination_matrix(A, k)
 		M = M * inv(m)
 		A .= m * A
@@ -312,20 +329,35 @@ end
 # ╔═╡ f2bab70d-847f-495b-ba30-409156a9a874
 lufact(a::AbstractMatrix) = lufact!(copy(a))
 
+# ╔═╡ 480b6065-f9ca-4770-baa4-f1451fc046b8
+@testset "LU" begin
+	a = randn(4, 4)
+	L, U = lufact(a)
+	@test istril(L)
+	@test istriu(U)
+	@test L * U ≈ a
+end
+
 # ╔═╡ b81714d1-9a3c-4800-b478-68cabbc5d10d
-a = randn(4, 4)
+A4 = randn(4, 4)
 
 # ╔═╡ 1f1267d0-9ff2-44a4-b418-a42953159a1e
-L, U = lufact(a)
-
-# ╔═╡ 0b22e796-1eb1-4feb-a924-2984537d6d53
-L * U - a
+lufact(A4)
 
 # ╔═╡ 5e426a5f-65cf-4adf-8b2b-ea28534e529a
 md"The Julia's version"
 
 # ╔═╡ 9d30b63e-f437-420b-8c22-037d34e1be2f
-lu(a, NoPivot())  # the version we implemented above has no pivot
+julia_lures = lu(A4, NoPivot())  # the version we implemented above has no pivot
+
+# ╔═╡ 4a18900a-9051-4451-9736-724b19c3bd5d
+julia_lures.U
+
+# ╔═╡ aacd052d-b6e7-4f40-b08a-872aa9420c46
+typeof(julia_lures)
+
+# ╔═╡ c86a4d3c-adf3-429a-a4b4-8a0aaec83b43
+fieldnames(julia_lures |> typeof)
 
 # ╔═╡ d75af574-ee8e-4e8f-839f-9ebbb288397a
 md"## Complexity Analysis
@@ -381,6 +413,9 @@ a_{31} & a_{32} & a_{33}
 \ldots M_2P_2M_1P_1 A = U
 ```
 """
+
+# ╔═╡ 95c78df3-2283-4230-8d8d-9996e4d6fe36
+md"NOTE: $P_{k+1}$ and $M_k$ commute"
 
 # ╔═╡ e9ba7dc4-1494-4601-8eb7-72127e92815d
 md"## Algorithm 2.4 LU Factoriazation by Gaussian Elimination with Partial Pivoting"
@@ -581,39 +616,6 @@ a + b
 ```
 """
 
-# ╔═╡ d5c75146-50a2-4cd3-a2f8-4d743f54c448
-md"# Computing Matrix Inverse"
-
-# ╔═╡ c50dbe8c-6c09-47aa-a798-0673875e1e42
-md"""
-## Gauss Jordan Elimination Matrix
-```math
-N_k = \left(\begin{matrix}
-
-1 & \ldots & 0 & -m_1 & 0 & \ldots & 0\\
-\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
-0 & \ldots & 1 & -m_{k-1} & 0 & \ldots & 0\\
-0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
-0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
-\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
-0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
-
-\end{matrix}\right)
-```
-where $m_i = a_i/a_k$.
-"""
-
-# ╔═╡ ca87e541-b520-4231-b949-4675456f6c0b
-md"""## Computing the inverse
-```math
-SN_{n}N_{n-1}\ldots N_1 A = I
-```
-Then
-```math
-A^{-1} = SN_{n}N_{n-1}\ldots N_1
-```
-"""
-
 # ╔═╡ bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
 md"## Measuring the size of a vector: Norms"
 
@@ -700,6 +702,39 @@ let
 end
 
 
+# ╔═╡ d5c75146-50a2-4cd3-a2f8-4d743f54c448
+md"# Computing Matrix Inverse"
+
+# ╔═╡ c50dbe8c-6c09-47aa-a798-0673875e1e42
+md"""
+## Gauss Jordan Elimination Matrix
+```math
+N_k = \left(\begin{matrix}
+
+1 & \ldots & 0 & -m_1 & 0 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 1 & -m_{k-1} & 0 & \ldots & 0\\
+0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
+0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
+
+\end{matrix}\right)
+```
+where $m_i = a_i/a_k$.
+"""
+
+# ╔═╡ ca87e541-b520-4231-b949-4675456f6c0b
+md"""## Computing the inverse
+```math
+SN_{n}N_{n-1}\ldots N_1 A = I
+```
+Then
+```math
+A^{-1} = SN_{n}N_{n-1}\ldots N_1
+```
+"""
+
 # ╔═╡ c98ed46e-31da-49fc-9ed4-776aaff7d6d1
 md"# Special Matrices"
 
@@ -770,6 +805,36 @@ md"## Rank 1 update: Sherman-Morrison formula
 
 which requires only $O(n^2)$ extra work.
 "
+
+# ╔═╡ 011e1b39-a73d-4eaf-8847-ae5fa5ffd2f0
+md"""# Assignments
+1. Get the relative condition number of division operation $a/b$.
+
+2. Classify each of the following matrices as well-conditioned or ill-conditioned:
+```math
+(a). ~~\left(\begin{matrix}10^{10} & 0\\ 0 & 10^{-10}\end{matrix}\right)
+```
+```math
+(b). ~~\left(\begin{matrix}10^{10} & 0\\ 0 & 10^{10}\end{matrix}\right)
+```
+```math
+(c). ~~\left(\begin{matrix}10^{-10} & 0\\ 0 & 10^{-10}\end{matrix}\right)
+```
+```math
+(d). ~~\left(\begin{matrix}1 & 2\\ 2 & 4\end{matrix}\right)
+```
+3. Implement the Gauss-Jordan elimination algorithm to compute matrix inverse. In the following example, we first create an augmented matrix $(A | I)$. Then we apply the Gauss-Jordan elimination matrices on the left. The final result is stored in the augmented matrix as $(I, A^{-1})$.
+![](https://user-images.githubusercontent.com/6257240/222182865-c2a1aa28-946a-4acb-8df8-f5d7da93c3ee.png)
+
+Task: Please implement a function `gauss_jordan` that computes the inverse for a matrix at any size. Please also include the following test in your submission.
+```julia
+@testset "Gauss Jordan" begin
+	n = 10
+	A = randn(n, n)
+	@test gauss_jordan(A) * A ≈ Matrix{Float64}(I, n, n)
+end
+```
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1775,6 +1840,7 @@ version = "1.4.1+0"
 # ╟─a7203d10-cffd-4f08-80c2-f6b1465210bd
 # ╟─3a411c5f-264b-4f81-98ba-53eecdad3d28
 # ╟─4015a2f9-a281-44ab-974c-7cd46041d105
+# ╟─53e51d33-9d03-4473-8ed8-aba1ef9ef105
 # ╟─02605f8e-b457-11ed-19c4-7d6d14b67507
 # ╟─fb583209-eb00-41ce-9fc6-906898327ecd
 # ╠═742a79b6-6ced-467e-961b-814da8b65af7
@@ -1796,11 +1862,14 @@ version = "1.4.1+0"
 # ╟─2b3596d7-17a3-46bb-b687-302c1255a4af
 # ╠═b8cf4822-d91b-47f4-86e4-a36d668b5256
 # ╠═faa03439-b526-4c27-a9dc-593b5a32cb04
-# ╠═fc286cee-c912-4395-8af6-77702d5fef31
-# ╠═2a8da2fe-f21e-44ac-9253-583c06dd5134
-# ╠═32ce956f-a90f-44fb-8473-438dd2a6ba78
+# ╟─416f9a74-2d88-4788-92b1-847eda6539cc
 # ╠═b8379e6d-768d-4a43-8370-1583324750f3
 # ╠═e478efbc-a75f-4fb4-8ea8-f24ea7f8a9c2
+# ╟─73fa4829-33dc-46e7-935d-b4c78bdb02d3
+# ╠═fc286cee-c912-4395-8af6-77702d5fef31
+# ╟─b4282280-a825-456f-90ec-cfc274c68864
+# ╠═32ce956f-a90f-44fb-8473-438dd2a6ba78
+# ╠═2a8da2fe-f21e-44ac-9253-583c06dd5134
 # ╟─87de48b5-4d4e-4b8a-9f2c-4b6dc328a502
 # ╠═a4b32a01-2d7f-4933-a3cb-2ab2d0c6cb2e
 # ╠═4d8276dc-9356-47f8-afa6-5329dde63468
@@ -1809,11 +1878,14 @@ version = "1.4.1+0"
 # ╟─1df2f386-2b55-4fb0-a035-64cf454e2698
 # ╠═fadba4ba-efca-48f7-bf31-959f458f64d5
 # ╠═f2bab70d-847f-495b-ba30-409156a9a874
+# ╠═480b6065-f9ca-4770-baa4-f1451fc046b8
 # ╠═b81714d1-9a3c-4800-b478-68cabbc5d10d
 # ╠═1f1267d0-9ff2-44a4-b418-a42953159a1e
-# ╠═0b22e796-1eb1-4feb-a924-2984537d6d53
 # ╟─5e426a5f-65cf-4adf-8b2b-ea28534e529a
 # ╠═9d30b63e-f437-420b-8c22-037d34e1be2f
+# ╠═4a18900a-9051-4451-9736-724b19c3bd5d
+# ╠═aacd052d-b6e7-4f40-b08a-872aa9420c46
+# ╠═c86a4d3c-adf3-429a-a4b4-8a0aaec83b43
 # ╟─d75af574-ee8e-4e8f-839f-9ebbb288397a
 # ╟─2fda47ad-08f2-45c5-8f47-0eec1aa49aac
 # ╠═77396c1b-f23d-41da-b9e2-d6980a090217
@@ -1825,6 +1897,7 @@ version = "1.4.1+0"
 # ╟─178c4193-a45d-460f-a22e-b15f6604b5dd
 # ╠═c8399254-ab8f-45ec-8b4e-10860274e8e0
 # ╟─9bd48ccc-549a-4057-aa91-16ad79536583
+# ╟─95c78df3-2283-4230-8d8d-9996e4d6fe36
 # ╟─e9ba7dc4-1494-4601-8eb7-72127e92815d
 # ╠═9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
 # ╠═13493579-9189-4c9a-9361-430868427b59
@@ -1835,7 +1908,7 @@ version = "1.4.1+0"
 # ╟─ed52cf76-ed66-44af-b98b-b58551bd217f
 # ╟─e113247a-b2a5-4acc-8714-342ecb191ac4
 # ╟─25f870c1-e70a-48b1-a0ce-4c2b9a523d60
-# ╠═b333fc58-0981-4d0f-ba49-0ee15cc78aad
+# ╟─b333fc58-0981-4d0f-ba49-0ee15cc78aad
 # ╠═0beab22f-5411-403c-a116-cf552083382e
 # ╠═63cddfd1-bdef-4601-ab57-48314952fb73
 # ╠═c5b109da-ab9c-4a44-ab2d-168b9711c2cc
@@ -1890,5 +1963,6 @@ version = "1.4.1+0"
 # ╟─406c0ed5-a739-4771-8c5e-6c8b3c76dd89
 # ╟─dbbd7062-6971-4620-840e-ee4346405b11
 # ╟─7e91942d-f526-4310-9e96-bc5533b564b7
+# ╟─011e1b39-a73d-4eaf-8847-ae5fa5ffd2f0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
