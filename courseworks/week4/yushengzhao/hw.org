@@ -1,0 +1,15 @@
+#+TITLE: Homework 3
+#+AUTHOR: Yusheng Zhao
+
+* Problem 1: Condition Number
+- Assuming the division $a/b$ is keeping $a$ as constant.
+\begin{align}
+    cond(a/b) & = lim_{\epsilon \to 0^{+}} \sup_{||\delta x|| \le \epsilon} \\
+              & = \frac{ (||-a/b^{2} \delta b||)/ (a/b)}{||\delta b|| / ||b||} \\
+              & = 1
+\end{align}
+
+* Problem 2:
+#+begin_src julia :exports both :results output
+
+#+end_src
