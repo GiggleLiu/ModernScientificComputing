@@ -1,6 +1,6 @@
 1. My CPU has 6 cores with max frequency 2.6 GHz, and it support FMA, so its computing power is given by
    $$
-   6 \times 2.6 \times 4 = 62.4 ~\text{GFLOPS}
+   6 \times 2.6 \times 8 \times 2 = 249.6 ~\text{GFLOPS}
    $$
 
 2. Consider that spead of light given by $3 \times 10^8 ms^{-1}$, it takes 
@@ -23,10 +23,10 @@
 
 4. Floating point number is not a Group
 
-   1. **Associativity of addition**: Yes
+   1. **Associativity of addition**: no
    2. **Existence of additive identity**: Yes
-   3. **Existence of additive inverses**: Yes
-   4. **Commutativity of multiplication**: Yes
+   3. **Existence of additive inverses**: no
+   4. **Commutativity of multiplication**: no
    5. **Associativity of multiplication**: No, for example, consider a 2 digital numer system, $(0.52 \times 0.46) \times 0.81 = 0.18 \neq 0.19 = 0.52 \times (0.46 \times 0.81)$
    6. **Existence of multiplicative identity**: Yes
    7. **Existence of multiplicative inverses**: No. All floating point numbers can be given by $p/q$, but $q/p$ may not be given by floating point number.
