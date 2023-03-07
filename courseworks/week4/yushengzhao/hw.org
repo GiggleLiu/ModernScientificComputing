@@ -47,6 +47,5 @@ end
     #+end_src
 
     #+RESULTS:
-    : Hello
     : Test Summary: | Pass  Total  Time
-    : Gauss Jordan  |    1      1  1.3s
+    : Gauss Jordan  |    1      1  1.2s
