@@ -4,10 +4,16 @@
 * Problem 1: Condition Number
 - Assuming the division $a/b$ is keeping $a$ as constant.
 \begin{align}
-    cond(a/b) & = lim_{\epsilon \to 0^{+}} \sup_{||\delta x|| \le \epsilon} \\
-              & = \frac{ (||-a/b^{2} \delta b||)/ (a/b)}{||\delta b|| / ||b||} \\
+    cond(a/b) & = lim_{\epsilon \to 0^{+}} \sup_{||\delta x|| \le \epsilon}(|\delta f|/|f|) / (|\delta x|/|x|)\\
+              & = \frac{ (||-a/b^{2} \delta b||)/ ||(a/b)||}{||\delta b|| / ||b||} \\
               & = 1
 \end{align}
+- Assuming the division $a/b$ is keeping $b$ as constant
+  \begin{align}
+    cond(a/b) & = lim_{\epsilon \to 0^{+}} \sup_{||\delta x|| \le \epsilon}(|\delta f|/|f|) / (|\delta x|/|x|)\\
+              & = \frac{||\delta a/b||/||a/b||}{||\delta a|| / ||a||} \\
+              & = 1
+  \end{align}
 
 * Problem 2:
 #+begin_src julia :exports both :results output
