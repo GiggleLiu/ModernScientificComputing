@@ -29,7 +29,7 @@ function _gauss_jordan_helper!(MI_partial::AbstractMatrix{T}) where T <: Number
                 end
             end
         end
-        return _gauss_jordan_helper!(MI_partial[:,2:end])
+        return _gauss_jordan_helper!(view(MI_partial,:,2:n))
     end
 
 end
@@ -40,9 +40,9 @@ end
 	@test gauss_jordan(A) * A ≈ Matrix{Float64}(I, n, n)
 end
 
-begin
-    n = 10
-    A = randn(n, n)
-    @benchmark gauss_jordan(A)
-    @benchmark inv(A)
-end
+# begin
+#     n = 10
+#     A = randn(n, n)
+#     @benchmark gauss_jordan(A)
+#     @benchmark inv(A)
+# end
