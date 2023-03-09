@@ -32,6 +32,11 @@ using Luxor
 # ╔═╡ c91e28af-d372-429b-b0c1-e6579b6230d4
 TableOfContents()
 
+# ╔═╡ 50272a9d-5040-413c-84f5-69ffe06b133a
+html"""
+<button onclick="present();"> present</button>
+"""
+
 # ╔═╡ 3bc7e1c5-4d06-4b2d-adbd-20935f8c54b2
 ts = collect(0.0:0.5:10.0)
 
@@ -42,13 +47,7 @@ ys = [2.9, 2.7, 4.8, 5.3, 7.1, 7.6, 7.7, 7.6, 9.4, 9.0, 9.6, 10.0, 10.2, 9.7, 8.
 scatter(ts, ys; label="", xlabel="t", ylabel="y", ylim=(0, 10.5))
 
 # ╔═╡ af03fa73-40ce-45f5-9f4f-d8c7809f7166
-A = [ones(length(ts)) ts ts.^2]
-
-# ╔═╡ a509fb79-f36d-4985-b2a3-1a13c6c21578
-A2 = [1 0 0; 0 1 0; 0 0 1; -1 1 0; -1 0 1; 0 -1 1]
-
-# ╔═╡ 1ce7257e-3cb9-4385-ae89-19775a60567a
-b2 = [1237, 1941, 2417, 711, 1177, 475]
+A2 = [ones(length(ts)) ts ts.^2]
 
 # ╔═╡ c4b34c32-fc00-4a7c-8089-edd35c23bd65
 A2
@@ -56,11 +55,44 @@ A2
 # ╔═╡ 7209792f-4944-4d06-9098-ae7ce1cea103
 A2inv = pinv(A2)
 
-# ╔═╡ 14932e35-62fa-409b-a689-a82c2f8032da
+# ╔═╡ d9a623cd-74fb-4404-8f62-30ed24a82ed7
+x2 = pinv(A2) * ys
+
+# ╔═╡ 72cb2367-c4bc-4ed1-b942-4144881e558f
+norm(A2 * x2 - ys)^2
+
+# ╔═╡ 0653d1cc-febe-4b97-9cea-ccf1ea5ef77c
+let
+	plt = scatter(ts, ys; xlabel="t", ylabel="y", ylim=(0, 10.5), label="data")
+	tt = 0:0.1:10
+	plot!(plt, tt, map(t->x2[1] + x2[2]*t + x2[3] * t^2, tt); label="fitted")
+end
+
+# ╔═╡ 3cfd45c5-4618-4b9a-a931-0b0cb7f12cf1
+pinv(A2)
+
+# ╔═╡ 78bd6ebd-a710-4cbb-a2a4-6ac663eb64d5
+cond(A2)
+
+# ╔═╡ 7e8d4ef5-6b3a-4588-8e1b-5a491860f9f9
 opnorm(A2) * opnorm(pinv(A2))
 
-# ╔═╡ 0f8e426d-1109-481a-b2c3-ece73b0de07f
-cond(A2)
+# ╔═╡ 8e07091c-0b4b-490a-9cf7-dad94c3fa08a
+maximum(svd(A2).S)/minimum(svd(A2).S)
+
+# ╔═╡ f240e540-65a2-4f82-8006-a1d2a9955d1b
+let
+	p = 12345678
+	q = 1
+	p - sqrt(p^2 + q)
+end
+
+# ╔═╡ f4acf2cd-a183-4986-91f5-da6729759c84
+let # more accurate
+	p = 12345678
+	q = 1
+	q/(p + sqrt(p^2 + q))
+end
 
 # ╔═╡ 135c30d2-2168-4e88-82e3-673bbb4764d9
 rectQ = Matrix(qr(A2).Q)
@@ -92,20 +124,14 @@ Base.inv(A::HouseholderMatrix) = A
 # ╔═╡ 6c2555d4-5d84-42e0-8dd3-6e5781037a95
 Base.adjoint(A::HouseholderMatrix) = A
 
+# ╔═╡ 42812c21-229f-4e4a-b7ad-0d0317061776
+inv(A2' * A2) * A2'
+
 # ╔═╡ 5c3d483b-c1a4-4af9-b06f-f01b306d383b
 A2' * A2
 
 # ╔═╡ 4979c507-72c3-4cbb-8a7e-27cf4c9c4660
-A2' * b2
-
-# ╔═╡ d9a623cd-74fb-4404-8f62-30ed24a82ed7
-x2 = (A2' * A2) \ (A2' * b2)
-
-# ╔═╡ 72cb2367-c4bc-4ed1-b942-4144881e558f
-norm(A2 * x2 - b2)^2
-
-# ╔═╡ 42812c21-229f-4e4a-b7ad-0d0317061776
-inv(A2' * A2) * A2'
+A2' * ys
 
 # ╔═╡ 8782019c-f4b4-4b68-9d84-61aec009fe50
 rectQ' * rectQ
@@ -125,20 +151,32 @@ end
 
 # ╔═╡ 64a46e12-ae2e-445f-b870-3389e15bcc5b
 # the `mul!` interfaces can take two extra factors.
-function LinearAlgebra.mul!(C, A::HouseholderMatrix, B)
-	C .= B .- (A.β .* A.v) * (A.v' * B)
-	return C
+function left_mul!(B, A::HouseholderMatrix)
+	B .-= (A.β .* A.v) * (A.v' * B)
+	return B
 end
 
 # ╔═╡ 0c263746-b0a3-42df-a52b-9f9f51341db2
 # the `mul!` interfaces can take two extra factors.
-function LinearAlgebra.mul!(C, A, B::HouseholderMatrix)
-	C .= A .- (A * (B.β .* B.v)) * B.v'
-	return C
+function right_mul!(A, B::HouseholderMatrix)
+	A .= A .- (A * (B.β .* B.v)) * B.v'
+	return A
 end
 
 # ╔═╡ 6e6b7827-86a1-4f20-801e-7d9c385d0d26
 Base.getindex(A::HouseholderMatrix, i::Int, j::Int) = A.β * A.v[i] * conj(A.v[j])
+
+# ╔═╡ db07252c-d1c1-46af-a16e-9a7d1e91ce4f
+md"""# Review: Solving linear equations
+Given $A\in \mathbb{R}^{n\times n}$ and $b \in \mathbb{R}^n$, find $x \in \mathbb{R}^n$ s.t.
+```math
+Ax = b
+```
+
+1. LU factorization with Gaussian Elimination (with Pivoting)
+2. Sensitivity analysis: Condition number
+2. Computing matrix inverse with Guass-Jordan Elimination
+"""
 
 # ╔═╡ 039e70f8-b8cf-11ed-311e-4d770652d6a9
 md"# Linear Least Square Problem"
@@ -160,6 +198,13 @@ f: \mathbb{R}^{n+1} \rightarrow \mathbb{R}
 # ╔═╡ 19083b13-3b40-43ea-9535-975c2f1be8bb
 md"## Example"
 
+# ╔═╡ 26461708-def3-44b5-bb8f-4eb9f75c66d5
+md"""
+```math
+f(x) = x_0 + x_1 t + x_2 t^2
+```
+"""
+
 # ╔═╡ f0b7e196-80dd-4cd2-a8ce-3b99eee32580
 md"""
 ```math
@@ -168,29 +213,19 @@ Ax = \left(\begin{matrix}
 1 & t_2 & t_2^2\\
 1 & t_3 & t_3^2\\
 1 & t_4 & t_4^2\\
-1 & t_5 & t_5^2
+1 & t_5 & t_5^2\\
+\vdots & \vdots & \vdots
 \end{matrix}\right)
 \left(\begin{matrix} x_1 \\ x_2 \\ x_3\end{matrix}\right) \approx
-\left(\begin{matrix}y_1\\ y_2\\ y_3 \\ y_4 \\ y_5\end{matrix}\right) = b
+\left(\begin{matrix}y_1\\ y_2\\ y_3 \\ y_4 \\ y_5\\\vdots\end{matrix}\right) = b
 ```
 """
-
-# ╔═╡ 85a73a77-540e-452e-8c89-1081b14e0d3a
-md"""
-```math
-\begin{array}{r|rr}
-t & 0.0 & 0.5\\
-\hline
-y & 2.9 & 2.7
-\end{array}
-```
-"""
-
-# ╔═╡ 46b08452-0c25-4063-982d-f2dfd22884d6
-md"# Existence and Uniqueness"
 
 # ╔═╡ e4e444bf-0d07-4f6c-a104-ac0569928347
-md"## Normal Equations"
+md"# Normal Equations"
+
+# ╔═╡ 5124f2d6-37e3-4cf9-82df-eb50372271cb
+md"The goal: minimize $\|Ax - b\|_2^2$"
 
 # ╔═╡ dbd8e759-f5bf-4239-843f-2c394e7665c1
 md"""
@@ -199,14 +234,33 @@ A^T Ax = A^T b
 ```
 """
 
+# ╔═╡ 58834440-1e0a-432b-9be2-41db98fa2742
+md"## Pseudo-Inverse"
+
+# ╔═╡ 81b6f4cb-a6c8-4a86-91f7-ac88646651f8
+md"
+```math
+A^{+} = (A^T A)^{-1}A^T
+```
+```math
+x = A^+ b
+```
+"
+
+# ╔═╡ 291caf11-bacd-4171-8408-410b50f49183
+md"Pseudoinverse"
+
+# ╔═╡ 800b3257-0449-4d0d-8124-5b6ca7882902
+md"The julia version"
+
 # ╔═╡ e6435900-79be-46de-a7aa-7308df1e486a
 md"## Example"
 
-# ╔═╡ 1684bff0-7ad0-4921-be48-a4bfdcbde81d
-md"The residual is"
-
 # ╔═╡ 6d7d33ff-1b2b-4f03-b4d4-a7f31dfd3b74
-md"## Orthogonality and Orthogonal Projectors"
+md"## The geometric interpretation"
+
+# ╔═╡ 1684bff0-7ad0-4921-be48-a4bfdcbde81d
+md"The residual is $b-Ax$"
 
 # ╔═╡ eeb922e4-2e63-4d97-88c8-3951613695f5
 md"""
@@ -215,31 +269,8 @@ A^T(b - Ax) = 0
 ```
 """
 
-# ╔═╡ 58834440-1e0a-432b-9be2-41db98fa2742
-md"# Sensitivity and Conditioning"
-
-# ╔═╡ 81b6f4cb-a6c8-4a86-91f7-ac88646651f8
-md"Pseudoinverse
-
-```math
-A^{+} = (A^T A)^{-1}A^T
-```
-```math
-x = A^+ b
-```
-```math
-{\rm cond}(A) = \|A\|_2\cdot \|A^+\|_2
-```
-"
-
-# ╔═╡ 291caf11-bacd-4171-8408-410b50f49183
-md"Pseudoinverse"
-
-# ╔═╡ b8e4603b-48b7-4a72-935c-44d8c94f7182
-md"The condition number"
-
 # ╔═╡ a5034aeb-e74e-47ed-9d0a-4eb3d076dfbe
-md"# Normal Equations"
+md"## Solving Normal Equations with Cholesky decomposition"
 
 # ╔═╡ bb097284-3e30-489c-abac-f0c6b71edfd9
 md"""
@@ -266,6 +297,29 @@ md"The conditioning of a square linear system $Ax = b$ depends only on the matri
 md"""
 ```math
 A = \left(\begin{matrix}1 & 1\\ \epsilon & 0 \\ 0 & \epsilon \end{matrix}\right)
+```
+"""
+
+# ╔═╡ 5933200f-5aab-4937-b3df-9af1f81a5eaf
+md"The definition of thin matrix condition number"
+
+# ╔═╡ 68d9c2b1-bccf-48ec-9428-e0c65a1618ad
+md"""
+## The algorithm matters
+"""
+
+# ╔═╡ 96f7d3c9-fecc-4b5e-94ff-e8e9af74ce63
+md"$x^2 - 2px - q$"
+
+# ╔═╡ cb7a0e40-0d26-4330-abd0-cd730261b6b4
+md"""
+Algorithm 1:
+```math
+p - \sqrt{p^2 + q}
+```
+Algorithm 2:
+```math
+\frac{q}{p+\sqrt{p^2+q}}
 ```
 """
 
@@ -501,35 +555,6 @@ let
 	L * R ≈ A
 end
 
-# ╔═╡ e6cd8de6-20c6-4d36-93ba-b1a9ed808fc2
-function householder_qr!(Q::AbstractMatrix{T}, a::AbstractMatrix{T}) where T
-	m, n = size(a)
-	@assert size(Q, 2) == m
-	if m == 1
-		return Q, a
-	else
-		# apply householder matrix
-		H = householder_matrix(view(a, :, 1))
-		mul!(a, H, a)
-		# update Q matrix
-		mul!(Q, Q, H')
-		# recurse
-		householder_qr!(view(Q, 1:m, 2:m), view(a, 2:m, 2:n))
-	end
-	return Q, a
-end
-
-# ╔═╡ 5ce1edef-5b0e-48ce-b269-855726cc5e15
-@testset "householder QR" begin
-	A = randn(3, 3)
-	Q = Matrix{Float64}(I, 3, 3)
-	R = copy(A)
-	householder_qr!(Q, R)
-	@info R
-	@test Q * R ≈ A
-	@test Q' * Q ≈ I
-end
-
 # ╔═╡ b2e92d06-8731-491c-adbe-ec9f778247c1
 function givens(A, i, j)
 	x, y = A[i, 1], A[j, 1]
@@ -557,6 +582,35 @@ function right_mul!(A::AbstractMatrix, givens::GivensMatrix)
 		A[row, givens.j] = -vi * givens.s + vj * givens.c
 	end
 	return A
+end
+
+# ╔═╡ e6cd8de6-20c6-4d36-93ba-b1a9ed808fc2
+function householder_qr!(Q::AbstractMatrix{T}, a::AbstractMatrix{T}) where T
+	m, n = size(a)
+	@assert size(Q, 2) == m
+	if m == 1
+		return Q, a
+	else
+		# apply householder matrix
+		H = householder_matrix(view(a, :, 1))
+		left_mul!(a, H)
+		# update Q matrix
+		right_mul!(Q, H')
+		# recurse
+		householder_qr!(view(Q, 1:m, 2:m), view(a, 2:m, 2:n))
+	end
+	return Q, a
+end
+
+# ╔═╡ 5ce1edef-5b0e-48ce-b269-855726cc5e15
+@testset "householder QR" begin
+	A = randn(3, 3)
+	Q = Matrix{Float64}(I, 3, 3)
+	R = copy(A)
+	householder_qr!(Q, R)
+	@info R
+	@test Q * R ≈ A
+	@test Q' * Q ≈ I
 end
 
 # ╔═╡ 296749ef-7973-4ac9-8632-825fccbd3476
@@ -603,6 +657,9 @@ q_k = \left(a_k - \sum_{i=1}^{k-1} r_{ik}q_i\right)/r_{kk}
 ```
 """
 
+# ╔═╡ e4a1cb08-1e6c-45b1-9937-12b13bba1645
+md"## Algorithm: Classical Gram-Schmidt Orthogonalization"
+
 # ╔═╡ c32925a7-28ca-4c23-9ab8-43db8e0dc0c3
 function classical_gram_schmidt(A::AbstractMatrix{T}) where T
 	m, n = size(A)
@@ -626,7 +683,7 @@ end
 
 # ╔═╡ a7a4c219-d4dd-4491-90f9-824924124ff2
 @testset "classical GS" begin
-	n = 3
+	n = 10
 	A = randn(n, n)
 	Q, R = classical_gram_schmidt(A)
 	@test Q * R ≈ A
@@ -634,32 +691,185 @@ end
 	@info R
 end
 
-# ╔═╡ e4a1cb08-1e6c-45b1-9937-12b13bba1645
-md"## Algorithm: Classical Gram-Schmidt Orthogonalization"
-
 # ╔═╡ 21f0d7df-396e-47cc-beb8-0fa13fd8bc40
 md"## Algorithm: Modified Gram-Schmidt Orthogonalization"
 
-# ╔═╡ 6669ca5c-edc1-467f-aad7-3756b5817b22
-md"## Example: Gram-Schmidt QR Factorization"
+# ╔═╡ bd12051d-f8ad-4055-8461-b1495ca95ce6
+function modified_gram_schmidt!(A::AbstractMatrix{T}) where T
+	m, n = size(A)
+	Q = zeros(T, m, n)
+	R = zeros(T, n, n)
+	for k = 1:n
+		R[k, k] = norm(view(A, :, k))
+		Q[:, k] .= view(A, :, k) ./ R[k, k]
+		for j = k+1:n
+			R[k, j] = view(Q, :, k)' * view(A, :, j)
+			A[:, j] .-= view(Q, :, k) .* R[k, j]
+		end
+	end
+	return Q, R
+end
 
-# ╔═╡ 4724ef2e-d3e2-4d79-8238-f7ece5d97252
-md"## Rank Deficiency"
+# ╔═╡ 8d4e7395-f05b-45dd-b762-da4cd1f40b29
+@testset "modified GS" begin
+	n = 10
+	A = randn(n, n)
+	Q, R = modified_gram_schmidt!(copy(A))
+	@test Q * R ≈ A
+	@test Q * Q' ≈ I
+	@info R
+end
 
-# ╔═╡ 137eef27-f02b-41a4-9e3a-d8cd6f83fcd7
-md"# Singular Value Decomposition"
+# ╔═╡ cbab862d-f6f1-4238-b007-f1341455a85f
+let
+	n = 100
+	A = randn(n, n)
+	Q1, R1 = classical_gram_schmidt(A)
+	Q2, R2 = modified_gram_schmidt!(copy(A))
+	@info norm(Q1' * Q1 - I)
+	@info norm(Q2' * Q2 - I)
+end
 
-# ╔═╡ 1ac2f200-f749-4183-93d6-9bd242517612
-md"## Other Applications of SVD"
+# ╔═╡ c806e238-5f84-4cab-8e13-d9a15d4ee2b0
+md"# Eigenvalue/Singular value decomposition problem"
 
-# ╔═╡ be4eb3e1-b73c-453b-8f8d-1bbcd72df55c
-md"# Comparison of Methods"
+# ╔═╡ 21d4d322-3af7-4ab2-90a4-b465f009167b
+md"""
+```math
+Ax = \lambda x
+```
+"""
+
+# ╔═╡ 36e59b38-07a5-43ea-9b73-599f6b78b938
+md"## Power method"
+
+# ╔═╡ e5998180-d4e9-4e9d-a965-b02d92c3a188
+matsize = 10
+
+# ╔═╡ 836f7624-e0b9-4ee3-9f11-a9b148af4266
+A10 = randn(matsize, matsize); A10 += A10'
+
+# ╔═╡ c84c3f0b-8b82-4710-bf27-7667506ef357
+eigen(A10).values
+
+# ╔═╡ deaaf582-3387-41b1-83ba-8290aa84236d
+vmax = eigen(A10).vectors[:,end]
+
+# ╔═╡ 1625ece0-5a1c-416f-b716-68c1f9f9478d
+let
+	x = normalize!(randn(matsize))
+	for i=1:20
+		x = A10 * x
+		normalize!(x)
+	end
+	1-abs2(x' * vmax)
+end
+
+# ╔═╡ 5787c430-d48b-43b8-97e4-e95b1d66f578
+md"""
+## Rayleigh Quotient Iteration
+"""
+
+# ╔═╡ 0e874ac9-c3cb-4d65-8424-d425b6ff4748
+let
+	x = normalize!(randn(matsize))
+	U = eigen(A10).vectors
+	for k=1:5
+		sigma = x' * A10 * x
+		y = (A10 - sigma * I) \ x
+		x = normalize!(y)
+	end
+	(x' * U)'
+end
+
+# ╔═╡ 537f7520-4e65-4d9f-8905-697d957f2772
+md"## Symmetric QR decomposition"
+
+# ╔═╡ ca22eba8-be14-40b1-b8fe-ead89b323952
+function householder_trid!(Q, a)
+	m, n = size(a)
+	@assert m==n && size(Q, 2) == n
+	if m == 2
+		return Q, a
+	else
+		# apply householder matrix
+		H = householder_matrix(view(a, 2:n, 1))
+		left_mul!(view(a, 2:n, :), H)
+		right_mul!(view(a, :, 2:n), H')
+		# update Q matrix
+		right_mul!(view(Q, :, 2:n), H')
+		# recurse
+		householder_trid!(view(Q, :, 2:n), view(a, 2:m, 2:n))
+	end
+	return Q, a
+end
+
+# ╔═╡ a5c83d11-580e-4066-9bec-9ed8202e4e46
+@testset "householder tridiagonal" begin
+	n = 5
+	a = randn(n, n)
+	a = a + a'
+	Q = Matrix{Float64}(I, n, n)
+	Q, T = householder_trid!(Q, copy(a))
+	@test Q * T * Q' ≈ a
+end
+
+# ╔═╡ d8fb96fb-bc78-4072-afe9-8427fac0f6ac
+md"""## The SVD algorithm
+```math
+A = U S V^T
+```
+1. Form $C = A^T A$,
+2. Use the symmetric QR algorithm to compute $V_1^T C V_1 = {\rm diag}(\sigma_i^2)$,
+3. Apply QR with column pivoting to $AV_1$ obtaining $U^T(AV_1)\Pi = R$.
+"""
 
 # ╔═╡ ac65b656-8ab5-4866-b011-25711260f110
 md"""
-# Assignment
-1. Reading
-2. Coding
+# Assignments
+### 1. Review
+Suppose that you are computing the QR factorization of the matrix
+```math
+A = \left(\begin{matrix}
+1 & 1 & 1\\
+1 & 2 & 4\\
+1 & 3 & 9\\
+1 & 4 & 16
+\end{matrix}\right)
+```
+by Householder transformations.
+
+* Problems:
+    1. How many Householder transformations are required?
+    2. What does the first column of A become as a result of applying the first Householder transformation?
+    3. What does the first column of A become as a result of applying the first Householder transformation?
+    4. How many Givens rotations would be required to computing the QR factoriazation of A?
+### 2. Coding
+Computing the QR decomposition of a symmetric triangular matrix with Givens rotation. Try to minimize the computing time and estimate the number of FLOPS.
+
+For example, if the input matrix size is $T \in \mathbb{R}^{5\times 5}$
+```math
+T = \left(\begin{matrix}
+t_{11} & t_{12} & 0 & 0 & 0\\
+t_{21} & t_{22} & t_{23} & 0 & 0\\
+0 & t_{32} & t_{33} & t_{34} & 0\\
+0 & 0 & t_{43} & t_{44} & t_{45}\\
+0 & 0 & 0 & t_{54} & t_{55}
+\end{matrix}\right)
+```
+where $t_{ij} = t_{ji}$.
+
+In your algorithm, you should first apply Givens rotation on row 1 and 2.
+```math
+G(t_{11}, t_{21}) T = \left(\begin{matrix}
+t_{11}' & t_{12}' & t_{13}' & 0 & 0\\
+0 & t_{22}' & t_{23}' & 0 & 0\\
+0 & t_{32} & t_{33} & t_{34} & 0\\
+0 & 0 & t_{43} & t_{44} & t_{45}\\
+0 & 0 & 0 & t_{54} & t_{55}
+\end{matrix}\right)
+```
+Then apply $G(t_{22}', t_{32})$ et al.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1710,45 +1920,54 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╠═03d7776f-1ae1-4305-8638-caa82837166a
 # ╟─c91e28af-d372-429b-b0c1-e6579b6230d4
+# ╟─50272a9d-5040-413c-84f5-69ffe06b133a
+# ╟─db07252c-d1c1-46af-a16e-9a7d1e91ce4f
 # ╟─039e70f8-b8cf-11ed-311e-4d770652d6a9
 # ╟─1285a0ff-2290-49fb-bd16-74ebb155e6ff
 # ╟─c12b4f4e-81d7-4b8a-8f77-b4e940199064
 # ╟─19083b13-3b40-43ea-9535-975c2f1be8bb
-# ╟─f0b7e196-80dd-4cd2-a8ce-3b99eee32580
-# ╟─85a73a77-540e-452e-8c89-1081b14e0d3a
 # ╠═3bc7e1c5-4d06-4b2d-adbd-20935f8c54b2
 # ╠═69ea48d1-58c2-4e7d-a351-c4d96dcbed55
 # ╠═f375e09d-cfe2-4ca8-a2c1-32d11dd0b236
 # ╠═42fd3d15-40b6-4051-913b-293bd953028c
+# ╟─26461708-def3-44b5-bb8f-4eb9f75c66d5
+# ╟─f0b7e196-80dd-4cd2-a8ce-3b99eee32580
 # ╠═af03fa73-40ce-45f5-9f4f-d8c7809f7166
-# ╟─46b08452-0c25-4063-982d-f2dfd22884d6
 # ╟─e4e444bf-0d07-4f6c-a104-ac0569928347
+# ╟─5124f2d6-37e3-4cf9-82df-eb50372271cb
 # ╟─dbd8e759-f5bf-4239-843f-2c394e7665c1
-# ╟─e6435900-79be-46de-a7aa-7308df1e486a
-# ╠═a509fb79-f36d-4985-b2a3-1a13c6c21578
-# ╠═5c3d483b-c1a4-4af9-b06f-f01b306d383b
-# ╠═1ce7257e-3cb9-4385-ae89-19775a60567a
-# ╠═4979c507-72c3-4cbb-8a7e-27cf4c9c4660
-# ╠═d9a623cd-74fb-4404-8f62-30ed24a82ed7
-# ╟─1684bff0-7ad0-4921-be48-a4bfdcbde81d
-# ╠═078d0638-7540-4ca4-bc11-b77b2c7f28c4
-# ╠═72cb2367-c4bc-4ed1-b942-4144881e558f
-# ╟─6d7d33ff-1b2b-4f03-b4d4-a7f31dfd3b74
-# ╟─eeb922e4-2e63-4d97-88c8-3951613695f5
 # ╟─58834440-1e0a-432b-9be2-41db98fa2742
 # ╟─81b6f4cb-a6c8-4a86-91f7-ac88646651f8
 # ╠═c4b34c32-fc00-4a7c-8089-edd35c23bd65
 # ╟─291caf11-bacd-4171-8408-410b50f49183
 # ╠═42812c21-229f-4e4a-b7ad-0d0317061776
+# ╟─800b3257-0449-4d0d-8124-5b6ca7882902
 # ╠═7209792f-4944-4d06-9098-ae7ce1cea103
-# ╟─b8e4603b-48b7-4a72-935c-44d8c94f7182
-# ╠═14932e35-62fa-409b-a689-a82c2f8032da
-# ╠═0f8e426d-1109-481a-b2c3-ece73b0de07f
+# ╟─e6435900-79be-46de-a7aa-7308df1e486a
+# ╠═5c3d483b-c1a4-4af9-b06f-f01b306d383b
+# ╠═4979c507-72c3-4cbb-8a7e-27cf4c9c4660
+# ╠═d9a623cd-74fb-4404-8f62-30ed24a82ed7
+# ╠═078d0638-7540-4ca4-bc11-b77b2c7f28c4
+# ╠═72cb2367-c4bc-4ed1-b942-4144881e558f
+# ╠═0653d1cc-febe-4b97-9cea-ccf1ea5ef77c
+# ╟─6d7d33ff-1b2b-4f03-b4d4-a7f31dfd3b74
+# ╟─1684bff0-7ad0-4921-be48-a4bfdcbde81d
+# ╟─eeb922e4-2e63-4d97-88c8-3951613695f5
 # ╟─a5034aeb-e74e-47ed-9d0a-4eb3d076dfbe
 # ╟─bb097284-3e30-489c-abac-f0c6b71edfd9
 # ╟─0f6b8814-77a1-4b1f-8183-42bc6ea412e0
 # ╟─04acb542-dc1f-4c45-b6fd-62f387a81963
 # ╟─080677b7-cac7-4bbe-a4b0-71e18ca41b1b
+# ╠═3cfd45c5-4618-4b9a-a931-0b0cb7f12cf1
+# ╠═78bd6ebd-a710-4cbb-a2a4-6ac663eb64d5
+# ╟─5933200f-5aab-4937-b3df-9af1f81a5eaf
+# ╠═7e8d4ef5-6b3a-4588-8e1b-5a491860f9f9
+# ╠═8e07091c-0b4b-490a-9cf7-dad94c3fa08a
+# ╟─68d9c2b1-bccf-48ec-9428-e0c65a1618ad
+# ╟─96f7d3c9-fecc-4b5e-94ff-e8e9af74ce63
+# ╟─cb7a0e40-0d26-4330-abd0-cd730261b6b4
+# ╠═f240e540-65a2-4f82-8006-a1d2a9955d1b
+# ╠═f4acf2cd-a183-4986-91f5-da6729759c84
 # ╟─b0c7ed86-2127-46a6-9f98-547cdf591d23
 # ╟─b84c4a00-37ea-453a-b69d-555ffcd8b358
 # ╠═135c30d2-2168-4e88-82e3-673bbb4764d9
@@ -1807,15 +2026,27 @@ version = "1.4.1+0"
 # ╠═bfca07d3-6479-4835-8b10-314facfcfea1
 # ╟─0a753edc-4507-46e8-ab0f-fcdd5f3fa21f
 # ╟─8bcdaf5f-6e69-471e-9fca-063ece7f563a
+# ╟─e4a1cb08-1e6c-45b1-9937-12b13bba1645
 # ╠═c32925a7-28ca-4c23-9ab8-43db8e0dc0c3
 # ╠═a7a4c219-d4dd-4491-90f9-824924124ff2
-# ╟─e4a1cb08-1e6c-45b1-9937-12b13bba1645
 # ╟─21f0d7df-396e-47cc-beb8-0fa13fd8bc40
-# ╟─6669ca5c-edc1-467f-aad7-3756b5817b22
-# ╟─4724ef2e-d3e2-4d79-8238-f7ece5d97252
-# ╟─137eef27-f02b-41a4-9e3a-d8cd6f83fcd7
-# ╟─1ac2f200-f749-4183-93d6-9bd242517612
-# ╟─be4eb3e1-b73c-453b-8f8d-1bbcd72df55c
-# ╠═ac65b656-8ab5-4866-b011-25711260f110
+# ╠═bd12051d-f8ad-4055-8461-b1495ca95ce6
+# ╠═8d4e7395-f05b-45dd-b762-da4cd1f40b29
+# ╠═cbab862d-f6f1-4238-b007-f1341455a85f
+# ╟─c806e238-5f84-4cab-8e13-d9a15d4ee2b0
+# ╟─21d4d322-3af7-4ab2-90a4-b465f009167b
+# ╟─36e59b38-07a5-43ea-9b73-599f6b78b938
+# ╠═e5998180-d4e9-4e9d-a965-b02d92c3a188
+# ╠═836f7624-e0b9-4ee3-9f11-a9b148af4266
+# ╠═c84c3f0b-8b82-4710-bf27-7667506ef357
+# ╠═deaaf582-3387-41b1-83ba-8290aa84236d
+# ╠═1625ece0-5a1c-416f-b716-68c1f9f9478d
+# ╟─5787c430-d48b-43b8-97e4-e95b1d66f578
+# ╠═0e874ac9-c3cb-4d65-8424-d425b6ff4748
+# ╟─537f7520-4e65-4d9f-8905-697d957f2772
+# ╠═ca22eba8-be14-40b1-b8fe-ead89b323952
+# ╠═a5c83d11-580e-4066-9bec-9ed8202e4e46
+# ╟─d8fb96fb-bc78-4072-afe9-8427fac0f6ac
+# ╟─ac65b656-8ab5-4866-b011-25711260f110
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
