@@ -309,13 +309,52 @@ md"""
 md"One can use the power method to compute dominant eigenvalues (one having the largest absolute value) of a matrix."
 
 # ╔═╡ 1981eb8f-e93b-44cb-b81d-6f8c7ed13ec1
+function power_method(A::AbstractMatrix{T}, n::Int) where T
+	n = size(A, 2)
+	x = normalize!(randn(n))
+	for i=1:n
+		x = A * x
+		normalize!(x)
+	end
+	return x' * A * x', x
+end
 
+# ╔═╡ ec049390-f8fa-42d8-8e63-45af08b058d3
+md"""
+Since computing matrix-vector multiplication of CSC sparse matrix is fast, the power method is a convenient method to obtain the largest eigen value of a sparse matrix.
+"""
 
 # ╔═╡ a51ddacf-7e9f-4ab5-be9b-f2ed4e9952aa
 md"The rate of convergence is dedicated by $|\lambda_2/\lambda_1|^k$."
 
+# ╔═╡ cefb596e-2df5-44a3-bd6f-062e7ebdc0ed
+md"""
+By inverting the sign, $A\rightarrow -A$, we can use the same method to obtain the smallest eigenvalue.
+"""
+
 # ╔═╡ 50717c84-e8cf-4e19-b344-7d50b0b290ff
 md"## The symmetric Lanczos process"
+
+# ╔═╡ 339df51a-7623-405a-a590-adc337edc0be
+md"""
+Let $A \in \mathbb{R}^{n \times n}$ be a large symmetric sparse matrix, the Lanczos process can be used to obtain its largest/smallest eigenvalue, with faster convergence speed comparing with the power method.
+"""
+
+# ╔═╡ 014be843-e2d3-42c8-bbc9-bd66bbb7df93
+md"""
+## The Krylov subspace
+"""
+
+# ╔═╡ 2a548303-adb7-4189-bb82-2095f920a996
+md"""
+A Krylov subspace of size $k$ with initial vector $q_1$ is defined by
+```math
+\mathcal{K}(A, q_1, k) = {\rm span}\{q_1, Aq_1, A^2q_1, \ldots, A^{k-1}q_1\}
+```
+"""
+
+# ╔═╡ 0906b965-f760-4f67-9ddc-498aeb99c3b8
+md"## A naive implementation"
 
 # ╔═╡ 166d4ddc-5e58-4210-a389-997c1ea82de2
 function lanczos(A, q1::AbstractVector{T}; abstol, maxiter) where T
@@ -344,6 +383,11 @@ function lanczos(A, q1::AbstractVector{T}; abstol, maxiter) where T
 	end
 	return SymTridiagonal(α, β), hcat(q...)
 end
+
+# ╔═╡ 37a68538-2fee-45e2-a1c4-653107f1e0de
+md"""
+## Example: using dominant eigensolver to study the graph spectral
+"""
 
 # ╔═╡ 294e1dea-4f2f-4731-9327-b1c04c82d2db
 graphsize = 10
@@ -571,7 +615,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "16f80016e1f60eaf55c277e76da5abe133d8b3db"
+project_hash = "2810da36ff5c96af693608e9e35c2889d5a7d14b"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -976,9 +1020,16 @@ version = "17.4.0+0"
 # ╟─f14621f1-a002-46c5-b0c0-15d008ab382c
 # ╟─3b75625c-2d92-4499-9662-ee1c7a173c30
 # ╠═1981eb8f-e93b-44cb-b81d-6f8c7ed13ec1
+# ╟─ec049390-f8fa-42d8-8e63-45af08b058d3
 # ╟─a51ddacf-7e9f-4ab5-be9b-f2ed4e9952aa
+# ╟─cefb596e-2df5-44a3-bd6f-062e7ebdc0ed
 # ╟─50717c84-e8cf-4e19-b344-7d50b0b290ff
+# ╟─339df51a-7623-405a-a590-adc337edc0be
+# ╟─014be843-e2d3-42c8-bbc9-bd66bbb7df93
+# ╟─2a548303-adb7-4189-bb82-2095f920a996
+# ╟─0906b965-f760-4f67-9ddc-498aeb99c3b8
 # ╠═166d4ddc-5e58-4210-a389-997c1ea82de2
+# ╟─37a68538-2fee-45e2-a1c4-653107f1e0de
 # ╠═5b764297-3d06-4899-a8ae-f4378427a6e5
 # ╠═294e1dea-4f2f-4731-9327-b1c04c82d2db
 # ╠═3b299d74-e209-4c1e-a831-fce40c4f43f4
