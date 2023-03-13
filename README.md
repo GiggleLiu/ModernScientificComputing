@@ -21,14 +21,16 @@ Please check the following book as a reference.
 > Heath M T. Scientific computing: an introductory survey, revised second edition[M]. Society for Industrial and Applied Mathematics, 2018.
 
 ### Week 4: Systems of linear equations
+* Pluto notebook [[pdf](notebooks/4.linearequation.pdf), [source](notebooks/4.linearequation.jl)]
 
-### Week 5: Eigenvalue problems and sparse matrices
+### Week 5: Linear least square problem and QR decomposition
+* Pluto notebook [[pdf](notebooks/5.linear-least-square.pdf), [source](notebooks/5.linear-least-square.jl)]
 
-### Week 6: Nonlinear equations
+### Week 6: Eigenvalue problems and sparse matrices
 
-### Week 7: Optimization
+### Week 7: Nonlinear equations and optimization
 
-### Week 8: Fast fourier transform
+### Week 8: Fast Fourier transform
 
 ### Week 9: Random numbers and stochastic simulation
 
