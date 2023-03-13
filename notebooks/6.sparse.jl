@@ -8,10 +8,7 @@ using InteractiveUtils
 using PlutoUI
 
 # ╔═╡ e548acb6-bf53-11ed-1988-7325c1e2b481
-using SparseArrays
-
-# ╔═╡ 455f8887-9b2c-4e67-abe5-5449efe55ce5
-using LinearAlgebra
+using LinearAlgebra, SparseArrays
 
 # ╔═╡ 0c8bf832-0cf8-4b56-b064-1dd177aceae8
 using KrylovKit
@@ -24,6 +21,32 @@ TableOfContents()
 
 # ╔═╡ 2add4589-251b-47d0-a800-f0db7f204b61
 html"""<button onclick="present()">present</button>"""
+
+# ╔═╡ 83886259-6371-4a02-aedf-b84b413bc229
+some_random_matrix = reshape(1:25, 5, 5)
+
+# ╔═╡ 4f1e505c-170b-436f-a8ba-ef61c1d8943e
+struct COOMatrix{T} <: AbstractArray{T, 2}   # Julia does not have a COO data type
+	rowval::Vector{Int}
+	colval::Vector{Int}
+	nzval::Vector{T}
+	m::Int
+	n::Int
+end
+
+# ╔═╡ a205f6d4-8ecd-4103-9904-505c4ecc7b72
+Base.size(coo::COOMatrix{T}) where T = (coo.m, coo.n)
+
+# ╔═╡ 78e46965-d581-4f1b-9b53-283441526571
+function Base.getindex(coo::COOMatrix{T}, i::Integer, j::Integer) where T
+	v = zero(T)
+	for (i2, j2, v2) in zip(coo.rowval, coo.colval, coo.nzval)
+		if i == i2 && j == j2
+			v += v2  # accumulate the value, since repeated indices are allowed.
+		end
+	end
+	return v
+end
 
 # ╔═╡ 4990344c-81e8-48cf-93c0-fa1460e0470b
 md"# Overview
@@ -38,16 +61,241 @@ md"# Overview
 # ╔═╡ 49a32422-2415-487e-b3be-28a0436bb552
 md"# Sparse Matrices"
 
-# ╔═╡ be9e7da9-a3c9-411e-bf2a-082c10e19bf5
-sp = sprand(100, 100, 0.1)
+# ╔═╡ 4e017416-db9b-43b9-8fd5-657e9810e075
+md"Recall that the elementary elimination matrix in Gaussian elimination has the following form."
 
-# ╔═╡ 3133cc77-6647-45c5-b693-5eaa1b9528bc
-fieldnames(sp |> typeof)
+# ╔═╡ 893f30df-9984-41e3-8353-c23d22730dcc
+md"""
+```math
+M_k = \left(\begin{matrix}
+
+1 & \ldots & 0 & 0 & 0 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 1 & 0 & 0 & \ldots & 0\\
+0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
+0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
+
+\end{matrix}\right)
+```
+where $m_i = a_i/a_k$.
+"""
+
+# ╔═╡ 5cca8d2a-7b49-4fcd-bf84-748cb0d66eb0
+md"The following cell is copied from notebook: `4.linearequation.jl`"
+
+# ╔═╡ 50b753dc-7033-447b-9480-2e7e0a052f78
+md"""
+This representation requires storing $n^2$ elements, which is very memory inefficient since it has only $2n-k$ nonzero elements.
+"""
+
+# ╔═╡ cf51c362-3a4a-4f60-9123-2693b60e00fd
+md"Let $A\in\mathbb{R}^{m\times n}$ be a sparse matrix, and ${\rm nnz}(A) \ll mn$ be the number of nonzero elements in $A$. Is there a universal matrix type that stores such sparse matrices efficiently?."
+
+# ╔═╡ 78da9988-7cc0-4be7-9b8b-89e0029971d7
+md"The answer is yes."
+
+# ╔═╡ 6210e3be-fcd3-4682-9f45-8c8d1af9f99c
+md"""
+## COOrdinate (COO) format
+"""
+
+# ╔═╡ 30eb61aa-b03c-4bb7-8491-c6e411a378fe
+md"""
+The coordinate format means storing nonzero matrix elements into triples
+```math
+\begin{align}
+&(i_1, j_1, v_1)\\
+&(i_2, j_2, v_2)\\
+&\vdots\\
+&(i_k, j_k, v_k)
+\end{align}
+```
+
+Quiz: How many bytes are required to store the matrix `demo_matrix` in the COO format?
+"""
+
+# ╔═╡ 3b1537ea-6176-4996-acd0-05071187f95c
+md"We need to implement the [`AbstractArray` interfaces](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array)."
+
+# ╔═╡ 3b72536e-c005-4224-ba9d-b157f1c38310
+Base.size(coo::COOMatrix{T}, i::Int) where T = getindex((coo.m, coo.n), i)
+
+# ╔═╡ f19a3128-c0a5-4529-b839-1e97fb969483
+function elementary_elimination_matrix(A::AbstractMatrix{T}, k::Int) where T
+	n = size(A, 1)
+	@assert size(A, 2) == n
+	# create Elementary Elimination Matrices
+	M = Matrix{Float64}(I, n, n)
+	for i=k+1:n
+		M[i, k] =  -A[i, k] ./ A[k, k]
+	end
+	return M
+end
+
+# ╔═╡ 64ac1cc6-6463-44f8-be88-54f9f52fc12b
+demo_matrix = elementary_elimination_matrix(some_random_matrix, 3)
+
+# ╔═╡ 33c4367d-2475-4cf5-8ac4-7ecd81642bbf
+md"""
+## Indexing a COO matrix
+"""
+
+# ╔═╡ 6a3e1a35-762a-4e1e-a706-310e21e618b3
+md"Element indexing requires $O({\rm nnz}(A))$ time."
+
+# ╔═╡ 8b6801b4-0ece-4484-a48f-f9435a868bc1
+coo_matrix = COOMatrix([1, 2, 3, 4, 5, 4, 5], [1, 2, 3, 4, 5, 3, 3], [1, 1, 1, 1, 1, demo_matrix[4,3], demo_matrix[5, 3]], 5, 5)
+
+# ╔═╡ 6f54c341-383a-4969-95d3-9e347862ddd2
+# uncomment to show the result
+# sizeof(coo_format)
 
 # ╔═╡ 0ea729be-40b2-41ab-991a-c87c8a79fbdf
 md"""
-## How to multiply a vector efficiently
+## Multiplying two COO matrices
 """
+
+# ╔═╡ 1365d99c-4baa-4f04-b5e3-a05fbb3a42c1
+md"In the following example, we compute `coo_matrix * coo_matrix`."
+
+# ╔═╡ cd21ceec-3ebd-459b-b28c-8942a885d4b6
+function Base.:(*)(A::COOMatrix{T1}, B::COOMatrix{T2}) where {T1, T2}
+	@assert size(A, 2) == size(B, 1)
+	rowval = Int[]
+	colval = Int[]
+	nzval = promote_type(T1, T2)[]
+	for (i, j, v) in zip(A.rowval, A.colval, A.nzval)
+		for (i2, j2, v2) in zip(B.rowval, B.colval, B.nzval)
+			if j == i2
+				push!(rowval, i)
+				push!(colval, j2)
+				push!(nzval, v * v2)
+			end
+		end
+	end
+	return COOMatrix(rowval, colval, nzval, size(A, 1), size(B, 2))
+end
+
+# ╔═╡ 2e7b7227-e3c8-4235-aeea-610508e25432
+coo_matrix * coo_matrix
+
+# ╔═╡ 09fff797-5ee7-442c-90de-fb2eae4ede7c
+demo_matrix ^ 2
+
+# ╔═╡ 90193207-5ace-4987-94f5-747690777ab3
+md"""
+Yep!
+"""
+
+# ╔═╡ 3b43ee31-eb5a-4e62-81ba-6196e1ad8420
+md"""
+Quiz: What is the time complexity of COO matrix multiplication?
+"""
+
+# ╔═╡ 86dc94e1-726a-40c5-87fd-6f5ab43774da
+md"""
+## Compressed Sparse Column (CSC) format
+"""
+
+# ╔═╡ c5eb77b7-f1e6-45fc-88ef-cf4edf331223
+md"""
+A CSC format sparse matrix can be constructed with the `SparseArrays.sparse` function
+"""
+
+# ╔═╡ 39c9b4c3-469d-45dd-ab89-523c48764480
+csc_matrix = sparse(coo_matrix.rowval, coo_matrix.colval, coo_matrix.nzval)
+
+# ╔═╡ eff3b121-edaa-4dcd-b3f3-fbdfb061713d
+md"It contains 5 fields"
+
+# ╔═╡ 3133cc77-6647-45c5-b693-5eaa1b9528bc
+fieldnames(csc_matrix |> typeof)
+
+# ╔═╡ 04531119-a926-4e9e-9f4f-b0cfc655f637
+md"""
+The `m`, `n`, `rowval` and `nzval` have the same meaning as those in the COO format.
+`colptr` is a integer vector of size $n+1$, the element of which points to the elements in `rowval` and `nzval`. Given a matrix $A \in \mathbb{R}^{m\times n}$ in the CSC format, the $j$-th column of $A$ is defined as
+`A[rowval[colptr[j]:colptr[j+1]-1], j] := rowval[colptr[j]:colptr[j+1]-1]`
+"""
+
+# ╔═╡ 242a2046-fae4-4a45-9792-2ac06deb08a3
+csc_matrix[:, 3]
+
+# ╔═╡ 009dd53d-402f-44a4-9dec-087887ab74eb
+md"The row indices of nonzero elements in the 3rd column."
+
+# ╔═╡ a59bda82-78cd-44e3-ad23-f3a887a33ad7
+rows3 = csc_matrix.rowval[csc_matrix.colptr[3]:csc_matrix.colptr[4]-1]
+
+# ╔═╡ bb4a7db3-c437-4247-8ba5-8f752960f8eb
+# or equivalently in Julia, we can use `nzrange`
+csc_matrix.rowval[nzrange(csc_matrix, 3)]
+
+# ╔═╡ 4cffe4df-c28a-4004-afc1-1652020d0aa7
+md"The values of nonzero elements in the 3rd column."
+
+# ╔═╡ e4b610d0-5247-4c6b-8f06-733504f8ebae
+csc_matrix.nzval[csc_matrix.colptr[3]:csc_matrix.colptr[4]-1]
+
+# ╔═╡ cb869bad-b17c-446e-860f-600e1054668d
+md"""
+## Indexing a CSC matrix
+"""
+
+# ╔═╡ a4ff9546-3dc4-463e-84b3-73303ced838d
+md"""
+The number of operations required to index an element in the $j$-th column of a CSC matrix is linear to the nonzero elements in the $j$-th column.
+"""
+
+# ╔═╡ 2a590b74-3ed1-44bf-87bc-c703a237211b
+# I do not want to overwrite `Base.getindex`
+function my_getindex(A::SparseMatrixCSC{T}, i::Int, j::Int) where T
+	for k in nzrange(A, j)
+		if A.rowval[k] == i
+			return A.nzval[k]
+		end
+	end
+	return zero(T)
+end
+
+# ╔═╡ 9296e387-fc25-495c-9299-564d7d512e72
+my_getindex(csc_matrix, 4, 3)
+
+# ╔═╡ 97d9d866-20bd-490f-b0e1-a722a3dedf29
+md"""
+## Multiplying two CSC matrices
+"""
+
+# ╔═╡ 27ebe6eb-5b47-400a-8e30-2dccafdaab24
+md"""
+Multiplying two CSC matrices is much faster than multiplying two COO matrices.
+"""
+
+# ╔═╡ 778b3d09-1b76-4ad0-bdd7-8cbd06918519
+function my_matmul(A::SparseMatrixCSC{T1}, B::SparseMatrixCSC{T2}) where {T1, T2}
+	T = promote_type(T1, T2)
+	@assert size(A, 2) == size(B, 1)
+	rowval, colval, nzval = Int[], Int[], T[]
+	for j2 in 1:size(B, 2)  # enumerate the columns of B
+		for k2 in nzrange(B, j2)  # enumerate the rows of B
+			v2 = B.nzval[k2]
+			for k1 in nzrange(A, B.rowval[k2])  # enumerate the rows of A
+				push!(rowval, A.rowval[k1])
+				push!(colval, j2)
+				push!(nzval, A.nzval[k1] * v2)
+			end
+		end
+	end
+	return sparse(rowval, colval, nzval, size(A, 1), size(B, 2))
+end
+
+# ╔═╡ fa3f8189-85eb-4943-8347-83aa6572c2fe
+my_matmul(csc_matrix, csc_matrix)
+
+# ╔═╡ e8234fbd-61a8-4ff8-9d18-b974267fb062
+csc_matrix^2
 
 # ╔═╡ fffdf566-3d54-4cbe-8543-bc88bd669f4c
 md"# Large sparse eigenvalue problem"
@@ -58,7 +306,10 @@ md"""
 """
 
 # ╔═╡ 3b75625c-2d92-4499-9662-ee1c7a173c30
-md"Power method"
+md"One can use the power method to compute dominant eigenvalues (one having the largest absolute value) of a matrix."
+
+# ╔═╡ 1981eb8f-e93b-44cb-b81d-6f8c7ed13ec1
+
 
 # ╔═╡ a51ddacf-7e9f-4ab5-be9b-f2ed4e9952aa
 md"The rate of convergence is dedicated by $|\lambda_2/\lambda_1|^k$."
@@ -320,7 +571,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "2810da36ff5c96af693608e9e35c2889d5a7d14b"
+project_hash = "16f80016e1f60eaf55c277e76da5abe133d8b3db"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -672,14 +923,59 @@ version = "17.4.0+0"
 # ╟─4990344c-81e8-48cf-93c0-fa1460e0470b
 # ╟─49a32422-2415-487e-b3be-28a0436bb552
 # ╠═e548acb6-bf53-11ed-1988-7325c1e2b481
-# ╠═455f8887-9b2c-4e67-abe5-5449efe55ce5
-# ╠═0c8bf832-0cf8-4b56-b064-1dd177aceae8
-# ╠═be9e7da9-a3c9-411e-bf2a-082c10e19bf5
-# ╠═3133cc77-6647-45c5-b693-5eaa1b9528bc
+# ╟─4e017416-db9b-43b9-8fd5-657e9810e075
+# ╟─893f30df-9984-41e3-8353-c23d22730dcc
+# ╟─5cca8d2a-7b49-4fcd-bf84-748cb0d66eb0
+# ╠═f19a3128-c0a5-4529-b839-1e97fb969483
+# ╠═83886259-6371-4a02-aedf-b84b413bc229
+# ╠═64ac1cc6-6463-44f8-be88-54f9f52fc12b
+# ╟─50b753dc-7033-447b-9480-2e7e0a052f78
+# ╟─cf51c362-3a4a-4f60-9123-2693b60e00fd
+# ╟─78da9988-7cc0-4be7-9b8b-89e0029971d7
+# ╟─6210e3be-fcd3-4682-9f45-8c8d1af9f99c
+# ╟─30eb61aa-b03c-4bb7-8491-c6e411a378fe
+# ╠═4f1e505c-170b-436f-a8ba-ef61c1d8943e
+# ╟─3b1537ea-6176-4996-acd0-05071187f95c
+# ╠═a205f6d4-8ecd-4103-9904-505c4ecc7b72
+# ╠═3b72536e-c005-4224-ba9d-b157f1c38310
+# ╟─33c4367d-2475-4cf5-8ac4-7ecd81642bbf
+# ╠═6a3e1a35-762a-4e1e-a706-310e21e618b3
+# ╠═78e46965-d581-4f1b-9b53-283441526571
+# ╠═8b6801b4-0ece-4484-a48f-f9435a868bc1
+# ╠═6f54c341-383a-4969-95d3-9e347862ddd2
 # ╟─0ea729be-40b2-41ab-991a-c87c8a79fbdf
+# ╟─1365d99c-4baa-4f04-b5e3-a05fbb3a42c1
+# ╠═cd21ceec-3ebd-459b-b28c-8942a885d4b6
+# ╠═2e7b7227-e3c8-4235-aeea-610508e25432
+# ╠═09fff797-5ee7-442c-90de-fb2eae4ede7c
+# ╟─90193207-5ace-4987-94f5-747690777ab3
+# ╟─3b43ee31-eb5a-4e62-81ba-6196e1ad8420
+# ╟─86dc94e1-726a-40c5-87fd-6f5ab43774da
+# ╟─c5eb77b7-f1e6-45fc-88ef-cf4edf331223
+# ╠═39c9b4c3-469d-45dd-ab89-523c48764480
+# ╟─eff3b121-edaa-4dcd-b3f3-fbdfb061713d
+# ╠═3133cc77-6647-45c5-b693-5eaa1b9528bc
+# ╟─04531119-a926-4e9e-9f4f-b0cfc655f637
+# ╠═242a2046-fae4-4a45-9792-2ac06deb08a3
+# ╟─009dd53d-402f-44a4-9dec-087887ab74eb
+# ╠═a59bda82-78cd-44e3-ad23-f3a887a33ad7
+# ╠═bb4a7db3-c437-4247-8ba5-8f752960f8eb
+# ╟─4cffe4df-c28a-4004-afc1-1652020d0aa7
+# ╠═e4b610d0-5247-4c6b-8f06-733504f8ebae
+# ╟─cb869bad-b17c-446e-860f-600e1054668d
+# ╟─a4ff9546-3dc4-463e-84b3-73303ced838d
+# ╠═2a590b74-3ed1-44bf-87bc-c703a237211b
+# ╠═9296e387-fc25-495c-9299-564d7d512e72
+# ╟─97d9d866-20bd-490f-b0e1-a722a3dedf29
+# ╟─27ebe6eb-5b47-400a-8e30-2dccafdaab24
+# ╠═778b3d09-1b76-4ad0-bdd7-8cbd06918519
+# ╠═fa3f8189-85eb-4943-8347-83aa6572c2fe
+# ╠═e8234fbd-61a8-4ff8-9d18-b974267fb062
 # ╟─fffdf566-3d54-4cbe-8543-bc88bd669f4c
+# ╠═0c8bf832-0cf8-4b56-b064-1dd177aceae8
 # ╟─f14621f1-a002-46c5-b0c0-15d008ab382c
 # ╟─3b75625c-2d92-4499-9662-ee1c7a173c30
+# ╠═1981eb8f-e93b-44cb-b81d-6f8c7ed13ec1
 # ╟─a51ddacf-7e9f-4ab5-be9b-f2ed4e9952aa
 # ╟─50717c84-e8cf-4e19-b344-7d50b0b290ff
 # ╠═166d4ddc-5e58-4210-a389-997c1ea82de2
