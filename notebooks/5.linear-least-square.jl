@@ -842,7 +842,7 @@ by Householder transformations.
 * Problems:
     1. How many Householder transformations are required?
     2. What does the first column of A become as a result of applying the first Householder transformation?
-    3. What does the first column of A become as a result of applying the first Householder transformation?
+    3. What does the first column of A become as a result of applying the second Householder transformation?
     4. How many Givens rotations would be required to computing the QR factoriazation of A?
 ### 2. Coding
 Computing the QR decomposition of a symmetric triangular matrix with Givens rotation. Try to minimize the computing time and estimate the number of FLOPS.
@@ -893,7 +893,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "cd3df8ab6206c1807bf1a96f1c03d728b167c474"
+project_hash = "f3ccd548493bd3f31c742b8b993a90fd0da8dd95"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
