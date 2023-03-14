@@ -62,4 +62,10 @@ You will need $(4-1) + (3-1) + (2-1) +(1-1) =6$ rotations.
 
 * Problem 2
 - Work done in file [[file:given_trisym.jl][here]].
--
+** FLOPS Calculation
+- We perform $m-1$ times of givens rotation
+- Within each givens rotation, we
+  1) Compute the ~GivensMatrix~ with $6$ floating point operations
+  2) In ~left_mul~, we need is on average $n*6$
+  3) In ~left_mul~, we need is on  average $m*6$
+- In total we need $(m-1)*(6+6m+6n)$ FLOPS
