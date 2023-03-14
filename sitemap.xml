@@ -43,4 +43,40 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
 </url>
+<url>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/notebooks/5.linear-least-square</loc>
+    <lastmod>2023-03-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/notebooks/3.julia</loc>
+    <lastmod>2023-03-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/notebooks/4.linearequation</loc>
+    <lastmod>2023-03-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/notebooks/garbage/</loc>
+    <lastmod>2023-03-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/notebooks/6.sparse</loc>
+    <lastmod>2023-03-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://giggleliu.github.io/ModernScientificComputing/notebooks/1.understanding-our-computing-devices</loc>
+    <lastmod>2023-03-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
 </urlset>
