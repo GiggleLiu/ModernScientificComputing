@@ -1,0 +1,4 @@
+Test Summary: | Pass  Total     Time
+OMEinsum.jl   |  600    600  2m44.1s
+     Testing OMEinsum tests passed
+
