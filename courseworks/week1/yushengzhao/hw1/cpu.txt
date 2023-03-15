@@ -1,0 +1,55 @@
+Architecture:                    x86_64
+CPU op-mode(s):                  32-bit, 64-bit
+Address sizes:                   46 bits physical, 57 bits v
+irtual
+Byte Order:                      Little Endian
+CPU(s):                          8
+On-line CPU(s) list:             0-7
+Vendor ID:                       GenuineIntel
+Model name:                      Intel Xeon Processor (Icela
+ke)
+CPU family:                      6
+Model:                           134
+Thread(s) per core:              1
+Core(s) per socket:              1
+Socket(s):                       8
+Stepping:                        0
+BogoMIPS:                        5985.93
+Flags:                           fpu vme de pse tsc msr pae 
+mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxs
+r sse sse2 ss syscall nx pdpe1gb rdtscp lm constant_tsc rep_
+good nopl xtopology cpuid tsc_known_freq pni pclmulqdq vmx s
+sse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_dea
+dline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm
+ 3dnowprefetch cpuid_fault invpcid_single ssbd ibrs ibpb sti
+bp ibrs_enhanced tpr_shadow vnmi flexpriority ept vpid ept_a
+d fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx51
+2f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx51
+2cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves 
+wbnoinvd arat avx512vbmi umip pku ospke avx512_vbmi2 gfni va
+es vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la5
+7 rdpid fsrm md_clear arch_capabilities
+Virtualization:                  VT-x
+Hypervisor vendor:               KVM
+Virtualization type:             full
+L1d cache:                       256 KiB (8 instances)
+L1i cache:                       256 KiB (8 instances)
+L2 cache:                        32 MiB (8 instances)
+L3 cache:                        128 MiB (8 instances)
+NUMA node(s):                    1
+NUMA node0 CPU(s):               0-7
+Vulnerability Itlb multihit:     Not affected
+Vulnerability L1tf:              Not affected
+Vulnerability Mds:               Not affected
+Vulnerability Meltdown:          Not affected
+Vulnerability Mmio stale data:   Vulnerable: Clear CPU buffe
+rs attempted, no microcode; SMT Host state unknown
+Vulnerability Retbleed:          Not affected
+Vulnerability Spec store bypass: Mitigation; Speculative Sto
+re Bypass disabled via prctl and seccomp
+Vulnerability Spectre v1:        Mitigation; usercopy/swapgs
+ barriers and __user pointer sanitization
+Vulnerability Spectre v2:        Mitigation; Enhanced IBRS, 
+IBPB conditional, RSB filling, PBRSB-eIBRS Not affected
+Vulnerability Srbds:             Not affected
+Vulnerability Tsx async abort:   Mitigation; TSX disabled

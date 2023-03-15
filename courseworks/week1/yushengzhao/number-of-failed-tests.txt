@@ -1,0 +1,55 @@
+Test Summary:                      | Pass  Fail  Error  Total     Time
+OMEinsum.jl                        |  593     1      6    600  1m28.9s
+  EinCode                          |   21                  21     1.3s
+  indexer                          |    3                   3     0.1s
+  dynamic indexer                  |    3                   3     0.0s
+  EinArray                         |    3                   3     0.3s
+  match rule                       |   42                  42     0.3s
+  isbatchmul                       |    8                   8     0.0s
+  match_rule eye candies           |    1                   1     0.0s
+  analyse binary                   |    8                   8     0.1s
+  binary rules                     |  251                 251    13.6s
+  match binary rules               |   18                  18     0.0s
+  binary einsum                    |   11                  11     4.0s
+  regression test                  |    1                   1     1.9s
+  polynomial scalar mul            |    1                   1     0.1s
+  utils                            |    6                   6     0.0s
+  allunique                        |    4                   4     0.0s
+  tensorpermute                    |    2                   2     0.1s
+  align_types                      |    2                   2     0.1s
+  batched gemm                     |    4                   4     0.8s
+  get output array                 |    2                   2     0.0s
+  tensor order check               |    2                   2     0.0s
+  get size dict                    |    3                   3     0.0s
+  einsum                           |   41                  41     3.8s
+  fallback                         |    3                   3     0.2s
+  error handling                   |    1                   1     0.0s
+  string input                     |    3                   3     0.0s
+  macro input                      |                 5      5     0.8s
+  argument checks                  |    4                   4     0.1s
+  dispatched                       |    9                   9     2.0s
+  isbatchmul                       |    5                   5     1.6s
+  duplicate                        |    2                   2     0.2s
+  issue 136                        |    2                   2     0.3s
+  fix rule cc,cb->bc               |   17                  17     0.8s
+  einsum bp                        |   38                  38    23.3s
+  gradient type check              |    4                   4     1.4s
+  string-specification             |    3                   3     0.6s
+  sequence specification           |    1                   1     1.3s
+  hessian                          |    1                   1     2.6s
+  einsequence                      |   18                  18     1.7s
+  macro                            |                 1      1     0.3s
+  flatten                          |    2                   2     0.5s
+  time, space, rw complexity       |    4                   4     0.6s
+  slice iterator                   |    5                   5     0.1s
+  SlicedEinsum                     |    9                   9     0.9s
+  unspecified index sizes          |    3                   3     0.2s
+  tree greedy                      |    5                   5     2.0s
+  fullerene                        |    6                   6     7.0s
+  regression test                  |    6                   6     0.4s
+  simplifier and permute optimizer |    1                   1     0.0s
+  save load                        |    4                   4     2.1s
+  Doctests: OMEinsum               |          1             1     4.5s
+ERROR: LoadError: Some tests did not pass: 593 passed, 1 failed, 6 errored, 0 broken.
+in expression starting at /Users/yushengzhao/.julia/dev/OMEinsum/test/runtests.jl:8
+ERROR: Package OMEinsum errored during testing
