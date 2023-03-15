@@ -160,7 +160,7 @@ coo_matrix = COOMatrix([1, 2, 3, 4, 5, 4, 5], [1, 2, 3, 4, 5, 3, 3], [1, 1, 1, 1
 
 # ╔═╡ 6f54c341-383a-4969-95d3-9e347862ddd2
 # uncomment to show the result
-# sizeof(coo_format)
+sizeof(coo_matrix)
 
 # ╔═╡ 0ea729be-40b2-41ab-991a-c87c8a79fbdf
 md"""
@@ -201,7 +201,8 @@ Yep!
 
 # ╔═╡ 3b43ee31-eb5a-4e62-81ba-6196e1ad8420
 md"""
-Quiz: What is the time complexity of COO matrix multiplication?
+* Quiz 1: What is the time complexity of COO matrix `setindex!` (`A[i, j] += v`)?
+* Quiz 2: What is the time complexity of COO matrix multiplication?
 """
 
 # ╔═╡ 86dc94e1-726a-40c5-87fd-6f5ab43774da
@@ -227,7 +228,7 @@ fieldnames(csc_matrix |> typeof)
 md"""
 The `m`, `n`, `rowval` and `nzval` have the same meaning as those in the COO format.
 `colptr` is a integer vector of size $n+1$, the element of which points to the elements in `rowval` and `nzval`. Given a matrix $A \in \mathbb{R}^{m\times n}$ in the CSC format, the $j$-th column of $A$ is defined as
-`A[rowval[colptr[j]:colptr[j+1]-1], j] := rowval[colptr[j]:colptr[j+1]-1]`
+`A[rowval[colptr[j]:colptr[j+1]-1], j] := nzval[colptr[j]:colptr[j+1]-1]`
 """
 
 # ╔═╡ 242a2046-fae4-4a45-9792-2ac06deb08a3
@@ -306,6 +307,11 @@ my_matmul(csc_matrix, csc_matrix)
 
 # ╔═╡ e8234fbd-61a8-4ff8-9d18-b974267fb062
 csc_matrix^2
+
+# ╔═╡ d7f295c4-ce02-46d0-9f14-5ec3d4f25ab3
+md"""
+Quiz: What is the time complexity of CSC matrix `setindex!` (`A[i, j] = v`)?
+"""
 
 # ╔═╡ fffdf566-3d54-4cbe-8543-bc88bd669f4c
 md"# Large sparse eigenvalue problem"
@@ -386,7 +392,7 @@ md"""
 ## Projecting a sparse matrix into a subspace
 Given $Q\in \mathbb{R}^{n\times k}$ and $Q^T Q = I$, the following statement is always true.
 ```math
-\lambda_1(Q^T_k A Q) \leq \lambda_1(A),
+\lambda_1(Q^T_k A Q_k) \leq \lambda_1(A),
 ```
 where $\lambda_1(A)$ is the largest eigenvalue of $A \in \mathbb{R}^{n\times n}$.
 """
@@ -527,6 +533,7 @@ let
 	tr, Q = lanczos(-A, q1; abstol=1e-8, maxiter=100)
 	# using function `KrylovKit.eigsolve`
 	@info "KrylovKit.eigsolve: " eigsolve(A, q1, 2, :SR)
+	@info Q' * Q
 	# diagonalize the triangular matrix obtained with our naive implementation
 	@info "Naive approach: " eigen(-tr).values
 end;
@@ -750,7 +757,7 @@ julia> sp.n
 
 # ╔═╡ dabdee6d-0c64-4dc7-9c09-15d388a32387
 md"""
-#### 2. Coding:
+#### 2. Coding (Choose one of the following two problems):
 1. (easy) Implement CSC format sparse matrix-vector multiplication as function `my_spv`. Please include the following test code into your project.
 ```julia
 using SparseArrays, Test
@@ -1200,6 +1207,7 @@ version = "17.4.0+0"
 # ╠═778b3d09-1b76-4ad0-bdd7-8cbd06918519
 # ╠═fa3f8189-85eb-4943-8347-83aa6572c2fe
 # ╠═e8234fbd-61a8-4ff8-9d18-b974267fb062
+# ╟─d7f295c4-ce02-46d0-9f14-5ec3d4f25ab3
 # ╟─fffdf566-3d54-4cbe-8543-bc88bd669f4c
 # ╟─f14621f1-a002-46c5-b0c0-15d008ab382c
 # ╟─3b75625c-2d92-4499-9662-ee1c7a173c30
