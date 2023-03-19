@@ -22,7 +22,7 @@ function givens(A, i, j)
 end
 
 function left_mul!(A::AbstractMatrix, givens::GivensMatrix)
-	for col in 1:size(A, 2)
+	@inbounds for col in 1:min(size(A, 2),3)
 		vi, vj = A[givens.i, col], A[givens.j, col]
 		A[givens.i, col] = vi * givens.c + vj * givens.s
 		A[givens.j, col] = -vi * givens.s + vj * givens.c
@@ -30,7 +30,7 @@ function left_mul!(A::AbstractMatrix, givens::GivensMatrix)
 	return A
 end
 function right_mul!(A::AbstractMatrix, givens::GivensMatrix)
-	for row in 1:size(A, 1)
+	@inbounds for row in 1:size(A, 1)
 		vi, vj = A[row, givens.i], A[row, givens.j]
 		A[row, givens.i] = vi * givens.c + vj * givens.s
 		A[row, givens.j] = -vi * givens.s + vj * givens.c
