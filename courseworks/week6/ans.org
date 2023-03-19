@@ -25,5 +25,6 @@ end
 
 * Problem 2
 ** Section A
--
+- See [[./csc.jl]]
 ** Section B
+- See [[./lanczos.jl]]
