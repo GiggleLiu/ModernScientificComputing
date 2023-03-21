@@ -32,9 +32,6 @@ using Images
 # ╔═╡ c3c583e6-79fa-4a8e-92ca-fa8a95a4982c
 using Plots
 
-# ╔═╡ 56c7b64f-bf4b-4b6a-93fd-d792d17660ea
-using BenchmarkTools
-
 # ╔═╡ 869f12fb-3ddb-4962-9243-9e0ce1f43e1d
 md"""
 ### Fourier transformation
@@ -410,8 +407,7 @@ plot(brain_signal)
 
 # ╔═╡ 7fe5a514-a9c8-4ae3-8318-729bff933299
 md"""
-### Hints
-As a hint, you can use the Ricker wavelet
+Here, we use the Ricker wavelet to analyse the above wave function.
 ```math
 A  \left(1 - \left(\frac{x}{a}\right)^2\right) e^{-\frac{x^2}{2a^2}},
 ```
@@ -431,15 +427,16 @@ let
 	plot(x, y)
 end
 
-# ╔═╡ 968f2f8d-4402-47b2-a3b7-ae18a7be9d94
+# ╔═╡ cb26291d-d6d6-4533-a37c-286cba0048b6
+md"### Tasks"
+
+# ╔═╡ 07153cbc-35e4-4cb2-b46c-e413ecfd6641
 md"""
-### Task
-Implement the wavelet transformation `z = wavelet_transformation(x, y)`, such that
+Please help me fix the following code to let the output be what we want. You need to implement the wavelet transformation `z = wavelet_transformation(x, y)`, such that
 ```math
 z_i = \sum_j x_{j-i} y_j
 ```
-
-You will get extra credit if you use the fast wavelet transformation that having time complexity $O(n \log(n))$.
+You are supposed to implement the fast wavelet transformation that having time complexity $O(n \log(n))$ where $n$ is the size of $x$ and $y$.
 """
 
 # ╔═╡ 289b1e96-9aa0-4c74-b545-4c7ebd0b37f2
@@ -450,6 +447,7 @@ function wavelet_transformation(signal::AbstractVector{T}, fw) where T
 end
 
 # ╔═╡ fc149a86-70cd-41a2-b122-719765449784
+# this is the test program
 let
 	# the width parameter `a` in the Ricker wavelet is 1..500
 	widths = 1:N÷10
@@ -462,43 +460,17 @@ let
 	heatmap(hcat(res...); ylabel="time", xlabel="widths")
 end
 
-# ╔═╡ e196d77f-3b41-440c-8274-1c86ccc0481b
-function conv_naive(x, w)
-	m, n = length(x), length(w)
-	c = zeros(m+n-1)
-	for k=1:m+n-1
-		j = k - n
-		c[k] = sum(i->w[i-j] * x[i], max(j+1, 1):min(m, n+j))
-	end
-	return c
-end
-
-# ╔═╡ 5a5eec67-c4d2-49fd-b9b4-07e3f5f55f9a
-function fast_conv(x, w)
-	return fast_polymul(x, w[end:-1:1])
-end
-
-# ╔═╡ 65fa45af-a349-4551-9d78-fdd23fa6417e
-let
-	x = randn(100000)
-	y = randn(50000)
-	@time conv_naive(x, y)
-	@time fast_conv(x, y)
-end
-
-# ╔═╡ 3841597e-b2f4-43c6-8766-497d55dfad72
-@testset "conv" begin
-	x = randn(10)
-	y = randn(20)
-	c1 = conv_naive(x, y)
-	c2 = fast_conv(x, y)
-	@test c1 ≈ c2
-end
+# ╔═╡ e8475529-9257-46ef-a28f-d041e371353c
+md"""
+In the submission (pull request), the following contents should be included
+1. The correct implementation of the `wavelet_transformation` function.
+2. The output image created by the above code block,
+3. An interpretation of the output image.
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -509,7 +481,6 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-BenchmarkTools = "~1.3.2"
 FFTW = "~1.6.0"
 Images = "~0.25.2"
 Plots = "~1.38.8"
@@ -523,7 +494,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "99af48b66f69e98708740f452e29294444b4d0fd"
+project_hash = "239d157fe50d088c740e4813d2175de50a659541"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -582,12 +553,6 @@ version = "0.4.6"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
-
-[[deps.BenchmarkTools]]
-deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
-git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
-uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.3.2"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
@@ -1484,10 +1449,6 @@ version = "1.3.0"
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
-[[deps.Profile]]
-deps = ["Printf"]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-
 [[deps.ProgressMeter]]
 deps = ["Distributed", "Printf"]
 git-tree-sha1 = "d7a7aef8f8f2d537104f170139553b14dfe39fe9"
@@ -2082,13 +2043,10 @@ version = "1.4.1+0"
 # ╠═3c567563-72fb-461d-a6b7-4153c28a44c6
 # ╠═c3c583e6-79fa-4a8e-92ca-fa8a95a4982c
 # ╠═9a72cda0-ee52-46d5-8dcf-c7b9fcc66798
-# ╠═fc149a86-70cd-41a2-b122-719765449784
-# ╟─968f2f8d-4402-47b2-a3b7-ae18a7be9d94
+# ╟─cb26291d-d6d6-4533-a37c-286cba0048b6
+# ╟─07153cbc-35e4-4cb2-b46c-e413ecfd6641
 # ╠═289b1e96-9aa0-4c74-b545-4c7ebd0b37f2
-# ╠═e196d77f-3b41-440c-8274-1c86ccc0481b
-# ╠═5a5eec67-c4d2-49fd-b9b4-07e3f5f55f9a
-# ╠═56c7b64f-bf4b-4b6a-93fd-d792d17660ea
-# ╠═65fa45af-a349-4551-9d78-fdd23fa6417e
-# ╠═3841597e-b2f4-43c6-8766-497d55dfad72
+# ╠═fc149a86-70cd-41a2-b122-719765449784
+# ╟─e8475529-9257-46ef-a28f-d041e371353c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
