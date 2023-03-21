@@ -14,466 +14,841 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 84c14a09-2c9e-4919-bfb1-cdf4d5a61776
-# ╠═╡ show_logs = false
-begin
-	using AbstractTrees, PlutoUI, Reexport
-	include("../lib/PlutoLecturing/src/PlutoLecturing.jl")
-	using .PlutoLecturing
-	presentmode()
-	TableOfContents(aside=true)
-end
+# ╔═╡ 37dc4b11-8849-41ad-9afe-5f792ea1fab8
+using PlutoUI
 
-# ╔═╡ a88e6865-235b-428a-9546-5da2daa3e03c
-using Plots
+# ╔═╡ bf6f8198-d120-4729-af67-ddb23f0c40d9
+using LinearAlgebra
 
-# ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
+# ╔═╡ 8dc256a3-06be-4df9-aa88-1ef1e574055e
+using Test
+
+# ╔═╡ c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
 using BenchmarkTools
 
-# ╔═╡ cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
-using LinearAlgebra: mul!
+# ╔═╡ d959c85c-0895-475c-b9f8-57368fc5e744
+using Plots
 
-# ╔═╡ 8776764c-4483-476b-bfff-a3e779431a68
-using Random
+# ╔═╡ cdaafdfa-9252-410f-af0c-e47a145fbfe3
+TableOfContents(; depth=2)
 
-# ╔═╡ 292dc84c-b2ed-4a35-b817-be6266b40ff1
-using Profile
+# ╔═╡ 2464e2fc-1a00-4572-b54c-f87b3239f9ad
+html"<button onclick='present();'>present</button>"
 
-# ╔═╡ 5c5f6214-61c5-4532-ac05-85a43e5639cc
-md"""
-# About this course (10min)
-## What is scientific computing?
-"""
+# ╔═╡ f6fa6216-0945-4c98-b507-7c91600d8c2f
+md"## About assignments"
 
-# ╔═╡ 0fe286ff-1359-4eb4-ab6c-28b231f9d56e
-PlutoLecturing.leftright(PlutoLecturing.netimage("https://upload.wikimedia.org/wikipedia/commons/c/ce/Genegolub.jpg"), md"""
-Scientific computing is the collection of tools, techniques and theories required to solve $(PlutoLecturing.highlight("on a computer")) the $(PlutoLecturing.highlight("mathematical models")) of problems in $(PlutoLecturing.highlight("science and engineering")).
-
--- Gene H. Golub and James M. Ortega
-"""; left=0.3)
-
-# ╔═╡ c51b55d2-c899-421f-a633-1daa4168c6d5
-md"## Textbook"
-
-# ╔═╡ d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-PlutoLecturing.leftright(md"""
-$(PlutoLecturing.localimage("images/textbook.jpg"))
-""", md"""
-#### Chapters
-1. Scientific Computing
-2. Systems of linear equations
-3. Linear least squares
-4. Eigenvalue problems
-5. Nonlinear equations
-6. Optimization
-7. Interpolation
-8. $(PlutoLecturing.del("Numerical integration and differentiation"))
-9. $(PlutoLecturing.del("Initial value problems for ordinary differential equations"))
-10. $(PlutoLecturing.del("Boundary value problems for ordinary differential equations"))
-11. $(PlutoLecturing.del("Partial differential equations"))
-12. Fast fourier transform
-13. Random numbers and stochastic simulation
-"""; width=660, left=0.4)
-
-# ╔═╡ f36e7b45-193e-4028-aae5-352711b8406d
-md"# Lecture 1: Understanding our computing devices"
-
-# ╔═╡ 72924c3a-0bbe-4d74-b2a9-60b250db4ec2
-PlutoLecturing.blackboard("What is inside a computer?  <br>(40min)")
-
-# ╔═╡ 163016e4-9133-4c61-a7ac-82e41e6db234
-md"## Get hardware information (Linux)"
-
-# ╔═╡ a3d7aa29-1099-48c5-94d8-b6148fa1e0fd
-PlutoLecturing.blackboard("Get hardware information"; coding=true, subtitle="&#36; lscpu <br>&#36; lsmem <br>&#36; top")
-
-# ╔═╡ f5ad618c-0a00-475f-b05d-97deba0faaef
-@xbind show_cpuinfo CheckBox()
-
-# ╔═╡ d5c2f523-80dd-40df-bf11-dd58cd493606
-if show_cpuinfo run(`lscpu`) end
-
-# ╔═╡ d6dca51b-978e-456e-b7c0-b658d894101d
-@xbind show_meminfo CheckBox()
-
-# ╔═╡ c0aa6f21-47d5-4f03-8b9b-a8df5c18a1b8
-if show_meminfo run(`lsmem`) end
-
-# ╔═╡ 2c92ab20-c105-4623-83c2-239462d59707
-@xbind show_processinfo CheckBox()
-
-# ╔═╡ 96c87a95-ca76-4cf5-8920-8d1f014ba47b
-if show_processinfo run(`top -n 1 -b`) end
-
-# ╔═╡ c0db86ae-d6b3-49b4-bde1-d6c2585090e8
-md"# Number system (20min)"
-
-# ╔═╡ c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
-md"## Integers"
-
-# ╔═╡ 17f877cd-3958-4b49-a0cc-fb0529800223
-md"Integer type range is"
-
-# ╔═╡ 5a5fd311-4c9f-4fa0-8f5a-d3f5acba3106
-typemin(Int64)
-
-# ╔═╡ 24684e2a-e99e-43f3-ba66-881634e4ba1b
-bitstring(typemin(Int64))
-
-# ╔═╡ 79565487-c1fb-47d7-b50d-a0a39a8849d9
-bitstring(typemin(Int64) + 1)
-
-# ╔═╡ baeefdd1-09ef-4b5d-8cf4-c4eeb98d3335
-bitstring(0)
-
-# ╔═╡ 4cf1e164-c510-47da-a138-f4582bfa0270
-md" $(@bind show_minus1 CheckBox()) Show the bitstring for -1 (binded to `show_minus1`)"
-
-# ╔═╡ 07b3e56b-78fd-4894-b310-096281009764
-if show_minus1 bitstring(-1) end
-
-# ╔═╡ cc2e0ab8-83cc-44fe-9782-eabee896bcc0
-typemax(Int64)
-
-# ╔═╡ e51adfeb-3868-43c2-8f64-21bd1a4e8522
-bitstring(typemax(Int64))
-
-# ╔═╡ 9186b86b-88b1-4165-94ac-b738882a2c23
-md"## Floating point numbers"
-
-# ╔═╡ 31d784e6-22b5-430a-a571-6aad7aaefee1
-LocalResource("images/float-format.png")
-
-# ╔═╡ 5a10796f-c084-451e-89f5-75ba8364f2d8
-md"image source: https://en.wikipedia.org/wiki/IEEE_754"
-
-# ╔═╡ 8eff13e4-1d93-4add-b516-46307fca965a
-bitstring(0.15625f0)
-
-# ╔═╡ c3db170e-20f0-4488-98b0-7a65090728a1
-exponent(0.15625f0)
-
-# ╔═╡ 2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
-md"The significant is in range [1, 2)"
-
-# ╔═╡ 27212a7a-fdd0-423d-a008-83c6f6e257c6
-significand(0.15625f0)  # the fraction
-
-# ╔═╡ e5c3c192-e398-4bb1-9933-6c6070b10756
-typemax(Float64)
-
-# ╔═╡ c761fcf3-7386-437a-b37c-af256e189a10
-bitstring(Inf)
-
-# ╔═╡ 9f58f7f1-ab35-499b-aefe-6bdecd137e1d
-prevfloat(Inf)
-
-# ╔═╡ 5f27ff9c-2d86-4d8c-9d95-025e72e56c95
-typemin(Float64)
-
-# ╔═╡ 21bfac50-1d7d-4737-bf1e-aef799353734
-bitstring(-Inf)
-
-# ╔═╡ 129207a7-b88a-47bd-a853-e5db71ed65c5
-prevfloat(0.0)
-
-# ╔═╡ d49a05c0-e60d-471d-ba19-e5e9708fa4f7
-nextfloat(0.0)
-
-# ╔═╡ 7275c2ec-996a-4335-ac8b-9b94719a765f
-Inf-Inf
-
-# ╔═╡ 1eab94a9-c00d-4d12-95fb-08f26d05b4d4
-0 * NaN
-
-# ╔═╡ ccc49ad6-e8c2-479c-8341-fc16877b50cf
-bitstring(NaN)
-
-# ╔═╡ 1d75ba45-2b66-47b2-a528-0e30e982c5e7
-md"## The distribution of floating point numbers"
-
-# ╔═╡ 1baa4439-9325-4e7f-bdd5-53410a200d41
-md"The distribution of floating point numbers"
-
-# ╔═╡ 9513bd15-5789-4a56-961b-175f8dabfdaf
-@xbind npoints Slider(1:10000; default=1000, show_value=true)
-
-# ╔═╡ 38e23738-f7fb-4b9e-9067-200d42f6a1e4
-xs = filter(!isnan, reinterpret(Float64, rand(Int64, npoints)));
-
-# ╔═╡ 8fd31129-f150-4114-afa5-8106dba8009f
-md"From the linear scale plot, you will see data concentrated around 0
-(each vertical bar is a sample)"
-
-# ╔═╡ e59b8bb2-95df-492e-bd15-24a1de2573f5
-scatter(xs, zeros(length(xs)), xlim=(-1e300, 1e300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
-
-# ╔═╡ c64ed02d-0c62-4cab-9bcf-35dfbfedddc6
-md"If we use logarithmic x-axis"
-
-# ╔═╡ c13955ef-4986-4d56-8e1e-48c6becd213a
-@xbind smearing_factor Slider(0.1:0.1:5.0; show_value=true, default=1.0)
-
-# ╔═╡ be7247b8-ac5d-4b3a-ba3b-e8da37ef1e08
-let
-	logxs = sign.(xs) .* log10.(abs.(xs))
-	ax = scatter(logxs, zeros(length(xs)), xlim=(-300, 300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
-	a = -300:300
-	# smoothen the distribution with Lorentz function
-	m = 1/π/smearing_factor ./ (((a' .- logxs) ./ smearing_factor) .^ 2 .+ 1)
-	plot!(ax, a, dropdims(sum(m, dims=1), dims=1); label="probability")
-end
-
-# ╔═╡ 16dc1e93-9f16-4299-9e8e-59dff16b6fd9
-md"# Estimating the computing power of your devices (20min)"
-
-# ╔═╡ 5c13904a-505b-4fec-9e32-0ffa54a9dad8
-md"""## Example 1: Matrix multiplication
-```math
-C_{ik} = \sum_j A_{ij} \times B_{jk}
+# ╔═╡ a0fa8273-cf22-4cb4-ad4b-b83aee874556
+md"1. You should submit your homework through Github pull request. Xuanzhao Gao will comment on your PR, then you should resolve the issues to get your PR merged. You should submit different PRs for different assignments. [Open repo](https://github.com/GiggleLiu/ModernScientificComputing)
+2. We will grade based on your merged PRs. You will not be failed if your submition is complete.
+4. You may check the answers of other students, but you must credit him in your PR description, e.g.
 ```
-"""
-
-# ╔═╡ 13dabaa8-7310-4557-ad06-e64f566ca256
-md"""
-Let the matrix size be `n x n`, the peudocode for general matrix multiply (GEMM) is
+### Reference:
+* PR #3
+* PR #4
 ```
-for i=1:n
-	for j=1:n
-		for k=1:n
-			C[i, k] = A[i, j] * B[j, k]
-		end
-	end
-end
-```
-"""
-
-# ╔═╡ 37e9697d-e2ed-4fa4-882b-5cd77586d719
-md"GEMM is CPU bottlenecked"
-
-# ╔═╡ 040fc63d-0b5c-4b33-ac8e-946573dc1c0c
-@xbind matrix_size NumberField(2:3000; default=1000)
-
-# ╔═╡ 054c57f7-22cb-4d47-a79c-7ef035586f0c
-@xbind benchmark_example1 CheckBox()
-
-# ╔═╡ 88d538e9-3757-4f87-88c5-68078aef681f
-md"Loading the package for benchmarking"
-
-# ╔═╡ ead892c7-dc0d-452b-9443-15a854683f43
-md"Loading the matrix multiplication function"
-
-# ╔═╡ 4dba5c49-7bfb-426b-8461-f062a9c4a365
-if benchmark_example1
-	let
-		# creating random vectors with normal distribution/zero elements
-		A = randn(Float64, matrix_size, matrix_size)
-		B = randn(Float64, matrix_size, matrix_size)
-		C = zeros(Float64, matrix_size, matrix_size)
-		@benchmark mul!($C, $A, $B)
-	end
-end
-
-# ╔═╡ 407219ae-51df-487e-a831-c6087428159c
-md"Calculating the **floating point operations per second**"
-
-# ╔═╡ 4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
-PlutoLecturing.blackboard("FLOPS for computing GEMM<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
-
-# ╔═╡ a87eb239-70a5-4da2-a8ce-4d3a93d976b4
-md"""
-## Example 2: axpy
-"""
-
-# ╔═╡ 330c3319-7954-466d-9100-f6ec19f43fcc
-md"""
-axpy! is memory I/O bottlenecked
-"""
-
-# ╔═╡ 9acd075f-bd77-41da-8455-e54063cbc8b4
-function axpy!(a::Real, x::AbstractVector, y::AbstractVector)
-	@assert length(x) == length(y) "the input size of x and y mismatch, got $(length(x)) and $(length(y))"
-	@inbounds for i=1:length(x)
-		y[i] += a * x[i]
-	end
-	return y
-end
-
-# ╔═╡ 9abf93ab-ad22-4911-b459-fa5c6f139152
-@xbind axpy_vector_size NumberField(2:10000000; default=1000)
-
-# ╔═╡ 85d0bce1-ca15-4a86-821f-87d3ec0b715c
-@xbind benchmark_axpy CheckBox()
-
-# ╔═╡ f5edd248-eb04-41d1-b435-21aa77b010b7
-if benchmark_axpy
-	let
-		x = randn(Float64, axpy_vector_size)
-		y = randn(Float64, axpy_vector_size)
-		@benchmark axpy!(2.0, $x, $y)
-	end
-end
-
-# ╔═╡ 0e3bfc93-33ff-487e-ac73-71922fabf660
-PlutoLecturing.blackboard("FLOPS for computing axpy", subtitle="the number of floating point operations / the number of seconds")
-
-# ╔═╡ 13ff13dd-1146-46f7-99a0-c9ee7e878931
-md"## Example 3: modified axpy"
-
-# ╔═╡ d381fcf1-3b53-49fa-a5af-1a242c83d05c
-function bad_axpy!(a::Real, x::AbstractVector, y::AbstractVector, indices::AbstractVector{Int})
-	@assert length(x) == length(y) == length(indices) "the input size of x and y mismatch, got $(length(x)), $(length(y)) and $(length(indices))"
-	@inbounds for i in indices
-		y[i] += a * x[i]
-	end
-	return y
-end
-
-# ╔═╡ bb0e95c9-0a73-4367-b738-f42994758ffc
-md"I will show this function is latency bottlenecked"
-
-# ╔═╡ 94016043-b913-4413-8c6a-e2b2a75dd9dd
-@xbind bad_axpy_vector_size NumberField(2:10000000; default=1000)
-
-# ╔═╡ 7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-@xbind benchmark_bad_axpy CheckBox()
-
-# ╔═╡ 5245a31a-62c3-422d-8d04-d2bdf496cbcc
-if benchmark_bad_axpy
-	let
-		x = randn(Float64, bad_axpy_vector_size)
-		y = randn(Float64, bad_axpy_vector_size)
-		indices = randperm(bad_axpy_vector_size)
-		@benchmark bad_axpy!(2.0, $x, $y, $indices)
-	end
-end
-
-# ╔═╡ d41f8743-d3ba-437e-b7db-a9b6d1756543
-PlutoLecturing.blackboard("FLOPS for computing bad axpy", subtitle="the number of floating point operations / the number of seconds")
-
-# ╔═╡ f48ae9b5-51dd-4434-870d-4c5e73497433
-md"""
-# Programming on a device （30min）
-"""
-
-# ╔═╡ 035f8874-d463-4fa8-92cc-49f1fd226d23
-md"## You program are compiled to binary"
-
-# ╔═╡ 7f0ff65f-40fd-4907-b54a-9a5ba4fcccca
-with_terminal() do
-	x, y = randn(10), randn(10)
-	@code_native axpy!(2.0, x, y)
-end
-
-# ╔═╡ e5d9327e-75b2-4f99-97da-d3be1c8cd405
-md"Let us check an easier one"
-
-# ╔═╡ 39c580e0-d184-4400-8562-b5ba6a2d4a81
-function oneton(n::Int)
-   res = zero(n)
-   for i = 1:n
-		res+=i
-   end
-	return res
-end
-
-# ╔═╡ b52078f1-605a-47aa-87f8-ce3b000aa10a
-with_terminal() do
-	@code_native oneton(10)
-end
-
-# ╔═╡ f37d0016-16ab-4bdd-8728-00f26f6e87a9
-md"An instruct has a binary correspondence: [check the online decoder](https://defuse.ca/online-x86-assembler.htm#disassembly)"
-
-# ╔═╡ 980dac9e-092a-47e0-bcca-85c7e5ededab
-md"## Measuring the performance"
-
-# ╔═╡ 56c9c50e-bb43-4c27-88a6-ea3a26288b57
-@xbind profile_axpy CheckBox()
-
-# ╔═╡ d31f0924-aca0-446d-b06c-92a3daa65ae2
-if profile_axpy
-	with_terminal() do
-		# clear previous profiling data
-		Profile.init(; n=10^6, delay=0.001)
-		x, y = randn(100000000), randn(100000000)
-		@profile axpy!(2.0, x, y)
-		Profile.print()
-	end
-end
-
-# ╔═╡ 4fc93548-0253-4e09-b2a2-61f08818105d
-PlutoLecturing.blackboard("How does profiling work?", subtitle="* function call stack <br> * two approaches: instrumentation and sampling</span>")
-
-# ╔═╡ d7784369-1591-4c22-ad17-e9ce7d31dff0
-md"# Summarize
-1. understanding the components of our computing devices
-2. the bottlenecks of our computing devices
-3. how to get our program compiled and executed
-3. how to measure the performance of a program with profiling
 "
 
-# ╔═╡ 752a7d31-5065-4d13-86b8-63eb279d1f7b
-md"""
-# Next lecture
-We have have a $(PlutoLecturing.highlight("coding seminar")).
-I will show you some cheatsheets about
-* Linux operation system
-* Vim
-* Git
-* SSH
-* Julia installation Guide
+# ╔═╡ 78b6f5be-0aec-4e40-8512-fb58c253a7e9
+md"# System of Linear Equations
+```math
+{\text Solving: } ~~\mathbf{A} \mathbf{x} = \mathbf{b}
+```
+"
 
-Please bring your laptops and get your hands dirty!
-If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
+# ╔═╡ c1cf7bba-3d47-4c8c-8f1b-64808c300f72
+md"Quiz: In a cage, chickens and rabbits add up to 35 heads and 94 feet. Please count the number of chickens and rabbits."
+
+# ╔═╡ 24e421db-547b-416b-8c37-582e9aa78165
+md"### Table of contents"
+
+# ╔═╡ e5c4aeef-5818-406c-be55-b6b010c960db
+md"* Gaussian elimination algorithm
+* Pivoting technique
+* Sensitivity analysis and condition number
+* Getting matrix inverse with Gauss-Jordan elimination
+* Solving linear equations for special matrices (optional)
+"
+
+# ╔═╡ a7203d10-cffd-4f08-80c2-f6b1465210bd
+md"## Schetch of solving the linear equation"
+
+# ╔═╡ 3a411c5f-264b-4f81-98ba-53eecdad3d28
+md"""
+```math
+\begin{align}
+&A = L U\\
+&x = A^{-1}b = U^{-1} L^{-1} b
+\end{align}
+```
 """
 
-# ╔═╡ 68176e03-544b-4a30-a096-c117c6625113
-md"## Pre-reading"
-
-# ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
-md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
-
-# ╔═╡ dec1a9dd-de98-4dc3-bc82-ee34efb000ab
+# ╔═╡ 4015a2f9-a281-44ab-974c-7cd46041d105
 md"""
-* $(PlutoLecturing.highlight("1/13: Course overview + the shell (1 - expert)"))
-* $(PlutoLecturing.highlight("1/14: Shell Tools and Scripting (4 - basic)"))
-* $(PlutoLecturing.highlight("1/15: Editors (Vim) (2 - basic)"))
-* 1/16: Data Wrangling
-* 1/21: Command-line Environment
-* $(PlutoLecturing.highlight("1/22: Version Control (Git) (3 - expert)"))
-* 1/23: Debugging and Profiling
-* 1/27: Metaprogramming (build systems, dependency management, testing, CI)
-* 1/28: Security and Cryptography
-* 1/29: Potpourri
-* 1/30: Q&A
+## Solving tridiagonal linear equation
+```math
+Lx = b
+```
 """
 
-# ╔═╡ a5fbf397-70d1-4dfd-a1ea-abff06007239
+# ╔═╡ 53e51d33-9d03-4473-8ed8-aba1ef9ef105
 md"""
-!!! note
-    *  Yellow backgrounded lectures are required by AMAT5315
-    * (n - basic) is the reading order and the level of familiarity
+```math
+L = \left(\begin{matrix}
+l_{11} & 0 & 0\\
+l_{21} & l_{22} & 0\\
+l_{31} & l_{32} & l_{33}\\
+\end{matrix}\right)
+```
+"""
+
+# ╔═╡ 02605f8e-b457-11ed-19c4-7d6d14b67507
+md"""## Algorithm 2.1: Forward-Substitution for Lower Triangular System"""
+
+# ╔═╡ fb583209-eb00-41ce-9fc6-906898327ecd
+md"""
+```math
+x_1 = b_1/l_{11},~~~ x_i = \left(b_i - \sum_{j=1}^{i-1}l_{ij}x_j\right)/l_{ii},~~ i=2, ..., n
+```
+"""
+
+# ╔═╡ 742a79b6-6ced-467e-961b-814da8b65af7
+function back_substitution!(l::AbstractMatrix, b::AbstractVector)
+	n = length(b)
+	@assert size(l) == (n, n) "size mismatch"
+	x = zero(b)
+	# loop over columns
+	for j = 1:n
+		# stop if matrix is singular
+		if iszero(l[j, j])
+			error("The lower triangular matrix is singular!")
+		end
+		# compute solution component
+		x[j] = b[j] / l[j, j]
+		for i = j+1:n
+			# update right hand side
+			b[i] = b[i] - l[i, j] * x[j]
+		end
+	end
+	return x
+end
+
+# ╔═╡ d3e1ef10-3f99-4561-87db-47c0fc47e9e9
+l = tril(randn(4, 4))
+
+# ╔═╡ 2381b052-7415-4d22-84f1-292bd7a5c87d
+b = randn(4)
+
+# ╔═╡ d24203f3-9b41-4bdb-8bb4-204bc5afe44f
+back_substitution!(l, copy(b))
+
+# ╔═╡ 5ffcc036-89fa-4bb9-8b9e-5d320d022c67
+md"The Julia's version"
+
+# ╔═╡ f7cffe31-15e4-4c5a-b7be-b49463120ec7
+LowerTriangular(l) \ b
+
+# ╔═╡ 7649913c-523f-4fa3-bf1e-ea1566b55114
+md"## LU Factorization"
+
+# ╔═╡ 4aee8572-c0df-4670-b383-a05fb24d8f57
+md"
+```math
+A = LU
+```
+"
+
+# ╔═╡ 90a658b2-fd6a-4260-a0b6-5b1ae62ed469
+md"## The Gaussian elimination process"
+
+# ╔═╡ 081d4926-e14c-46bb-8e21-fadea25b13a0
+md"""
+```math
+A = \left(\begin{matrix}
+a_{11} & a_{12} & a_{13} \\
+a_{21} & a_{22} & a_{23} \\
+a_{31} & a_{32} & a_{33}
+\end{matrix}\right)
+```
+"""
+
+# ╔═╡ 24fa07b8-6a9c-47d6-8f72-9346f1325ab4
+md"## The elementary elimination matrix"
+
+# ╔═╡ a890cdb6-34b6-4a3c-8749-e1543e9764ba
+md"""
+```math
+M_1 A = \left(\begin{matrix}
+a_{11} & a_{12} & \ldots \\
+0 & a_{22}' & \ldots \\
+\vdots & \vdots & \ddots
+\end{matrix}\right)
+```
+"""
+
+# ╔═╡ af1f932e-a6db-41ce-ace3-170228bb183b
+# ```math
+# (M_k)_{ij} = \begin{cases}
+# 	\delta_{ij} & i= j,\\
+# 	- a_{ik}/a_{kk} & i > j \land j = k, \\
+#	0 & {\rm otherwise}.
+#\end{cases}
+#```
+md"""
+```math
+M_k = \left(\begin{matrix}
+
+1 & \ldots & 0 & 0 & 0 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 1 & 0 & 0 & \ldots & 0\\
+0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
+0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
+
+\end{matrix}\right)
+```
+where $m_i = a_i/a_k$.
+"""
+
+# ╔═╡ 9640cc8d-f8c0-4d3b-b51a-3ad3865630bc
+md"Then
+```math
+L = M_1^{-1} M_2^{-1} \ldots M_{n-1}^{-1}
+```
+"
+
+# ╔═╡ 83e0cdc0-70d3-48d2-bf1c-8ed364652aed
+md"## Properties of elimination matrices
+```math
+M_k^{-1} = 2I - M_k
+```
+
+```math
+M_k M_{k' > k} = M_k + M_{k'} - I
+```
+"
+
+# ╔═╡ 2b3596d7-17a3-46bb-b687-302c1255a4af
+md"## Coding: Properties of elimination matrices"
+
+# ╔═╡ b8cf4822-d91b-47f4-86e4-a36d668b5256
+A3 = [1 2 2; 4 4 2; 4 6 4]
+
+# ╔═╡ faa03439-b526-4c27-a9dc-593b5a32cb04
+function elementary_elimination_matrix(A::AbstractMatrix{T}, k::Int) where T
+	n = size(A, 1)
+	@assert size(A, 2) == n
+	# create Elementary Elimination Matrices
+	M = Matrix{Float64}(I, n, n)
+	for i=k+1:n
+		M[i, k] =  -A[i, k] ./ A[k, k]
+	end
+	return M
+end
+
+# ╔═╡ 416f9a74-2d88-4788-92b1-847eda6539cc
+md"The elimination"
+
+# ╔═╡ b8379e6d-768d-4a43-8370-1583324750f3
+elementary_elimination_matrix(A3, 1)
+
+# ╔═╡ e478efbc-a75f-4fb4-8ea8-f24ea7f8a9c2
+elementary_elimination_matrix(A3, 1) * A3
+
+# ╔═╡ 73fa4829-33dc-46e7-935d-b4c78bdb02d3
+md"The inverse"
+
+# ╔═╡ fc286cee-c912-4395-8af6-77702d5fef31
+inv(elementary_elimination_matrix(A3, 1))
+
+# ╔═╡ b4282280-a825-456f-90ec-cfc274c68864
+md"The multiplication"
+
+# ╔═╡ 32ce956f-a90f-44fb-8473-438dd2a6ba78
+elementary_elimination_matrix(A3, 2)
+
+# ╔═╡ 2a8da2fe-f21e-44ac-9253-583c06dd5134
+inv(elementary_elimination_matrix(A3, 1)) * inv(elementary_elimination_matrix(A3, 2))
+
+# ╔═╡ 87de48b5-4d4e-4b8a-9f2c-4b6dc328a502
+md"## Algorithm 2.3: LU Factorization by Gaussian Elimination"
+
+# ╔═╡ a4b32a01-2d7f-4933-a3cb-2ab2d0c6cb2e
+function lufact_naive!(A::AbstractMatrix{T}) where T
+	n = size(A, 1)
+	@assert size(A, 2) == n
+	M = Matrix{T}(I, n, n)
+	for k=1:n-1
+		m = elementary_elimination_matrix(A, k)
+		M = M * inv(m)
+		A .= m * A
+	end
+	return M, A
+end
+
+# ╔═╡ 4d8276dc-9356-47f8-afa6-5329dde63468
+lufact_naive!(copy(A3))
+
+# ╔═╡ 405450f7-807d-45a8-94ac-54ef9972b234
+let
+	A = [1 2 2; 4 4 2; 4 6 4]
+	L, U = lufact_naive!(copy(A))
+	@test L * U ≈ A
+end
+
+# ╔═╡ 1df2f386-2b55-4fb0-a035-64cf454e2698
+md"Better implementation"
+
+# ╔═╡ fadba4ba-efca-48f7-bf31-959f458f64d5
+function lufact!(a::AbstractMatrix)
+	n = size(a, 1)
+	@assert size(a, 2) == n "size mismatch"
+	m = zero(a)
+	m[1:n+1:end] .+= 1
+	# loop over columns
+	for k=1:n-1
+		# stop if pivot is zero
+		if iszero(a[k, k])
+			error("Gaussian elimination fails!")
+		end
+		# compute multipliers for current column
+		for i=k+1:n
+			m[i, k] = a[i, k] / a[k, k]
+		end
+		# apply transformation to remaining sub-matrix
+		for j=k+1:n
+			for i=k+1:n
+				a[i,j] -= m[i,k] * a[k, j]
+			end
+		end
+	end
+	return m, triu!(a)
+end
+
+# ╔═╡ f2bab70d-847f-495b-ba30-409156a9a874
+lufact(a::AbstractMatrix) = lufact!(copy(a))
+
+# ╔═╡ 480b6065-f9ca-4770-baa4-f1451fc046b8
+@testset "LU" begin
+	a = randn(4, 4)
+	L, U = lufact(a)
+	@test istril(L)
+	@test istriu(U)
+	@test L * U ≈ a
+end
+
+# ╔═╡ b81714d1-9a3c-4800-b478-68cabbc5d10d
+A4 = randn(4, 4)
+
+# ╔═╡ 1f1267d0-9ff2-44a4-b418-a42953159a1e
+lufact(A4)
+
+# ╔═╡ 5e426a5f-65cf-4adf-8b2b-ea28534e529a
+md"The Julia's version"
+
+# ╔═╡ 9d30b63e-f437-420b-8c22-037d34e1be2f
+julia_lures = lu(A4, NoPivot())  # the version we implemented above has no pivot
+
+# ╔═╡ 4a18900a-9051-4451-9736-724b19c3bd5d
+julia_lures.U
+
+# ╔═╡ aacd052d-b6e7-4f40-b08a-872aa9420c46
+typeof(julia_lures)
+
+# ╔═╡ c86a4d3c-adf3-429a-a4b4-8a0aaec83b43
+fieldnames(julia_lures |> typeof)
+
+# ╔═╡ d75af574-ee8e-4e8f-839f-9ebbb288397a
+md"## Complexity Analysis
+```math
+O(n^3)
+```
+"
+
+# ╔═╡ 2fda47ad-08f2-45c5-8f47-0eec1aa49aac
+md"## Issue: how to handle small diagonal entries?"
+
+# ╔═╡ 77396c1b-f23d-41da-b9e2-d6980a090217
+@bind ϵ Slider(-20:0.01:0.0; default=-2, show_value=true)
+
+# ╔═╡ 97e373df-32cc-491e-8066-e3a33b9b2764
+small_diagonal_matrix = [10^(ϵ) 1; 1 1]
+
+# ╔═╡ 1201b122-b071-4f13-83e0-6bec0de08e2b
+lures = lufact(small_diagonal_matrix)
+
+# ╔═╡ 7a7e8ac0-2af9-42ec-ab17-54d4f86baf70
+md"A better approach"
+
+# ╔═╡ a4c024e4-83a7-4356-9b8e-168ce9ee1cbf
+lufact(small_diagonal_matrix[end:-1:1, :])
+
+# ╔═╡ 54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
+md"""
+## Pivoting technique
+"""
+
+# ╔═╡ 178c4193-a45d-460f-a22e-b15f6604b5dd
+md"""
+```math
+P A = L U
+```
+"""
+
+# ╔═╡ c8399254-ab8f-45ec-8b4e-10860274e8e0
+[10^(ϵ) 1; 1 1][end:-1:1, :]
+
+# ╔═╡ 9bd48ccc-549a-4057-aa91-16ad79536583
+md"""
+## Gaussian Elimination process with Partial Pivoting
+```math
+A = \left(\begin{matrix}
+a_{11} & a_{12} & a_{13} \\
+a_{21} & a_{22} & a_{23} \\
+a_{31} & a_{32} & a_{33}
+\end{matrix}\right)
+```
+```math
+\ldots M_2P_2M_1P_1 A = U
+```
+"""
+
+# ╔═╡ 95c78df3-2283-4230-8d8d-9996e4d6fe36
+md"NOTE: $P_{k+1}$ and $M_k$ commute"
+
+# ╔═╡ e9ba7dc4-1494-4601-8eb7-72127e92815d
+md"## Algorithm 2.4 LU Factoriazation by Gaussian Elimination with Partial Pivoting"
+
+# ╔═╡ 9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
+function lufact_pivot!(a::AbstractMatrix)
+	n = size(a, 1)
+	@assert size(a, 2) == n "size mismatch"
+	m = zero(a)
+	P = collect(1:n)
+	# loop over columns
+	@inbounds for k=1:n-1
+		# search for pivot in current column
+		val, p = findmax(x->abs(a[x, k]), k:n)
+		p += k-1
+		# find index p such that |a_{pk}| ≥ |a_{ik}| for k ≤ i ≤ n
+		if p != k
+			# swap rows k and p of matrix A
+			for col = 1:n
+				a[k, col], a[p, col] = a[p, col], a[k, col]
+			end
+			# swap rows k and p of matrix M
+			for col = 1:k-1
+				m[k, col], m[p, col] = m[p, col], m[k, col]
+			end
+			P[k], P[p] = P[p], P[k]
+		end
+		if iszero(a[k, k])
+			# skip current column if it's already zero
+			continue
+		end
+		# compute multipliers for current column
+		m[k, k] = 1
+		for i=k+1:n
+			m[i, k] = a[i, k] / a[k, k]
+		end
+		# apply transformation to remaining sub-matrix
+		for j=k+1:n
+			akj = a[k, j]
+			for i=k+1:n
+				a[i,j] -= m[i,k] * akj
+			end
+		end
+	end
+	m[n, n] = 1
+	return m, triu!(a), P
+end
+
+# ╔═╡ 13493579-9189-4c9a-9361-430868427b59
+let
+	n = 5
+	A = randn(n, n)
+	L, U, P = lufact_pivot!(copy(A))
+	pmat = zeros(Int, n, n)
+	setindex!.(Ref(pmat), 1, 1:n, P)
+	@test L ≈ lu(A).L
+	@test U ≈ lu(A).U
+	@test pmat * A ≈ L * U
+end
+
+# ╔═╡ d1b7f00e-2b7e-4c15-8231-a816c59472f9
+@bind benchmark_lu CheckBox()
+
+# ╔═╡ 3bcf8d78-3678-4749-99ac-0a7e43830d2d
+if benchmark_lu let
+	n = 200
+	A = randn(n, n)
+	@benchmark lufact_pivot!($A)
+end end
+
+# ╔═╡ e206e554-64cd-422d-963d-8284eb9625fe
+if benchmark_lu let
+	n = 200
+	A = randn(n, n)
+	@benchmark lu($A)
+end end
+
+# ╔═╡ ed52cf76-ed66-44af-b98b-b58551bd217f
+md"""
+## Complete pivoting
+```math
+P A Q = L U
+```
+"""
+
+# ╔═╡ e113247a-b2a5-4acc-8714-342ecb191ac4
+md"# Sensitivity Analysis"
+
+# ╔═╡ 25f870c1-e70a-48b1-a0ce-4c2b9a523d60
+md"## Issue: An Ill Conditioned Matrix"
+
+# ╔═╡ b333fc58-0981-4d0f-ba49-0ee15cc78aad
+md"""
+```math
+A = \left(\begin{matrix}
+0.913 & 0.659\\
+0.457 & 0.330
+\end{matrix}
+\right)
+```
+"""
+
+# ╔═╡ 0beab22f-5411-403c-a116-cf552083382e
+ill_conditioned_matrix = [0.913 0.659; 0.457 0.330]
+
+# ╔═╡ 63cddfd1-bdef-4601-ab57-48314952fb73
+lures2 = lufact(ill_conditioned_matrix)
+
+# ╔═╡ c5b109da-ab9c-4a44-ab2d-168b9711c2cc
+lures2
+
+# ╔═╡ 713267d1-08f0-4c41-9523-46128ce40430
+cond(ill_conditioned_matrix)
+
+# ╔═╡ 7bb9fda5-7951-40e7-a98b-bbbec4be8229
+md"## Forward Error and Backward Error"
+
+# ╔═╡ dab03daa-99fa-4b1a-9415-395cd4686222
+md"""
+Forward error:
+```math
+{\rm dist}(f(x), \hat f (x))
+```
+
+Backward error
+```math
+{\rm dist}(x, f^{-1}(\hat f(x)))
+```
+
+"""
+
+# ╔═╡ 51433b0f-8fce-4241-bb84-bcea9a687abe
+md"## Absolute Error and Relative Error"
+
+# ╔═╡ 26207f81-1f6e-4708-8c04-422a1133c5ac
+md"""
+Absolute error: $\|x - \hat x\|$
+
+Relative error: $\frac{\|x - \hat x\|}{\|x\|}$
+
+
+where $\|\cdot\|$ is a measure of size.
+"""
+
+# ╔═╡ 025101f0-a1c4-47da-bff0-c0ae0cd0da6e
+md"## Coding: Floating point numbers have \"constant\" relative error"
+
+# ╔═╡ 424638de-6651-4fe2-bc44-82f9675dc43d
+eps(Float64)
+
+# ╔═╡ 26978647-a790-4ba2-be21-60251c47d919
+let
+	n = 1000
+	reltol = zeros(2n+1)
+	for i=-n:n
+		f = 2.0^i
+		reltol[i+n+1] = log10(eps(f)) - log10(f)
+	end
+	plot(-n:n, reltol; label="relative error")
+end
+
+# ╔═╡ c10acde5-e22a-4f79-be4f-f7b3bbb0ece9
+eps(1.0)/1.0
+
+# ╔═╡ 8e055682-baef-4c78-b044-d22d51676844
+eps(2.0)/2.0
+
+# ╔═╡ ee1aba8e-5992-4ff1-9ae1-09d35a2abf00
+eps(sqrt(2))/sqrt(2)
+
+# ╔═╡ d1c29e2e-e67d-41d3-bbff-9f384cf0c84d
+md"## (Relative) Condition Number"
+
+# ╔═╡ df17edcb-8b98-4c2e-a628-1a1381b7cf3e
+md"""
+```math
+\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|\delta f(x)\|/\|f(x)\|}{\|\delta x\|/\|x\|}}
+```
+"""
+
+# ╔═╡ 46176c75-f23e-4aef-a54b-58aa43941855
+md"## Quantify Error of a Scalar Operator"
+
+# ╔═╡ fe41dd53-f69f-4382-bde1-af86a3a92aef
+md"""
+```math
+y = \exp(x)
+```
+"""
+
+# ╔═╡ 8651c71c-eb8b-467b-9c9c-f2a173e5b91d
+md"## Why we should avoid using floating point numbers being too big/small?"
+
+# ╔═╡ d9d88d11-0dd0-4e80-b476-e9b008dfb84c
+md"""
+```math
+a + b
+```
+"""
+
+# ╔═╡ bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
+md"## Measuring the size of a vector: Norms"
+
+# ╔═╡ f256bf0d-e2bb-49f4-882f-12508e68ff07
+md"""
+```math
+\|v\|_p = \left(\sum_i{|v_i|^p}\right)^{1/p}
+```
+"""
+
+# ╔═╡ f2da27a2-af5f-4f2a-a6d5-fb98b8dcd261
+md"""## Measure the size of a matrix
+```math
+\|A\| = \max_{x\neq 0} \frac{\|Ax\|}{\|x\|}
+```
+"""
+
+# ╔═╡ 49d62ec4-bce0-4620-93cc-278f149f848f
+md"## Coding: Vector and Matrix Norms"
+
+# ╔═╡ 33a6261a-2b21-4b37-bcd8-b5c0db6b509f
+norm([3, 4], 2)
+
+# ╔═╡ 1956af2c-c88f-483d-8e1c-8ed4004e996d
+norm([3, 4], 1)
+
+# ╔═╡ 61c1c35c-f7be-495b-90f5-9a3772f254f5
+norm([3, 4], Inf)
+
+# ╔═╡ 43731510-dfe7-48c8-8a4d-d8313d1d762b
+# l0 norm is not a true norm
+norm([3, 4], 0)
+
+# ╔═╡ a0af42b2-1bba-423c-b5f7-0a9d1a2adbb1
+norm([3, 0], 0)
+
+# ╔═╡ 79bc3efb-61a1-4241-b787-2726fb2a4a97
+mat = randn(2, 2)
+
+# ╔═╡ 9854ad79-d06e-4d60-86d5-54ade042d49a
+opnorm(mat, 1)
+
+# ╔═╡ 4628cb4b-649f-4e84-a6d5-e50109f8cc6c
+opnorm(mat, Inf)
+
+# ╔═╡ 424f63ce-f5b2-456f-8c4a-63f18877d730
+opnorm(mat, 2)
+
+# ╔═╡ 71e6ed15-bb0f-4510-901c-c9f53b3e701c
+opnorm(mat, 0)
+
+# ╔═╡ 898a511d-7c18-4eb0-b68b-3c1dd8208cfe
+cond(mat)
+
+# ╔═╡ 5653168f-80b5-4435-a711-d8a1d8f9c429
+md"## Condition Number of a Linear Operator"
+
+# ╔═╡ a1a55972-4baa-4a29-8c3f-ac7e13036136
+md"""
+```math
+{\rm cond}(A) = \|A\| \|A^{-1}\|
+```
+"""
+
+# ╔═╡ 8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
+md"""## Coding: Numeric experiment on condition number"""
+
+# ╔═╡ b71889e3-85d0-4873-a94a-63a9c4c0c009
+let
+	n = 1000
+	p = 2
+	errors = zeros(n)
+	conds = zeros(n)
+	for k = 1:n
+		A = rand(10, 10)
+		b = rand(10)
+		dx = A \ b
+		sx = Float32.(A) \ Float32.(b)
+		errors[k] = (norm(sx - dx, p)/norm(dx, p)) / (norm(b-Float32.(b), p)/norm(b, p))
+		conds[k] = cond(A, p)
+	end
+	plt = plot(conds, conds; label="upper bound", xlim=(1, 10000), ylim=(1, 10000), xscale=:log10, yscale=:log10)
+	scatter!(plt, conds, errors; label="samples")
+end
+
+
+# ╔═╡ d5c75146-50a2-4cd3-a2f8-4d743f54c448
+md"# Computing Matrix Inverse"
+
+# ╔═╡ c50dbe8c-6c09-47aa-a798-0673875e1e42
+md"""
+## Gauss Jordan Elimination Matrix
+```math
+N_k = \left(\begin{matrix}
+
+1 & \ldots & 0 & -m_1 & 0 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 1 & -m_{k-1} & 0 & \ldots & 0\\
+0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
+0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
+
+\end{matrix}\right)
+```
+where $m_i = a_i/a_k$.
+"""
+
+# ╔═╡ ca87e541-b520-4231-b949-4675456f6c0b
+md"""## Computing the inverse
+```math
+SN_{n}N_{n-1}\ldots N_1 A = I
+```
+Then
+```math
+A^{-1} = SN_{n}N_{n-1}\ldots N_1
+```
+"""
+
+# ╔═╡ c98ed46e-31da-49fc-9ed4-776aaff7d6d1
+md"# Special Matrices"
+
+# ╔═╡ 927272dc-d60c-4263-8139-7f43887df52c
+md"## Positive definite symmetric matrix"
+
+# ╔═╡ eac7780a-5e0b-4518-907f-9ff75dfb4b2f
+md"""
+* (Real) Symmetric: $A = A^T$,
+* Positive definite: $x^T A x > 0$ for all $x \neq 0$.
+"""
+
+# ╔═╡ 8dced7f2-8eab-41d8-95f7-5c23e0035466
+md"## Cholesky decomposition
+```math
+A = LL^T
+```
+"
+
+# ╔═╡ bcdefd39-5ac3-4a0f-b6a8-1dac8c03de9a
+md"## Algorithm 2.7 Cholesky Factorization
+"
+
+# ╔═╡ 79a5bc5d-a2bf-485a-95ee-07d3b8546e75
+function chol!(a::AbstractMatrix)
+	n = size(a, 1)
+	@assert size(a, 2) == n
+	for k=1:n
+		a[k, k] = sqrt(a[k, k])
+		for i=k+1:n
+			a[i, k] = a[i, k] / a[k, k]
+		end
+		for j=k+1:n
+			for i=k+1:n
+				a[i,j] = a[i,j] - a[i, k] * a[j, k]
+			end
+		end
+	end
+	return a
+end
+
+# ╔═╡ 7945c565-d226-437c-83ad-5b1e3149c076
+let
+	n = 10
+	Q, R = qr(randn(10, 10))
+	a = Q * Diagonal(rand(10)) * Q'
+	L = chol!(copy(a))
+	tril(L) * tril(L)' - a
+	# cholesky(a) in Julia
+end
+
+# ╔═╡ a628b607-a301-4abd-ad3f-99c784223a56
+md"## Banded matrices"
+
+# ╔═╡ 406c0ed5-a739-4771-8c5e-6c8b3c76dd89
+md"## Sparse matrices and linear operators
+Accessing every element is not allowed, but matrix-vector multiplication is defined.
+"
+
+# ╔═╡ dbbd7062-6971-4620-840e-ee4346405b11
+md"You need iterative solvers like `GMRES` (Package: [IterativeSolvers](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl))."
+
+# ╔═╡ 7e91942d-f526-4310-9e96-bc5533b564b7
+md"## Rank 1 update: Sherman-Morrison formula
+```math
+(A - u v^T)^{-1} = A^{-1} + A^{-1}u(1-v^TA^{-1}u)^{-1}v^T A^{-1}
+```
+
+which requires only $O(n^2)$ extra work.
+"
+
+# ╔═╡ 011e1b39-a73d-4eaf-8847-ae5fa5ffd2f0
+md"""# Assignments
+1. Get the relative condition number of division operation $a/b$.
+
+2. Classify each of the following matrices as well-conditioned or ill-conditioned:
+```math
+(a). ~~\left(\begin{matrix}10^{10} & 0\\ 0 & 10^{-10}\end{matrix}\right)
+```
+```math
+(b). ~~\left(\begin{matrix}10^{10} & 0\\ 0 & 10^{10}\end{matrix}\right)
+```
+```math
+(c). ~~\left(\begin{matrix}10^{-10} & 0\\ 0 & 10^{-10}\end{matrix}\right)
+```
+```math
+(d). ~~\left(\begin{matrix}1 & 2\\ 2 & 4\end{matrix}\right)
+```
+3. Implement the Gauss-Jordan elimination algorithm to compute matrix inverse. In the following example, we first create an augmented matrix $(A | I)$. Then we apply the Gauss-Jordan elimination matrices on the left. The final result is stored in the augmented matrix as $(I, A^{-1})$.
+![](https://user-images.githubusercontent.com/6257240/222182865-c2a1aa28-946a-4acb-8df8-f5d7da93c3ee.png)
+
+Task: Please implement a function `gauss_jordan` that computes the inverse for a matrix at any size. Please also include the following test in your submission.
+```julia
+@testset "Gauss Jordan" begin
+	n = 10
+	A = randn(n, n)
+	@test gauss_jordan(A) * A ≈ Matrix{Float64}(I, n, n)
+end
+```
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-AbstractTrees = "~0.4.4"
 BenchmarkTools = "~1.3.2"
-Plots = "~1.38.7"
+Plots = "~1.38.5"
 PlutoUI = "~0.7.50"
-Reexport = "~1.2.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -482,18 +857,13 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.0-beta3"
 manifest_format = "2.0"
-project_hash = "f1f63bbf2a4374d09e428af67f7664b036592dec"
+project_hash = "2fa32da7d4dd328c33d253ffedd635bb8436b01a"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
 git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
 version = "1.1.4"
-
-[[deps.AbstractTrees]]
-git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
-uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.4.4"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -1482,104 +1852,141 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─84c14a09-2c9e-4919-bfb1-cdf4d5a61776
-# ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
-# ╟─0fe286ff-1359-4eb4-ab6c-28b231f9d56e
-# ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
-# ╟─d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-# ╟─f36e7b45-193e-4028-aae5-352711b8406d
-# ╟─72924c3a-0bbe-4d74-b2a9-60b250db4ec2
-# ╟─163016e4-9133-4c61-a7ac-82e41e6db234
-# ╟─a3d7aa29-1099-48c5-94d8-b6148fa1e0fd
-# ╟─f5ad618c-0a00-475f-b05d-97deba0faaef
-# ╠═d5c2f523-80dd-40df-bf11-dd58cd493606
-# ╟─d6dca51b-978e-456e-b7c0-b658d894101d
-# ╠═c0aa6f21-47d5-4f03-8b9b-a8df5c18a1b8
-# ╟─2c92ab20-c105-4623-83c2-239462d59707
-# ╠═96c87a95-ca76-4cf5-8920-8d1f014ba47b
-# ╟─c0db86ae-d6b3-49b4-bde1-d6c2585090e8
-# ╟─c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
-# ╟─17f877cd-3958-4b49-a0cc-fb0529800223
-# ╠═5a5fd311-4c9f-4fa0-8f5a-d3f5acba3106
-# ╠═24684e2a-e99e-43f3-ba66-881634e4ba1b
-# ╠═79565487-c1fb-47d7-b50d-a0a39a8849d9
-# ╠═baeefdd1-09ef-4b5d-8cf4-c4eeb98d3335
-# ╟─4cf1e164-c510-47da-a138-f4582bfa0270
-# ╠═07b3e56b-78fd-4894-b310-096281009764
-# ╠═cc2e0ab8-83cc-44fe-9782-eabee896bcc0
-# ╠═e51adfeb-3868-43c2-8f64-21bd1a4e8522
-# ╟─9186b86b-88b1-4165-94ac-b738882a2c23
-# ╟─31d784e6-22b5-430a-a571-6aad7aaefee1
-# ╟─5a10796f-c084-451e-89f5-75ba8364f2d8
-# ╠═8eff13e4-1d93-4add-b516-46307fca965a
-# ╠═c3db170e-20f0-4488-98b0-7a65090728a1
-# ╟─2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
-# ╠═27212a7a-fdd0-423d-a008-83c6f6e257c6
-# ╠═e5c3c192-e398-4bb1-9933-6c6070b10756
-# ╠═c761fcf3-7386-437a-b37c-af256e189a10
-# ╠═9f58f7f1-ab35-499b-aefe-6bdecd137e1d
-# ╠═5f27ff9c-2d86-4d8c-9d95-025e72e56c95
-# ╠═21bfac50-1d7d-4737-bf1e-aef799353734
-# ╠═129207a7-b88a-47bd-a853-e5db71ed65c5
-# ╠═d49a05c0-e60d-471d-ba19-e5e9708fa4f7
-# ╠═7275c2ec-996a-4335-ac8b-9b94719a765f
-# ╠═1eab94a9-c00d-4d12-95fb-08f26d05b4d4
-# ╠═ccc49ad6-e8c2-479c-8341-fc16877b50cf
-# ╟─1d75ba45-2b66-47b2-a528-0e30e982c5e7
-# ╟─1baa4439-9325-4e7f-bdd5-53410a200d41
-# ╟─9513bd15-5789-4a56-961b-175f8dabfdaf
-# ╠═38e23738-f7fb-4b9e-9067-200d42f6a1e4
-# ╟─8fd31129-f150-4114-afa5-8106dba8009f
-# ╠═a88e6865-235b-428a-9546-5da2daa3e03c
-# ╠═e59b8bb2-95df-492e-bd15-24a1de2573f5
-# ╟─c64ed02d-0c62-4cab-9bcf-35dfbfedddc6
-# ╟─c13955ef-4986-4d56-8e1e-48c6becd213a
-# ╠═be7247b8-ac5d-4b3a-ba3b-e8da37ef1e08
-# ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
-# ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
-# ╟─13dabaa8-7310-4557-ad06-e64f566ca256
-# ╟─37e9697d-e2ed-4fa4-882b-5cd77586d719
-# ╟─040fc63d-0b5c-4b33-ac8e-946573dc1c0c
-# ╟─054c57f7-22cb-4d47-a79c-7ef035586f0c
-# ╟─88d538e9-3757-4f87-88c5-68078aef681f
-# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-# ╟─ead892c7-dc0d-452b-9443-15a854683f43
-# ╠═cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
-# ╠═4dba5c49-7bfb-426b-8461-f062a9c4a365
-# ╟─407219ae-51df-487e-a831-c6087428159c
-# ╟─4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
-# ╟─a87eb239-70a5-4da2-a8ce-4d3a93d976b4
-# ╟─330c3319-7954-466d-9100-f6ec19f43fcc
-# ╠═9acd075f-bd77-41da-8455-e54063cbc8b4
-# ╟─9abf93ab-ad22-4911-b459-fa5c6f139152
-# ╟─85d0bce1-ca15-4a86-821f-87d3ec0b715c
-# ╠═f5edd248-eb04-41d1-b435-21aa77b010b7
-# ╟─0e3bfc93-33ff-487e-ac73-71922fabf660
-# ╟─13ff13dd-1146-46f7-99a0-c9ee7e878931
-# ╠═d381fcf1-3b53-49fa-a5af-1a242c83d05c
-# ╟─bb0e95c9-0a73-4367-b738-f42994758ffc
-# ╟─94016043-b913-4413-8c6a-e2b2a75dd9dd
-# ╠═7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-# ╠═8776764c-4483-476b-bfff-a3e779431a68
-# ╠═5245a31a-62c3-422d-8d04-d2bdf496cbcc
-# ╟─d41f8743-d3ba-437e-b7db-a9b6d1756543
-# ╟─f48ae9b5-51dd-4434-870d-4c5e73497433
-# ╟─035f8874-d463-4fa8-92cc-49f1fd226d23
-# ╠═7f0ff65f-40fd-4907-b54a-9a5ba4fcccca
-# ╟─e5d9327e-75b2-4f99-97da-d3be1c8cd405
-# ╠═39c580e0-d184-4400-8562-b5ba6a2d4a81
-# ╠═b52078f1-605a-47aa-87f8-ce3b000aa10a
-# ╟─f37d0016-16ab-4bdd-8728-00f26f6e87a9
-# ╟─980dac9e-092a-47e0-bcca-85c7e5ededab
-# ╠═292dc84c-b2ed-4a35-b817-be6266b40ff1
-# ╟─56c9c50e-bb43-4c27-88a6-ea3a26288b57
-# ╠═d31f0924-aca0-446d-b06c-92a3daa65ae2
-# ╟─4fc93548-0253-4e09-b2a2-61f08818105d
-# ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
-# ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
-# ╟─68176e03-544b-4a30-a096-c117c6625113
-# ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
-# ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
-# ╟─a5fbf397-70d1-4dfd-a1ea-abff06007239
+# ╠═37dc4b11-8849-41ad-9afe-5f792ea1fab8
+# ╟─cdaafdfa-9252-410f-af0c-e47a145fbfe3
+# ╟─2464e2fc-1a00-4572-b54c-f87b3239f9ad
+# ╟─f6fa6216-0945-4c98-b507-7c91600d8c2f
+# ╟─a0fa8273-cf22-4cb4-ad4b-b83aee874556
+# ╟─78b6f5be-0aec-4e40-8512-fb58c253a7e9
+# ╟─c1cf7bba-3d47-4c8c-8f1b-64808c300f72
+# ╟─24e421db-547b-416b-8c37-582e9aa78165
+# ╟─e5c4aeef-5818-406c-be55-b6b010c960db
+# ╟─a7203d10-cffd-4f08-80c2-f6b1465210bd
+# ╟─3a411c5f-264b-4f81-98ba-53eecdad3d28
+# ╟─4015a2f9-a281-44ab-974c-7cd46041d105
+# ╟─53e51d33-9d03-4473-8ed8-aba1ef9ef105
+# ╟─02605f8e-b457-11ed-19c4-7d6d14b67507
+# ╟─fb583209-eb00-41ce-9fc6-906898327ecd
+# ╠═742a79b6-6ced-467e-961b-814da8b65af7
+# ╠═d3e1ef10-3f99-4561-87db-47c0fc47e9e9
+# ╠═2381b052-7415-4d22-84f1-292bd7a5c87d
+# ╠═d24203f3-9b41-4bdb-8bb4-204bc5afe44f
+# ╟─5ffcc036-89fa-4bb9-8b9e-5d320d022c67
+# ╠═bf6f8198-d120-4729-af67-ddb23f0c40d9
+# ╠═f7cffe31-15e4-4c5a-b7be-b49463120ec7
+# ╟─7649913c-523f-4fa3-bf1e-ea1566b55114
+# ╟─4aee8572-c0df-4670-b383-a05fb24d8f57
+# ╟─90a658b2-fd6a-4260-a0b6-5b1ae62ed469
+# ╟─081d4926-e14c-46bb-8e21-fadea25b13a0
+# ╟─24fa07b8-6a9c-47d6-8f72-9346f1325ab4
+# ╟─a890cdb6-34b6-4a3c-8749-e1543e9764ba
+# ╟─af1f932e-a6db-41ce-ace3-170228bb183b
+# ╟─9640cc8d-f8c0-4d3b-b51a-3ad3865630bc
+# ╟─83e0cdc0-70d3-48d2-bf1c-8ed364652aed
+# ╟─2b3596d7-17a3-46bb-b687-302c1255a4af
+# ╠═b8cf4822-d91b-47f4-86e4-a36d668b5256
+# ╠═faa03439-b526-4c27-a9dc-593b5a32cb04
+# ╟─416f9a74-2d88-4788-92b1-847eda6539cc
+# ╠═b8379e6d-768d-4a43-8370-1583324750f3
+# ╠═e478efbc-a75f-4fb4-8ea8-f24ea7f8a9c2
+# ╟─73fa4829-33dc-46e7-935d-b4c78bdb02d3
+# ╠═fc286cee-c912-4395-8af6-77702d5fef31
+# ╟─b4282280-a825-456f-90ec-cfc274c68864
+# ╠═32ce956f-a90f-44fb-8473-438dd2a6ba78
+# ╠═2a8da2fe-f21e-44ac-9253-583c06dd5134
+# ╟─87de48b5-4d4e-4b8a-9f2c-4b6dc328a502
+# ╠═a4b32a01-2d7f-4933-a3cb-2ab2d0c6cb2e
+# ╠═4d8276dc-9356-47f8-afa6-5329dde63468
+# ╠═8dc256a3-06be-4df9-aa88-1ef1e574055e
+# ╠═405450f7-807d-45a8-94ac-54ef9972b234
+# ╟─1df2f386-2b55-4fb0-a035-64cf454e2698
+# ╠═fadba4ba-efca-48f7-bf31-959f458f64d5
+# ╠═f2bab70d-847f-495b-ba30-409156a9a874
+# ╠═480b6065-f9ca-4770-baa4-f1451fc046b8
+# ╠═b81714d1-9a3c-4800-b478-68cabbc5d10d
+# ╠═1f1267d0-9ff2-44a4-b418-a42953159a1e
+# ╟─5e426a5f-65cf-4adf-8b2b-ea28534e529a
+# ╠═9d30b63e-f437-420b-8c22-037d34e1be2f
+# ╠═4a18900a-9051-4451-9736-724b19c3bd5d
+# ╠═aacd052d-b6e7-4f40-b08a-872aa9420c46
+# ╠═c86a4d3c-adf3-429a-a4b4-8a0aaec83b43
+# ╟─d75af574-ee8e-4e8f-839f-9ebbb288397a
+# ╟─2fda47ad-08f2-45c5-8f47-0eec1aa49aac
+# ╠═77396c1b-f23d-41da-b9e2-d6980a090217
+# ╠═97e373df-32cc-491e-8066-e3a33b9b2764
+# ╠═1201b122-b071-4f13-83e0-6bec0de08e2b
+# ╟─7a7e8ac0-2af9-42ec-ab17-54d4f86baf70
+# ╠═a4c024e4-83a7-4356-9b8e-168ce9ee1cbf
+# ╟─54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
+# ╟─178c4193-a45d-460f-a22e-b15f6604b5dd
+# ╠═c8399254-ab8f-45ec-8b4e-10860274e8e0
+# ╟─9bd48ccc-549a-4057-aa91-16ad79536583
+# ╟─95c78df3-2283-4230-8d8d-9996e4d6fe36
+# ╟─e9ba7dc4-1494-4601-8eb7-72127e92815d
+# ╠═9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
+# ╠═13493579-9189-4c9a-9361-430868427b59
+# ╠═c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
+# ╠═d1b7f00e-2b7e-4c15-8231-a816c59472f9
+# ╠═3bcf8d78-3678-4749-99ac-0a7e43830d2d
+# ╠═e206e554-64cd-422d-963d-8284eb9625fe
+# ╟─ed52cf76-ed66-44af-b98b-b58551bd217f
+# ╟─e113247a-b2a5-4acc-8714-342ecb191ac4
+# ╟─25f870c1-e70a-48b1-a0ce-4c2b9a523d60
+# ╟─b333fc58-0981-4d0f-ba49-0ee15cc78aad
+# ╠═0beab22f-5411-403c-a116-cf552083382e
+# ╠═63cddfd1-bdef-4601-ab57-48314952fb73
+# ╠═c5b109da-ab9c-4a44-ab2d-168b9711c2cc
+# ╠═713267d1-08f0-4c41-9523-46128ce40430
+# ╟─7bb9fda5-7951-40e7-a98b-bbbec4be8229
+# ╟─dab03daa-99fa-4b1a-9415-395cd4686222
+# ╟─51433b0f-8fce-4241-bb84-bcea9a687abe
+# ╟─26207f81-1f6e-4708-8c04-422a1133c5ac
+# ╟─025101f0-a1c4-47da-bff0-c0ae0cd0da6e
+# ╠═424638de-6651-4fe2-bc44-82f9675dc43d
+# ╠═26978647-a790-4ba2-be21-60251c47d919
+# ╠═c10acde5-e22a-4f79-be4f-f7b3bbb0ece9
+# ╠═8e055682-baef-4c78-b044-d22d51676844
+# ╠═ee1aba8e-5992-4ff1-9ae1-09d35a2abf00
+# ╟─d1c29e2e-e67d-41d3-bbff-9f384cf0c84d
+# ╟─df17edcb-8b98-4c2e-a628-1a1381b7cf3e
+# ╟─46176c75-f23e-4aef-a54b-58aa43941855
+# ╟─fe41dd53-f69f-4382-bde1-af86a3a92aef
+# ╟─8651c71c-eb8b-467b-9c9c-f2a173e5b91d
+# ╟─d9d88d11-0dd0-4e80-b476-e9b008dfb84c
+# ╟─bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
+# ╟─f256bf0d-e2bb-49f4-882f-12508e68ff07
+# ╟─f2da27a2-af5f-4f2a-a6d5-fb98b8dcd261
+# ╟─49d62ec4-bce0-4620-93cc-278f149f848f
+# ╠═33a6261a-2b21-4b37-bcd8-b5c0db6b509f
+# ╠═1956af2c-c88f-483d-8e1c-8ed4004e996d
+# ╠═61c1c35c-f7be-495b-90f5-9a3772f254f5
+# ╠═43731510-dfe7-48c8-8a4d-d8313d1d762b
+# ╠═a0af42b2-1bba-423c-b5f7-0a9d1a2adbb1
+# ╠═79bc3efb-61a1-4241-b787-2726fb2a4a97
+# ╠═9854ad79-d06e-4d60-86d5-54ade042d49a
+# ╠═4628cb4b-649f-4e84-a6d5-e50109f8cc6c
+# ╠═424f63ce-f5b2-456f-8c4a-63f18877d730
+# ╠═71e6ed15-bb0f-4510-901c-c9f53b3e701c
+# ╠═898a511d-7c18-4eb0-b68b-3c1dd8208cfe
+# ╟─5653168f-80b5-4435-a711-d8a1d8f9c429
+# ╟─a1a55972-4baa-4a29-8c3f-ac7e13036136
+# ╟─8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
+# ╠═d959c85c-0895-475c-b9f8-57368fc5e744
+# ╠═b71889e3-85d0-4873-a94a-63a9c4c0c009
+# ╟─d5c75146-50a2-4cd3-a2f8-4d743f54c448
+# ╟─c50dbe8c-6c09-47aa-a798-0673875e1e42
+# ╟─ca87e541-b520-4231-b949-4675456f6c0b
+# ╟─c98ed46e-31da-49fc-9ed4-776aaff7d6d1
+# ╟─927272dc-d60c-4263-8139-7f43887df52c
+# ╟─eac7780a-5e0b-4518-907f-9ff75dfb4b2f
+# ╟─8dced7f2-8eab-41d8-95f7-5c23e0035466
+# ╟─bcdefd39-5ac3-4a0f-b6a8-1dac8c03de9a
+# ╠═79a5bc5d-a2bf-485a-95ee-07d3b8546e75
+# ╠═7945c565-d226-437c-83ad-5b1e3149c076
+# ╟─a628b607-a301-4abd-ad3f-99c784223a56
+# ╟─406c0ed5-a739-4771-8c5e-6c8b3c76dd89
+# ╟─dbbd7062-6971-4620-840e-ee4346405b11
+# ╟─7e91942d-f526-4310-9e96-bc5533b564b7
+# ╟─011e1b39-a73d-4eaf-8847-ae5fa5ffd2f0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

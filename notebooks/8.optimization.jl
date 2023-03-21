@@ -1,499 +1,271 @@
 ### A Pluto.jl notebook ###
-# v0.19.19
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
+# ╔═╡ 4b3de811-278b-4154-bce6-4d67dc19ff38
+using Luxor
 
-# ╔═╡ 84c14a09-2c9e-4919-bfb1-cdf4d5a61776
-# ╠═╡ show_logs = false
-begin
-	using AbstractTrees, PlutoUI, Reexport
-	include("../lib/PlutoLecturing/src/PlutoLecturing.jl")
-	using .PlutoLecturing
-	presentmode()
-	TableOfContents(aside=true)
-end
-
-# ╔═╡ a88e6865-235b-428a-9546-5da2daa3e03c
+# ╔═╡ 1ed6d587-b984-463f-9db3-220bdfa81ebe
 using Plots
 
-# ╔═╡ b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-using BenchmarkTools
+# ╔═╡ 4136799e-c4ab-432b-9e8a-208b0eae060e
+using ForwardDiff
 
-# ╔═╡ cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
-using LinearAlgebra: mul!
+# ╔═╡ 7345a2c1-d4b7-470f-a936-b4cc6c177399
+md"## Optimization"
 
-# ╔═╡ 8776764c-4483-476b-bfff-a3e779431a68
-using Random
+# ╔═╡ 7c26b07f-6a1f-4d40-9152-b8738a1dad62
+md"Reference: **Scientific Computing - Chapter 6**"
 
-# ╔═╡ 292dc84c-b2ed-4a35-b817-be6266b40ff1
-using Profile
-
-# ╔═╡ 5c5f6214-61c5-4532-ac05-85a43e5639cc
-md"""
-# About this course (10min)
-## What is scientific computing?
-"""
-
-# ╔═╡ 0fe286ff-1359-4eb4-ab6c-28b231f9d56e
-PlutoLecturing.leftright(PlutoLecturing.netimage("https://upload.wikimedia.org/wikipedia/commons/c/ce/Genegolub.jpg"), md"""
-Scientific computing is the collection of tools, techniques and theories required to solve $(PlutoLecturing.highlight("on a computer")) the $(PlutoLecturing.highlight("mathematical models")) of problems in $(PlutoLecturing.highlight("science and engineering")).
-
--- Gene H. Golub and James M. Ortega
-"""; left=0.3)
-
-# ╔═╡ c51b55d2-c899-421f-a633-1daa4168c6d5
-md"## Textbook"
-
-# ╔═╡ d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-PlutoLecturing.leftright(md"""
-$(PlutoLecturing.localimage("images/textbook.jpg"))
-""", md"""
-#### Chapters
-1. Scientific Computing
-2. Systems of linear equations
-3. Linear least squares
-4. Eigenvalue problems
-5. Nonlinear equations
-6. Optimization
-7. Interpolation
-8. $(PlutoLecturing.del("Numerical integration and differentiation"))
-9. $(PlutoLecturing.del("Initial value problems for ordinary differential equations"))
-10. $(PlutoLecturing.del("Boundary value problems for ordinary differential equations"))
-11. $(PlutoLecturing.del("Partial differential equations"))
-12. Fast fourier transform
-13. Random numbers and stochastic simulation
-"""; width=660, left=0.4)
-
-# ╔═╡ f36e7b45-193e-4028-aae5-352711b8406d
-md"# Lecture 1: Understanding our computing devices"
-
-# ╔═╡ 72924c3a-0bbe-4d74-b2a9-60b250db4ec2
-PlutoLecturing.blackboard("What is inside a computer?  <br>(40min)")
-
-# ╔═╡ 163016e4-9133-4c61-a7ac-82e41e6db234
-md"## Get hardware information (Linux)"
-
-# ╔═╡ a3d7aa29-1099-48c5-94d8-b6148fa1e0fd
-PlutoLecturing.blackboard("Get hardware information"; coding=true, subtitle="&#36; lscpu <br>&#36; lsmem <br>&#36; top")
-
-# ╔═╡ f5ad618c-0a00-475f-b05d-97deba0faaef
-@xbind show_cpuinfo CheckBox()
-
-# ╔═╡ d5c2f523-80dd-40df-bf11-dd58cd493606
-if show_cpuinfo run(`lscpu`) end
-
-# ╔═╡ d6dca51b-978e-456e-b7c0-b658d894101d
-@xbind show_meminfo CheckBox()
-
-# ╔═╡ c0aa6f21-47d5-4f03-8b9b-a8df5c18a1b8
-if show_meminfo run(`lsmem`) end
-
-# ╔═╡ 2c92ab20-c105-4623-83c2-239462d59707
-@xbind show_processinfo CheckBox()
-
-# ╔═╡ 96c87a95-ca76-4cf5-8920-8d1f014ba47b
-if show_processinfo run(`top -n 1 -b`) end
-
-# ╔═╡ c0db86ae-d6b3-49b4-bde1-d6c2585090e8
-md"# Number system (20min)"
-
-# ╔═╡ c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
-md"## Integers"
-
-# ╔═╡ 17f877cd-3958-4b49-a0cc-fb0529800223
-md"Integer type range is"
-
-# ╔═╡ 5a5fd311-4c9f-4fa0-8f5a-d3f5acba3106
-typemin(Int64)
-
-# ╔═╡ 24684e2a-e99e-43f3-ba66-881634e4ba1b
-bitstring(typemin(Int64))
-
-# ╔═╡ 79565487-c1fb-47d7-b50d-a0a39a8849d9
-bitstring(typemin(Int64) + 1)
-
-# ╔═╡ baeefdd1-09ef-4b5d-8cf4-c4eeb98d3335
-bitstring(0)
-
-# ╔═╡ 4cf1e164-c510-47da-a138-f4582bfa0270
-md" $(@bind show_minus1 CheckBox()) Show the bitstring for -1 (binded to `show_minus1`)"
-
-# ╔═╡ 07b3e56b-78fd-4894-b310-096281009764
-if show_minus1 bitstring(-1) end
-
-# ╔═╡ cc2e0ab8-83cc-44fe-9782-eabee896bcc0
-typemax(Int64)
-
-# ╔═╡ e51adfeb-3868-43c2-8f64-21bd1a4e8522
-bitstring(typemax(Int64))
-
-# ╔═╡ 9186b86b-88b1-4165-94ac-b738882a2c23
-md"## Floating point numbers"
-
-# ╔═╡ 31d784e6-22b5-430a-a571-6aad7aaefee1
-LocalResource("images/float-format.png")
-
-# ╔═╡ 5a10796f-c084-451e-89f5-75ba8364f2d8
-md"image source: https://en.wikipedia.org/wiki/IEEE_754"
-
-# ╔═╡ 8eff13e4-1d93-4add-b516-46307fca965a
-bitstring(0.15625f0)
-
-# ╔═╡ c3db170e-20f0-4488-98b0-7a65090728a1
-exponent(0.15625f0)
-
-# ╔═╡ 2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
-md"The significant is in range [1, 2)"
-
-# ╔═╡ 27212a7a-fdd0-423d-a008-83c6f6e257c6
-significand(0.15625f0)  # the fraction
-
-# ╔═╡ e5c3c192-e398-4bb1-9933-6c6070b10756
-typemax(Float64)
-
-# ╔═╡ c761fcf3-7386-437a-b37c-af256e189a10
-bitstring(Inf)
-
-# ╔═╡ 9f58f7f1-ab35-499b-aefe-6bdecd137e1d
-prevfloat(Inf)
-
-# ╔═╡ 5f27ff9c-2d86-4d8c-9d95-025e72e56c95
-typemin(Float64)
-
-# ╔═╡ 21bfac50-1d7d-4737-bf1e-aef799353734
-bitstring(-Inf)
-
-# ╔═╡ 129207a7-b88a-47bd-a853-e5db71ed65c5
-prevfloat(0.0)
-
-# ╔═╡ d49a05c0-e60d-471d-ba19-e5e9708fa4f7
-nextfloat(0.0)
-
-# ╔═╡ 7275c2ec-996a-4335-ac8b-9b94719a765f
-Inf-Inf
-
-# ╔═╡ 1eab94a9-c00d-4d12-95fb-08f26d05b4d4
-0 * NaN
-
-# ╔═╡ ccc49ad6-e8c2-479c-8341-fc16877b50cf
-bitstring(NaN)
-
-# ╔═╡ 1d75ba45-2b66-47b2-a528-0e30e982c5e7
-md"## The distribution of floating point numbers"
-
-# ╔═╡ 1baa4439-9325-4e7f-bdd5-53410a200d41
-md"The distribution of floating point numbers"
-
-# ╔═╡ 9513bd15-5789-4a56-961b-175f8dabfdaf
-@xbind npoints Slider(1:10000; default=1000, show_value=true)
-
-# ╔═╡ 38e23738-f7fb-4b9e-9067-200d42f6a1e4
-xs = filter(!isnan, reinterpret(Float64, rand(Int64, npoints)));
-
-# ╔═╡ 8fd31129-f150-4114-afa5-8106dba8009f
-md"From the linear scale plot, you will see data concentrated around 0
-(each vertical bar is a sample)"
-
-# ╔═╡ e59b8bb2-95df-492e-bd15-24a1de2573f5
-scatter(xs, zeros(length(xs)), xlim=(-1e300, 1e300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
-
-# ╔═╡ c64ed02d-0c62-4cab-9bcf-35dfbfedddc6
-md"If we use logarithmic x-axis"
-
-# ╔═╡ c13955ef-4986-4d56-8e1e-48c6becd213a
-@xbind smearing_factor Slider(0.1:0.1:5.0; show_value=true, default=1.0)
-
-# ╔═╡ be7247b8-ac5d-4b3a-ba3b-e8da37ef1e08
-let
-	logxs = sign.(xs) .* log10.(abs.(xs))
-	ax = scatter(logxs, zeros(length(xs)), xlim=(-300, 300), label="", size=(600, 100), yaxis=:off, markersize=30, markershape=:vline)
-	a = -300:300
-	# smoothen the distribution with Lorentz function
-	m = 1/π/smearing_factor ./ (((a' .- logxs) ./ smearing_factor) .^ 2 .+ 1)
-	plot!(ax, a, dropdims(sum(m, dims=1), dims=1); label="probability")
-end
-
-# ╔═╡ 16dc1e93-9f16-4299-9e8e-59dff16b6fd9
-md"# Estimating the computing power of your devices (20min)"
-
-# ╔═╡ 5c13904a-505b-4fec-9e32-0ffa54a9dad8
-md"""## Example 1: Matrix multiplication
+# ╔═╡ 6b4307ea-33c0-4a20-af35-d05262856528
+md"""A general continous optimization problem has the following form
 ```math
-C_{ik} = \sum_j A_{ij} \times B_{jk}
+\min_{\mathbf x}f(\mathbf x)\text{ subject to }\mathbf{g}(\mathbf{x})=\mathbf{0}\text{ and }\mathbf{h}(\mathbf{x}) \leq \mathbf{0}
 ```
 """
 
-# ╔═╡ 13dabaa8-7310-4557-ad06-e64f566ca256
-md"""
-Let the matrix size be `n x n`, the peudocode for general matrix multiply (GEMM) is
+# ╔═╡ 9ca5ce82-9f7f-4bf1-834e-e02ba8ba33b7
+md"where $f:\mathbb{R}^n\rightarrow \mathbb{R}$, $\mathbf{g}:\mathbb{R}^n\rightarrow \mathbb{R}^m$ and $\mathbf{h}:\mathbb{R}^n\rightarrow \mathbb{R}^p$."
+
+# ╔═╡ e6dca5dc-dbf9-45ba-970d-23bd9a75769d
+md"## Convex optimization"
+
+# ╔═╡ 5b433d39-ed60-4831-a139-b6663a284e7a
+md"A set $S\subseteq \mathbb{R}^n$ is convex if it contains the line segment between any two of its points, i.e.,
+```math
+\{\alpha \mathbf{x} + (1-\alpha)\mathbf{y}: 1\leq \alpha \leq 1\} \subseteq S
 ```
-for i=1:n
-	for j=1:n
-		for k=1:n
-			C[i, k] = A[i, j] * B[j, k]
-		end
-	end
-end
-```
-"""
-
-# ╔═╡ 37e9697d-e2ed-4fa4-882b-5cd77586d719
-md"GEMM is CPU bottlenecked"
-
-# ╔═╡ 040fc63d-0b5c-4b33-ac8e-946573dc1c0c
-@xbind matrix_size NumberField(2:3000; default=1000)
-
-# ╔═╡ 054c57f7-22cb-4d47-a79c-7ef035586f0c
-@xbind benchmark_example1 CheckBox()
-
-# ╔═╡ 88d538e9-3757-4f87-88c5-68078aef681f
-md"Loading the package for benchmarking"
-
-# ╔═╡ ead892c7-dc0d-452b-9443-15a854683f43
-md"Loading the matrix multiplication function"
-
-# ╔═╡ 4dba5c49-7bfb-426b-8461-f062a9c4a365
-if benchmark_example1
-	let
-		# creating random vectors with normal distribution/zero elements
-		A = randn(Float64, matrix_size, matrix_size)
-		B = randn(Float64, matrix_size, matrix_size)
-		C = zeros(Float64, matrix_size, matrix_size)
-		@benchmark mul!($C, $A, $B)
-	end
-end
-
-# ╔═╡ 407219ae-51df-487e-a831-c6087428159c
-md"Calculating the **floating point operations per second**"
-
-# ╔═╡ 4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
-PlutoLecturing.blackboard("FLOPS for computing GEMM<br><span style='font-size: 10pt'>the number of floating point operations / the number of seconds</span>")
-
-# ╔═╡ a87eb239-70a5-4da2-a8ce-4d3a93d976b4
-md"""
-## Example 2: axpy
-"""
-
-# ╔═╡ 330c3319-7954-466d-9100-f6ec19f43fcc
-md"""
-axpy! is memory I/O bottlenecked
-"""
-
-# ╔═╡ 9acd075f-bd77-41da-8455-e54063cbc8b4
-function axpy!(a::Real, x::AbstractVector, y::AbstractVector)
-	@assert length(x) == length(y) "the input size of x and y mismatch, got $(length(x)) and $(length(y))"
-	@inbounds for i=1:length(x)
-		y[i] += a * x[i]
-	end
-	return y
-end
-
-# ╔═╡ 9abf93ab-ad22-4911-b459-fa5c6f139152
-@xbind axpy_vector_size NumberField(2:10000000; default=1000)
-
-# ╔═╡ 85d0bce1-ca15-4a86-821f-87d3ec0b715c
-@xbind benchmark_axpy CheckBox()
-
-# ╔═╡ f5edd248-eb04-41d1-b435-21aa77b010b7
-if benchmark_axpy
-	let
-		x = randn(Float64, axpy_vector_size)
-		y = randn(Float64, axpy_vector_size)
-		@benchmark axpy!(2.0, $x, $y)
-	end
-end
-
-# ╔═╡ 0e3bfc93-33ff-487e-ac73-71922fabf660
-PlutoLecturing.blackboard("FLOPS for computing axpy", subtitle="the number of floating point operations / the number of seconds")
-
-# ╔═╡ 13ff13dd-1146-46f7-99a0-c9ee7e878931
-md"## Example 3: modified axpy"
-
-# ╔═╡ d381fcf1-3b53-49fa-a5af-1a242c83d05c
-function bad_axpy!(a::Real, x::AbstractVector, y::AbstractVector, indices::AbstractVector{Int})
-	@assert length(x) == length(y) == length(indices) "the input size of x and y mismatch, got $(length(x)), $(length(y)) and $(length(indices))"
-	@inbounds for i in indices
-		y[i] += a * x[i]
-	end
-	return y
-end
-
-# ╔═╡ bb0e95c9-0a73-4367-b738-f42994758ffc
-md"I will show this function is latency bottlenecked"
-
-# ╔═╡ 94016043-b913-4413-8c6a-e2b2a75dd9dd
-@xbind bad_axpy_vector_size NumberField(2:10000000; default=1000)
-
-# ╔═╡ 7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-@xbind benchmark_bad_axpy CheckBox()
-
-# ╔═╡ 5245a31a-62c3-422d-8d04-d2bdf496cbcc
-if benchmark_bad_axpy
-	let
-		x = randn(Float64, bad_axpy_vector_size)
-		y = randn(Float64, bad_axpy_vector_size)
-		indices = randperm(bad_axpy_vector_size)
-		@benchmark bad_axpy!(2.0, $x, $y, $indices)
-	end
-end
-
-# ╔═╡ d41f8743-d3ba-437e-b7db-a9b6d1756543
-PlutoLecturing.blackboard("FLOPS for computing bad axpy", subtitle="the number of floating point operations / the number of seconds")
-
-# ╔═╡ f48ae9b5-51dd-4434-870d-4c5e73497433
-md"""
-# Programming on a device （30min）
-"""
-
-# ╔═╡ 035f8874-d463-4fa8-92cc-49f1fd226d23
-md"## You program are compiled to binary"
-
-# ╔═╡ 7f0ff65f-40fd-4907-b54a-9a5ba4fcccca
-with_terminal() do
-	x, y = randn(10), randn(10)
-	@code_native axpy!(2.0, x, y)
-end
-
-# ╔═╡ e5d9327e-75b2-4f99-97da-d3be1c8cd405
-md"Let us check an easier one"
-
-# ╔═╡ 39c580e0-d184-4400-8562-b5ba6a2d4a81
-function oneton(n::Int)
-   res = zero(n)
-   for i = 1:n
-		res+=i
-   end
-	return res
-end
-
-# ╔═╡ b52078f1-605a-47aa-87f8-ce3b000aa10a
-with_terminal() do
-	@code_native oneton(10)
-end
-
-# ╔═╡ f37d0016-16ab-4bdd-8728-00f26f6e87a9
-md"An instruct has a binary correspondence: [check the online decoder](https://defuse.ca/online-x86-assembler.htm#disassembly)"
-
-# ╔═╡ 980dac9e-092a-47e0-bcca-85c7e5ededab
-md"## Measuring the performance"
-
-# ╔═╡ 56c9c50e-bb43-4c27-88a6-ea3a26288b57
-@xbind profile_axpy CheckBox()
-
-# ╔═╡ d31f0924-aca0-446d-b06c-92a3daa65ae2
-if profile_axpy
-	with_terminal() do
-		# clear previous profiling data
-		Profile.init(; n=10^6, delay=0.001)
-		x, y = randn(100000000), randn(100000000)
-		@profile axpy!(2.0, x, y)
-		Profile.print()
-	end
-end
-
-# ╔═╡ 4fc93548-0253-4e09-b2a2-61f08818105d
-PlutoLecturing.blackboard("How does profiling work?", subtitle="* function call stack <br> * two approaches: instrumentation and sampling</span>")
-
-# ╔═╡ d7784369-1591-4c22-ad17-e9ce7d31dff0
-md"# Summarize
-1. understanding the components of our computing devices
-2. the bottlenecks of our computing devices
-3. how to get our program compiled and executed
-3. how to measure the performance of a program with profiling
+for all $\mathbf{x}, \mathbf{y} \in S$.
 "
 
-# ╔═╡ 752a7d31-5065-4d13-86b8-63eb279d1f7b
-md"""
-# Next lecture
-We have have a $(PlutoLecturing.highlight("coding seminar")).
-I will show you some cheatsheets about
-* Linux operation system
-* Vim
-* Git
-* SSH
-* Julia installation Guide
+# ╔═╡ 1bf01867-adbe-4d00-a189-c0f024e65475
+let
+	@drawsvg begin
+	function segment(a, b)
+		line(a, b, :stroke)
+		circle(a, 5, :fill)
+		circle(b, 5, :fill)
+	end
+	fontsize(20)
+	c1 = Point(-180, -20)
+	sethue("red")
+	ellipse(c1, 130, 80, :fill)
+	sethue("black")
+	ellipse(c1, 130, 80, :stroke)
+	segment(c1 - Point(50, 25), c1 + Point(50, -25))
+	Luxor.text("convex set", c1 + Point(0, 90), halign=:center)
+	c2 = Point(0, -20)
+	f(t) = Point(4cos(t) + 2cos(3t), 4sin(t) + 3sin(3t+π/2))
+	sethue("red")
+    poly(10 .* f.(range(0, 2π, length=160)) .+ c2, action = :fill)
+	sethue("black")
+    poly(10 .* f.(range(0, 2π, length=160)) .+ c2, action = :stroke)
+	a, b = Point(c2.x-30, c2.y+30), Point(c2.x+45, c2.y)
+	segment(a, b)
+	Luxor.text("nonconvex set", c2 + Point(0, 90), halign=:center)
+end 520 200
+end
 
-Please bring your laptops and get your hands dirty!
-If you are already an expert, please let me know, I need some help in preparing the cheatsheets.
+# ╔═╡ 2afe850b-cfd3-41de-b3e1-fafa44e9bbe2
+md"""
+A function $f: S \in R^n \rightarrow R$ is convex on a convex set $S$ if its graph along any line segment in $S$ lies on or blow the chord connecting the function values at the endpoints of the segment, i.e., if
+```math
+f(\alpha \mathbf{x} + (1-\alpha) \mathbf{y}) \leq \alpha f(\mathbf{x}) + (1+\alpha)f(\mathbf{y})
+```
+for all $\alpha \in [0, 1]$ and all $\mathbf{x}, \mathbf{y}\in S$.
 """
 
-# ╔═╡ 68176e03-544b-4a30-a096-c117c6625113
-md"## Pre-reading"
+# ╔═╡ 8a93097f-00c1-45b0-92a1-092aeccc58a5
+let
+@drawsvg begin
+	function segment(a, b)
+		line(a, b, :stroke)
+		circle(a, 5, :fill)
+		circle(b, 5, :fill)
+	end
+	fontsize(20)
+	c1 = Point(-180, -20)
+	xs = -1.6:0.01:1.6
+	ys = 0.8 * (2.0xs .^ 2 .- xs .^ 4 .- 0.2*xs .+ 1)
+	Luxor.poly(30 .* Point.(xs, ys) .+ Ref(c1), :stroke)
+	Luxor.text("nonconvex", c1 + Point(0, 90), halign=:center)
+	segment(c1+Point(-17, 40), c1+Point(18, 35))
+	
+	c2 = Point(0, -20)
+	xs = [-1.8, -0.9, 0.0, 0.7, 1.8]
+	ys = [-0.7, 1.3, 1.7, 1.2, -0.7]
+	Luxor.poly(30 .* Point.(xs, ys) .+ Ref(c2), :stroke)
+	Luxor.text("convex", c2 + Point(0, 90), halign=:center)
+	segment(c2+Point(-17, 43), c2+Point(25, 30))
 
-# ╔═╡ 103bf89d-c74a-4666-bfcb-8e50695ae971
-md"Strong recommended course: [missing-semester](https://missing.csail.mit.edu/2020/)"
+	
+	fontsize(20)
+	c3 = Point(180, -20)
+	xs = -1.4:0.01:1.3
+	ys = 0.8 * (- xs .^ 4 .- 0.2*xs .+ 2.2)
+	Luxor.poly(30 .* Point.(xs, ys) .+ Ref(c3), :stroke)
+	Luxor.text("strictly convex", c3 + Point(0, 90), halign=:center)
+	segment(c3+Point(-27, 40), c3+Point(25, 35))
+end 520 200
+end
 
-# ╔═╡ dec1a9dd-de98-4dc3-bc82-ee34efb000ab
+# ╔═╡ ce27c364-9ae3-435a-8153-a1c898ae8984
+md"Any local minimum of a convex function $f$ on a convex set $S\subseteq \mathbb{R}^n$ is a global minimum of $f$ on $S$."
+
+# ╔═╡ 50f91cd8-c74b-11ed-0b94-cdeb596bf99b
+md"## Gradient based optimization"
+
+# ╔═╡ 211b6c56-f16b-47fb-ba56-4534ac41be95
 md"""
-* $(PlutoLecturing.highlight("1/13: Course overview + the shell (1 - expert)"))
-* $(PlutoLecturing.highlight("1/14: Shell Tools and Scripting (4 - basic)"))
-* $(PlutoLecturing.highlight("1/15: Editors (Vim) (2 - basic)"))
-* 1/16: Data Wrangling
-* 1/21: Command-line Environment
-* $(PlutoLecturing.highlight("1/22: Version Control (Git) (3 - expert)"))
-* 1/23: Debugging and Profiling
-* 1/27: Metaprogramming (build systems, dependency management, testing, CI)
-* 1/28: Security and Cryptography
-* 1/29: Potpourri
-* 1/30: Q&A
+If $f: R^n \rightarrow R$ is differentiable, then the vector-valued function $\nabla f: R^n \rightarrow R^n$ defined by
+```math
+\nabla f(x) = \left(\begin{matrix}
+\frac{\partial f(\mathbf{x})}{\partial x_1}\\
+\frac{\partial f(\mathbf{x})}{\partial x_2}\\
+\vdots\\
+\frac{\partial f(\mathbf{x})}{\partial x_n}\\
+\end{matrix}\right)
+```
+is called the gradient of $f$.
 """
 
-# ╔═╡ a5fbf397-70d1-4dfd-a1ea-abff06007239
+# ╔═╡ eec10666-102c-44b6-a562-75ba78428d1e
 md"""
-!!! note
-    *  Yellow backgrounded lectures are required by AMAT5315
-    * (n - basic) is the reading order and the level of familiarity
+Gradient descent is based on the observation that changing $\mathbf x$ slightly towards the negative gradient direction always decrease $f$ in the first order perturbation.
+```math
+f(x - \epsilon \nabla f(\mathbf x)) \approx f(\mathbf x) - \epsilon \nabla f(\mathbf x)^T \nabla f(\mathbf x) = f(\mathbf x) - \epsilon \|\nabla f(\mathbf x)\|_2 < f(x)
+```
 """
+
+# ╔═╡ d59aaccf-1435-4c7b-998e-5dfb174990c3
+md"## Optimizing the Rosenbrock function"
+
+# ╔═╡ f859faaa-b24e-4af2-8b72-85f2d753e87a
+function rosenbrock(x)
+	(1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end
+
+# ╔═╡ c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
+let
+	x = -2:0.01:2
+	y = -2:0.01:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂")
+end
+
+# ╔═╡ 004a79b8-afbd-40b7-9c67-a8e864432179
+function gradient_descent(f, x; niters::Int, learning_rate::Real)
+	history = [x]
+	for i=1:niters
+		g = ForwardDiff.gradient(f, x)
+		x -= learning_rate * g
+		push!(history, x)
+	end
+	return history
+end
+
+# ╔═╡ 8d0dbc03-f927-4229-a8ce-6196cb62bde2
+let
+	x0 = [-1, -1.0]
+	history = gradient_descent(rosenbrock, x0; niters=1000, learning_rate=0.002)
+
+	# plot
+	x = -2:0.01:2
+	y = -2:0.01:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
+	plot!(plt, getindex.(history, 1), getindex.(history, 2); label="optimization", color="green")
+end
+
+# ╔═╡ a4b4bc11-efb2-46db-b256-ba9632fadd7b
+md"## Adam"
+
+# ╔═╡ 47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
+md"## Golden section search"
+
+# ╔═╡ da2f6865-ff3c-46bd-80d4-f171b0e30ce9
+function golden_section_search(f, a, b; tol=1e-5)
+	τ = (√5 - 1) / 2
+	x1 = a + (1 - τ) * (b - a)
+	x2 = a + τ * (b - a)
+	f1, f2 = f(x1), f(x2)
+	k = 0
+	while b - a > tol
+		k += 1
+		if f1 > f2
+			a = x1
+			x1 = x2
+			f1 = f2
+			x2 = a + τ * (b - a)
+			f2 = f(x2)
+		else
+			b = x2
+			x2 = x1
+			f2 = f1
+			x1 = a + (1 - τ) * (b - a)
+			f1 = f(x1)
+		end
+	end
+	@info "number of iterations = $k"
+	return f1 < f2 ? (a, f1) : (b, f2)
+end
+
+# ╔═╡ c75753d4-ceec-402e-a4bc-8b00b4934dbf
+golden_section_search(x->(x-4)^2, -5, 5; tol=1e-5)
+
+# ╔═╡ 66cbb653-b06d-4b06-880b-f402fd9f1d53
+md"## Newton's Method"
+
+# ╔═╡ da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
+function Newton1d(f, x; tol=1e-5)
+	k = 0
+	while k < 1000
+		k += 1
+		dx = ForwardDiff.gradient(v->f(v[1]), [x])[1]/ForwardDiff.hessian(v->f(v[1]), [x])[1]
+		x -= dx
+		abs(dx) < tol && break
+	end
+	@info "number of iterations = $k"
+	return x
+end
+
+# ╔═╡ a4832798-6e20-4630-889d-388fe55272f7
+Newton1d(x->0.5 - x * exp(-x^2), 1.0; tol=1e-5)
+
+# ╔═╡ 4ade7201-ae81-41ca-affb-fffcb99776fe
+md"## BFGS"
+
+# ╔═╡ afbc321c-c568-4b88-8dc1-9d87a4a0e7af
+md"## Linear Programming"
+
+# ╔═╡ 7db726fc-b537-483a-8898-dd24b4f3aca2
+md"""if $f$, $\mathbf{g}$ and $\mathbf{h}$ are all linear (or affine), then we have a linear programming problem."""
+
+# ╔═╡ 0aec2c02-cbf6-427c-8878-3c7ab600b7af
+md"## Linear programming and mixed-integer programming"
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-AbstractTrees = "~0.4.4"
-BenchmarkTools = "~1.3.2"
-Plots = "~1.38.7"
-PlutoUI = "~0.7.50"
-Reexport = "~1.2.2"
+ForwardDiff = "~0.10.35"
+Luxor = "~3.7.0"
+Plots = "~1.38.8"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.0-beta3"
+julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "f1f63bbf2a4374d09e428af67f7664b036592dec"
-
-[[deps.AbstractPlutoDingetjes]]
-deps = ["Pkg"]
-git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
-uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.1.4"
-
-[[deps.AbstractTrees]]
-git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
-uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.4.4"
+project_hash = "65e43c11288df65a7284beed94ed0f7f58306ffe"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -504,12 +276,6 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
-
-[[deps.BenchmarkTools]]
-deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
-git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
-uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.3.2"
 
 [[deps.BitFlags]]
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
@@ -522,11 +288,29 @@ git-tree-sha1 = "19a35467a82e236ff51bc17a3a44b69ef35185a2"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.8+0"
 
+[[deps.Cairo]]
+deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
+git-tree-sha1 = "d0b3f8b4ad16cb0a2988c6788646a5e6a17b6b1b"
+uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
+version = "1.0.5"
+
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
+
+[[deps.ChainRulesCore]]
+deps = ["Compat", "LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "c6d890a52d2c4d55d326439580c3b8d0875a77d9"
+uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+version = "1.15.7"
+
+[[deps.ChangesOfVariables]]
+deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
+git-tree-sha1 = "485193efd2176b88e6622a39a246f8c5b600e74e"
+uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+version = "0.1.6"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -558,20 +342,22 @@ git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
 
+[[deps.CommonSubexpressions]]
+deps = ["MacroTools", "Test"]
+git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+version = "0.3.0"
+
 [[deps.Compat]]
-deps = ["UUIDs"]
+deps = ["Dates", "LinearAlgebra", "UUIDs"]
 git-tree-sha1 = "7a60c856b9fa189eb34f5f8a6f6b5529b7942957"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "4.6.1"
-weakdeps = ["Dates", "LinearAlgebra"]
-
-    [deps.Compat.extensions]
-    CompatLinearAlgebraExt = "LinearAlgebra"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.0.1+0"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -595,9 +381,19 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
 [[deps.DelimitedFiles]]
 deps = ["Mmap"]
-git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-version = "1.9.1"
+
+[[deps.DiffResults]]
+deps = ["StaticArraysCore"]
+git-tree-sha1 = "782dd5f4561f5d267313f23853baaaa4c52ea621"
+uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+version = "1.1.0"
+
+[[deps.DiffRules]]
+deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
+git-tree-sha1 = "a4ad7ef19d2cdc2eff57abbbe68032b1cd0bd8f8"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.13.0"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -628,6 +424,12 @@ git-tree-sha1 = "74faea50c1d007c85837327f6775bea60b5492dd"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.2+2"
 
+[[deps.FileIO]]
+deps = ["Pkg", "Requires", "UUIDs"]
+git-tree-sha1 = "7be5f99f7d15578798f338f5433b6c432ea8037b"
+uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+version = "1.16.0"
+
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
@@ -649,6 +451,12 @@ git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
 uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
 
+[[deps.ForwardDiff]]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
+git-tree-sha1 = "00e252f4d706b3d55a8863432e742bf5717b498d"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "0.10.35"
+
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
 git-tree-sha1 = "87eb71354d8ec1a96d4a7636bd57a7347dde3ef9"
@@ -669,15 +477,15 @@ version = "3.3.8+0"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Preferences", "Printf", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "UUIDs", "p7zip_jll"]
-git-tree-sha1 = "660b2ea2ec2b010bb02823c6d0ff6afd9bdc5c16"
+git-tree-sha1 = "4423d87dc2d3201f3f1768a29e807ddc8cc867ef"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.71.7"
+version = "0.71.8"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "d5e1fd17ac7f3aa4c5287a61ee28d4f8b8e98873"
+git-tree-sha1 = "3657eb348d44575cc5560c80d7e55b812ff6ffe1"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.71.7+0"
+version = "0.71.8+0"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -690,6 +498,12 @@ deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libic
 git-tree-sha1 = "d3b3624125c1474292d0d8ed0f65554ac37ddb23"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.74.0+2"
+
+[[deps.Graphics]]
+deps = ["Colors", "LinearAlgebra", "NaNMath"]
+git-tree-sha1 = "d61890399bc535850c4bf08e4e0d3a7ad0f21cbd"
+uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
+version = "1.1.2"
 
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -714,24 +528,6 @@ git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
 
-[[deps.Hyperscript]]
-deps = ["Test"]
-git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
-uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
-version = "0.0.4"
-
-[[deps.HypertextLiteral]]
-deps = ["Tricks"]
-git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
-uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.4"
-
-[[deps.IOCapture]]
-deps = ["Logging", "Random"]
-git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
-uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
-version = "0.2.2"
-
 [[deps.IniFile]]
 git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
 uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
@@ -740,6 +536,12 @@ version = "0.5.1"
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[deps.InverseFunctions]]
+deps = ["Test"]
+git-tree-sha1 = "49510dfcb407e572524ba94aeae2fced1f3feb0f"
+uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
+version = "0.1.8"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
@@ -769,6 +571,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "6f2675ef130a300a112286de91973805fcc5ffbc"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.91+0"
+
+[[deps.Juno]]
+deps = ["Base64", "Logging", "Media", "Profile"]
+git-tree-sha1 = "07cb43290a840908a771552911a6274bc6c072c7"
+uuid = "e5e0dc1b-0480-54bc-9374-aad01c23163d"
+version = "0.8.4"
 
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -857,6 +665,12 @@ git-tree-sha1 = "9c30530bf0effd46e15e0fdcf2b8636e78cbbd73"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
 version = "2.35.0+0"
 
+[[deps.Librsvg_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pango_jll", "Pkg", "gdk_pixbuf_jll"]
+git-tree-sha1 = "ae0923dab7324e6bc980834f709c4cd83dd797ed"
+uuid = "925c91fb-5dd6-59dd-8e8c-345e74382d89"
+version = "2.54.5+0"
+
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
 git-tree-sha1 = "3eb79b0ca5764d4799c06699573fd8f533259713"
@@ -870,24 +684,14 @@ uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
 
 [[deps.LinearAlgebra]]
-deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
+deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
-deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
+deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "0a1b7c2863e44523180fdb3146534e265a91870b"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 version = "0.3.23"
-
-    [deps.LogExpFunctions.extensions]
-    LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
-    LogExpFunctionsChangesOfVariablesExt = "ChangesOfVariables"
-    LogExpFunctionsInverseFunctionsExt = "InverseFunctions"
-
-    [deps.LogExpFunctions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    ChangesOfVariables = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -898,10 +702,11 @@ git-tree-sha1 = "cedb76b37bc5a6c702ade66be44f831fa23c681e"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.0.0"
 
-[[deps.MIMEs]]
-git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
-uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
-version = "0.1.4"
+[[deps.Luxor]]
+deps = ["Base64", "Cairo", "Colors", "Dates", "FFMPEG", "FileIO", "Juno", "LaTeXStrings", "Random", "Requires", "Rsvg", "SnoopPrecompile"]
+git-tree-sha1 = "909a67c53fddd216d5e986d804b26b1e3c82d66d"
+uuid = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
+version = "3.7.0"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -929,6 +734,12 @@ git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.2"
 
+[[deps.Media]]
+deps = ["MacroTools", "Test"]
+git-tree-sha1 = "75a54abd10709c01f1b86b84ec225d26e840ed58"
+uuid = "e89f7d12-3494-54d1-8411-f7d8b9ae1f27"
+version = "0.5.0"
+
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "f66bdc5de519e8f8ae43bdc598782d35a25b1272"
@@ -940,7 +751,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.10.11"
+version = "2022.2.1"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
@@ -961,7 +772,7 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.21+0"
+version = "0.3.20+0"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1000,7 +811,13 @@ version = "1.4.1"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.42.0+0"
+version = "10.40.0+0"
+
+[[deps.Pango_jll]]
+deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "84a314e3926ba9ec66ac097e3635e270986b0f10"
+uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
+version = "1.50.9+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
@@ -1020,9 +837,9 @@ uuid = "30392449-352a-5448-841d-b1acce4e97dc"
 version = "0.40.1+0"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.0"
+version = "1.8.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
@@ -1038,29 +855,9 @@ version = "1.3.4"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SnoopPrecompile", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "cfcd24ebf8b066b4f8e42bade600c8558212ed83"
+git-tree-sha1 = "f49a45a239e13333b8b936120fe6d793fe58a972"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.38.7"
-
-    [deps.Plots.extensions]
-    FileIOExt = "FileIO"
-    GeometryBasicsExt = "GeometryBasics"
-    IJuliaExt = "IJulia"
-    ImageInTerminalExt = "ImageInTerminal"
-    UnitfulExt = "Unitful"
-
-    [deps.Plots.weakdeps]
-    FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-    GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-    IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-    ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
-[[deps.PlutoUI]]
-deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
-uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.50"
+version = "1.38.8"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -1119,6 +916,12 @@ git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.0"
 
+[[deps.Rsvg]]
+deps = ["Cairo", "Glib_jll", "Librsvg_jll"]
+git-tree-sha1 = "3d3dc66eb46568fb3a5259034bfc752a0eb0c686"
+uuid = "c4c386cf-5103-5370-be45-f3a111cca3b8"
+version = "1.0.0"
+
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
@@ -1159,25 +962,29 @@ uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
 version = "1.1.0"
 
 [[deps.SparseArrays]]
-deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
+deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SpecialFunctions]]
-deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
 git-tree-sha1 = "ef28127915f4229c971eb43f3fc075dd3fe91880"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "2.2.0"
 
-    [deps.SpecialFunctions.extensions]
-    SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
+[[deps.StaticArrays]]
+deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
+git-tree-sha1 = "6aa098ef1012364f2ede6b17bf358c7f1fbe90d4"
+uuid = "90137ffa-7385-5640-81b9-e52037218182"
+version = "1.5.17"
 
-    [deps.SpecialFunctions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+[[deps.StaticArraysCore]]
+git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
+uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
+version = "1.4.0"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-version = "1.9.0"
 
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
@@ -1191,20 +998,15 @@ git-tree-sha1 = "d1bf48bfcc554a3761a133fe3a9bb01488e06916"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.33.21"
 
-[[deps.SuiteSparse_jll]]
-deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
-uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "5.10.1+0"
-
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.3"
+version = "1.0.0"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.0"
+version = "1.10.1"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -1221,11 +1023,6 @@ deps = ["Random", "Test"]
 git-tree-sha1 = "94f38103c984f89cf77c402f2a68dbd870f8165f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.11"
-
-[[deps.Tricks]]
-git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
-uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
-version = "0.1.6"
 
 [[deps.URIs]]
 git-tree-sha1 = "074f993b0ca030848b897beff716d93aca60f06a"
@@ -1403,7 +1200,7 @@ version = "1.4.0+3"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+0"
+version = "1.2.12+3"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1416,6 +1213,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "868e669ccb12ba16eaf50cb2957ee2ff61261c56"
 uuid = "214eeab7-80f7-51ab-84ad-2988db7cef09"
 version = "0.29.0+0"
+
+[[deps.gdk_pixbuf_jll]]
+deps = ["Artifacts", "Glib_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pkg", "Xorg_libX11_jll", "libpng_jll"]
+git-tree-sha1 = "e9190f9fb03f9c3b15b9fb0c380b0d57a3c8ea39"
+uuid = "da03df04-f53b-5353-a52f-6a8b0620ced0"
+version = "2.42.8+0"
 
 [[deps.libaom_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1430,9 +1233,9 @@ uuid = "0ac62f75-1d6f-5e53-bd7c-93b484bb37c0"
 version = "0.15.1+0"
 
 [[deps.libblastrampoline_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.2.0+0"
+version = "5.1.1+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1482,104 +1285,37 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─84c14a09-2c9e-4919-bfb1-cdf4d5a61776
-# ╟─5c5f6214-61c5-4532-ac05-85a43e5639cc
-# ╟─0fe286ff-1359-4eb4-ab6c-28b231f9d56e
-# ╟─c51b55d2-c899-421f-a633-1daa4168c6d5
-# ╟─d59dce7b-5fed-45ba-9f9f-f4b93cf4b89f
-# ╟─f36e7b45-193e-4028-aae5-352711b8406d
-# ╟─72924c3a-0bbe-4d74-b2a9-60b250db4ec2
-# ╟─163016e4-9133-4c61-a7ac-82e41e6db234
-# ╟─a3d7aa29-1099-48c5-94d8-b6148fa1e0fd
-# ╟─f5ad618c-0a00-475f-b05d-97deba0faaef
-# ╠═d5c2f523-80dd-40df-bf11-dd58cd493606
-# ╟─d6dca51b-978e-456e-b7c0-b658d894101d
-# ╠═c0aa6f21-47d5-4f03-8b9b-a8df5c18a1b8
-# ╟─2c92ab20-c105-4623-83c2-239462d59707
-# ╠═96c87a95-ca76-4cf5-8920-8d1f014ba47b
-# ╟─c0db86ae-d6b3-49b4-bde1-d6c2585090e8
-# ╟─c80e2cc0-8cd9-438c-a2c5-7a5b0dc9aa7a
-# ╟─17f877cd-3958-4b49-a0cc-fb0529800223
-# ╠═5a5fd311-4c9f-4fa0-8f5a-d3f5acba3106
-# ╠═24684e2a-e99e-43f3-ba66-881634e4ba1b
-# ╠═79565487-c1fb-47d7-b50d-a0a39a8849d9
-# ╠═baeefdd1-09ef-4b5d-8cf4-c4eeb98d3335
-# ╟─4cf1e164-c510-47da-a138-f4582bfa0270
-# ╠═07b3e56b-78fd-4894-b310-096281009764
-# ╠═cc2e0ab8-83cc-44fe-9782-eabee896bcc0
-# ╠═e51adfeb-3868-43c2-8f64-21bd1a4e8522
-# ╟─9186b86b-88b1-4165-94ac-b738882a2c23
-# ╟─31d784e6-22b5-430a-a571-6aad7aaefee1
-# ╟─5a10796f-c084-451e-89f5-75ba8364f2d8
-# ╠═8eff13e4-1d93-4add-b516-46307fca965a
-# ╠═c3db170e-20f0-4488-98b0-7a65090728a1
-# ╟─2fd28ddf-b74c-485b-a5d4-dabb1bfdc6c7
-# ╠═27212a7a-fdd0-423d-a008-83c6f6e257c6
-# ╠═e5c3c192-e398-4bb1-9933-6c6070b10756
-# ╠═c761fcf3-7386-437a-b37c-af256e189a10
-# ╠═9f58f7f1-ab35-499b-aefe-6bdecd137e1d
-# ╠═5f27ff9c-2d86-4d8c-9d95-025e72e56c95
-# ╠═21bfac50-1d7d-4737-bf1e-aef799353734
-# ╠═129207a7-b88a-47bd-a853-e5db71ed65c5
-# ╠═d49a05c0-e60d-471d-ba19-e5e9708fa4f7
-# ╠═7275c2ec-996a-4335-ac8b-9b94719a765f
-# ╠═1eab94a9-c00d-4d12-95fb-08f26d05b4d4
-# ╠═ccc49ad6-e8c2-479c-8341-fc16877b50cf
-# ╟─1d75ba45-2b66-47b2-a528-0e30e982c5e7
-# ╟─1baa4439-9325-4e7f-bdd5-53410a200d41
-# ╟─9513bd15-5789-4a56-961b-175f8dabfdaf
-# ╠═38e23738-f7fb-4b9e-9067-200d42f6a1e4
-# ╟─8fd31129-f150-4114-afa5-8106dba8009f
-# ╠═a88e6865-235b-428a-9546-5da2daa3e03c
-# ╠═e59b8bb2-95df-492e-bd15-24a1de2573f5
-# ╟─c64ed02d-0c62-4cab-9bcf-35dfbfedddc6
-# ╟─c13955ef-4986-4d56-8e1e-48c6becd213a
-# ╠═be7247b8-ac5d-4b3a-ba3b-e8da37ef1e08
-# ╟─16dc1e93-9f16-4299-9e8e-59dff16b6fd9
-# ╟─5c13904a-505b-4fec-9e32-0ffa54a9dad8
-# ╟─13dabaa8-7310-4557-ad06-e64f566ca256
-# ╟─37e9697d-e2ed-4fa4-882b-5cd77586d719
-# ╟─040fc63d-0b5c-4b33-ac8e-946573dc1c0c
-# ╟─054c57f7-22cb-4d47-a79c-7ef035586f0c
-# ╟─88d538e9-3757-4f87-88c5-68078aef681f
-# ╠═b8d442b2-8b3d-11ed-2ac7-1f0fbfa7836d
-# ╟─ead892c7-dc0d-452b-9443-15a854683f43
-# ╠═cf591ae5-3b55-47c5-b7a2-6c8aefa72b7a
-# ╠═4dba5c49-7bfb-426b-8461-f062a9c4a365
-# ╟─407219ae-51df-487e-a831-c6087428159c
-# ╟─4dcdfdd5-24e2-4fc6-86dd-335fb12b8bb4
-# ╟─a87eb239-70a5-4da2-a8ce-4d3a93d976b4
-# ╟─330c3319-7954-466d-9100-f6ec19f43fcc
-# ╠═9acd075f-bd77-41da-8455-e54063cbc8b4
-# ╟─9abf93ab-ad22-4911-b459-fa5c6f139152
-# ╟─85d0bce1-ca15-4a86-821f-87d3ec0b715c
-# ╠═f5edd248-eb04-41d1-b435-21aa77b010b7
-# ╟─0e3bfc93-33ff-487e-ac73-71922fabf660
-# ╟─13ff13dd-1146-46f7-99a0-c9ee7e878931
-# ╠═d381fcf1-3b53-49fa-a5af-1a242c83d05c
-# ╟─bb0e95c9-0a73-4367-b738-f42994758ffc
-# ╟─94016043-b913-4413-8c6a-e2b2a75dd9dd
-# ╠═7fa987b4-3d97-40e0-b4e0-fd4c5759c48b
-# ╠═8776764c-4483-476b-bfff-a3e779431a68
-# ╠═5245a31a-62c3-422d-8d04-d2bdf496cbcc
-# ╟─d41f8743-d3ba-437e-b7db-a9b6d1756543
-# ╟─f48ae9b5-51dd-4434-870d-4c5e73497433
-# ╟─035f8874-d463-4fa8-92cc-49f1fd226d23
-# ╠═7f0ff65f-40fd-4907-b54a-9a5ba4fcccca
-# ╟─e5d9327e-75b2-4f99-97da-d3be1c8cd405
-# ╠═39c580e0-d184-4400-8562-b5ba6a2d4a81
-# ╠═b52078f1-605a-47aa-87f8-ce3b000aa10a
-# ╟─f37d0016-16ab-4bdd-8728-00f26f6e87a9
-# ╟─980dac9e-092a-47e0-bcca-85c7e5ededab
-# ╠═292dc84c-b2ed-4a35-b817-be6266b40ff1
-# ╟─56c9c50e-bb43-4c27-88a6-ea3a26288b57
-# ╠═d31f0924-aca0-446d-b06c-92a3daa65ae2
-# ╟─4fc93548-0253-4e09-b2a2-61f08818105d
-# ╟─d7784369-1591-4c22-ad17-e9ce7d31dff0
-# ╟─752a7d31-5065-4d13-86b8-63eb279d1f7b
-# ╟─68176e03-544b-4a30-a096-c117c6625113
-# ╟─103bf89d-c74a-4666-bfcb-8e50695ae971
-# ╟─dec1a9dd-de98-4dc3-bc82-ee34efb000ab
-# ╟─a5fbf397-70d1-4dfd-a1ea-abff06007239
+# ╟─7345a2c1-d4b7-470f-a936-b4cc6c177399
+# ╟─7c26b07f-6a1f-4d40-9152-b8738a1dad62
+# ╟─6b4307ea-33c0-4a20-af35-d05262856528
+# ╟─9ca5ce82-9f7f-4bf1-834e-e02ba8ba33b7
+# ╟─e6dca5dc-dbf9-45ba-970d-23bd9a75769d
+# ╟─5b433d39-ed60-4831-a139-b6663a284e7a
+# ╠═4b3de811-278b-4154-bce6-4d67dc19ff38
+# ╟─1bf01867-adbe-4d00-a189-c0f024e65475
+# ╟─2afe850b-cfd3-41de-b3e1-fafa44e9bbe2
+# ╟─8a93097f-00c1-45b0-92a1-092aeccc58a5
+# ╟─ce27c364-9ae3-435a-8153-a1c898ae8984
+# ╟─50f91cd8-c74b-11ed-0b94-cdeb596bf99b
+# ╟─211b6c56-f16b-47fb-ba56-4534ac41be95
+# ╟─eec10666-102c-44b6-a562-75ba78428d1e
+# ╟─d59aaccf-1435-4c7b-998e-5dfb174990c3
+# ╠═f859faaa-b24e-4af2-8b72-85f2d753e87a
+# ╠═1ed6d587-b984-463f-9db3-220bdfa81ebe
+# ╠═c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
+# ╠═004a79b8-afbd-40b7-9c67-a8e864432179
+# ╠═8d0dbc03-f927-4229-a8ce-6196cb62bde2
+# ╟─a4b4bc11-efb2-46db-b256-ba9632fadd7b
+# ╟─47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
+# ╠═da2f6865-ff3c-46bd-80d4-f171b0e30ce9
+# ╠═c75753d4-ceec-402e-a4bc-8b00b4934dbf
+# ╟─66cbb653-b06d-4b06-880b-f402fd9f1d53
+# ╠═4136799e-c4ab-432b-9e8a-208b0eae060e
+# ╠═da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
+# ╠═a4832798-6e20-4630-889d-388fe55272f7
+# ╟─4ade7201-ae81-41ca-affb-fffcb99776fe
+# ╟─afbc321c-c568-4b88-8dc1-9d87a4a0e7af
+# ╟─7db726fc-b537-483a-8898-dd24b4f3aca2
+# ╟─0aec2c02-cbf6-427c-8878-3c7ab600b7af
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

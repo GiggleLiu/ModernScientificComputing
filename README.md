@@ -4,12 +4,16 @@
 
 # *PART 1: Computing*
 ### Week 1: Understanding our computing devices
-* Lecture notes [online soon]
-* Pluto notebook [[pdf](notebooks/1.understanding-our-computing-devices.pdf), [source](notebooks/1.understanding-our-computing-devices.jl)]
+* [Lecture notes](https://giggleliu.github.io/ModernScientificComputing/msc/1.devices/)
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/1.understanding-our-computing-devices/), [pdf](notebooks/1.understanding-our-computing-devices.pdf), [source](notebooks/1.understanding-our-computing-devices.jl)]
 
-### Week 2: Get your computer ready for programming (Hands on)
+### Week 2: Linux and Git (Hands on)
+* [Lecture notes](https://giggleliu.github.io/ModernScientificComputing/msc/2.1.opensource/)
+* [Cheat sheet](https://giggleliu.github.io/ModernScientificComputing/msc/2.2.cheatsheets/)
 
 ### Week 3: The Julia programming language
+* We use [arXiv:1209.5145](https://arxiv.org/abs/1209.5145) as the reference.
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/3.julia/), [pdf](notebooks/3.julia.pdf), [source](notebooks/3.julia.jl)]
 
 # *PART 2: Mathematical modeling*
 This part does not contain any lecture note.
@@ -17,14 +21,18 @@ Please check the following book as a reference.
 > Heath M T. Scientific computing: an introductory survey, revised second edition[M]. Society for Industrial and Applied Mathematics, 2018.
 
 ### Week 4: Systems of linear equations
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/4.linearequation/), [pdf](notebooks/4.linearequation.pdf), [source](notebooks/4.linearequation.jl)]
 
-### Week 5: Eigenvalue problems and sparse matrices
+### Week 5: Linear least square problem and QR decomposition
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/5.linear-least-square/), [pdf](notebooks/5.linear-least-square.pdf), [source](notebooks/5.linear-least-square.jl)]
 
-### Week 6: Nonlinear equations
+### Week 6: Eigenvalue problems and sparse matrices
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/6.sparse/), [pdf](notebooks/6.sparse.pdf), [source](notebooks/6.sparse.jl)]
 
-### Week 7: Optimization
+### Week 7: Fast Fourier transform
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/7.fft/), [pdf](notebooks/7.fft.pdf), [source](notebooks/7.fft.jl)]
 
-### Week 8: Fast fourier transform
+### Week 8: Nonlinear equations and optimization
 
 ### Week 9: Random numbers and stochastic simulation
 

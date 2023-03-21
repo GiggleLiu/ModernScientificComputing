@@ -35,8 +35,12 @@ jobs:
     #   The last line should be `optimize()` though you may want to give it
     #   specific arguments, see the documentation or ?optimize in the REPL.
     - run: julia -e '
-            cd("website");
+            cd("website"); mkpath("notebooks");
             using Pkg; Pkg.activate("."); Pkg.instantiate();
+            using PlutoSliderServer;
+            for file in readdir("../notebooks")
+              endswith(file, ".jl") && PlutoSliderServer.export_notebook(joinpath("../notebooks", file); Export_output_dir="notebooks")
+            end;
             using NodeJS; run(`$(npm_cmd()) install highlight.js`);
             using Franklin;
             optimize();
