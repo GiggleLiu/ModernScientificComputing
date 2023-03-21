@@ -192,6 +192,23 @@ md"#### The reason why dynamic typed language is slow is related to caching."
 # ╔═╡ ee6182d7-52c2-4f8c-b74c-e50a2768587e
 md"Dynamic typed language uses `Box(type, *data)` to represent an object."
 
+# ╔═╡ 0380f2f3-be04-4629-bd00-11f972d6bb9b
+@drawsvg begin
+	x0 = -50
+	for i=1:4
+		y0 = 40 * i - 100
+		box(Point(x0, y0), 50, 40; action=:stroke)
+		box(Point(x0+50, y0), 50, 40; action=:stroke)
+		setcolor("#88CC66")
+		circle(Point(x0+120, y0), 15; action=:fill)
+		setcolor("black")
+		Luxor.text("type", Point(x0, y0); halign=:center, valign=:center)
+		Luxor.text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
+		Luxor.text("data", Point(x0+120, y0); halign=:center, valign=:middle)
+		Luxor.arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
+	end
+end 200 200
+
 # ╔═╡ 88b11d8a-c1e2-4d83-8c04-2543c0d141c7
 md"Cache miss!"
 
@@ -729,23 +746,6 @@ Base.:(+)(a::Z, b::Y) = Z(a.num + b.num)
 
 # ╔═╡ 2ded9376-c060-410c-bc14-0a5d28b217e5
 Base.:(+)(a::Z, b::Z) = Z(a.num + b.num)
-
-# ╔═╡ 0380f2f3-be04-4629-bd00-11f972d6bb9b
-@drawsvg begin
-	x0 = -50
-	for i=1:4
-		y0 = 40 * i - 100
-		box(Point(x0, y0), 50, 40; action=:stroke)
-		box(Point(x0+50, y0), 50, 40; action=:stroke)
-		setcolor("#88CC66")
-		circle(Point(x0+120, y0), 15; action=:fill)
-		setcolor("black")
-		Luxor.text("type", Point(x0, y0); halign=:center, valign=:center)
-		Luxor.text("*data", Point(x0+50, y0); halign=:center, valign=:middle)
-		Luxor.text("data", Point(x0+120, y0); halign=:center, valign=:middle)
-		Luxor.arrow(Point(x0+50, y0-10), Point(x0+70, y0-30), Point(x0+90, y0-30), Point(x0+110, y0-10), :stroke)
-	end
-end 200 200
 
 # ╔═╡ a252de65-257b-422d-a612-5e85a30ea0c9
 if run_any_benchmark
