@@ -29,9 +29,10 @@ Please check the following book as a reference.
 ### Week 6: Eigenvalue problems and sparse matrices
 * Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/6.sparse/), [pdf](notebooks/6.sparse.pdf), [source](notebooks/6.sparse.jl)]
 
-### Week 7: Nonlinear equations and optimization
+### Week 7: Fast Fourier transform
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/7.fft/), [pdf](notebooks/7.fft.pdf), [source](notebooks/7.fft.jl)]
 
-### Week 8: Fast Fourier transform
+### Week 8: Nonlinear equations and optimization
 
 ### Week 9: Random numbers and stochastic simulation
 
