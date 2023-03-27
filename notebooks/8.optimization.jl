@@ -4,6 +4,9 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 013c7dac-a8c6-4fff-8837-e4d6751f3fb6
+using PlutoUI
+
 # ╔═╡ 4b3de811-278b-4154-bce6-4d67dc19ff38
 using Luxor
 
@@ -13,8 +16,21 @@ using Plots
 # ╔═╡ 4136799e-c4ab-432b-9e8a-208b0eae060e
 using ForwardDiff
 
+# ╔═╡ 6644b213-63ed-4814-b034-0b39caa04f23
+md"""
+# Announcements
+1. How to avoid PR like: [https://github.com/GiggleLiu/ModernScientificComputing/pull/27](https://github.com/GiggleLiu/ModernScientificComputing/pull/27)
+2. The ChatGPT bot in Zulip.
+"""
+
+# ╔═╡ c85bdb41-ce56-48ce-a82c-6599ccbc446c
+
+
+# ╔═╡ 3dc062b0-30d0-4332-9047-0852671cb031
+TableOfContents()
+
 # ╔═╡ 7345a2c1-d4b7-470f-a936-b4cc6c177399
-md"## Optimization"
+md"# Optimization"
 
 # ╔═╡ 7c26b07f-6a1f-4d40-9152-b8738a1dad62
 md"Reference: **Scientific Computing - Chapter 6**"
@@ -115,7 +131,7 @@ end
 md"Any local minimum of a convex function $f$ on a convex set $S\subseteq \mathbb{R}^n$ is a global minimum of $f$ on $S$."
 
 # ╔═╡ 50f91cd8-c74b-11ed-0b94-cdeb596bf99b
-md"## Gradient based optimization"
+md"# Gradient based optimization"
 
 # ╔═╡ 211b6c56-f16b-47fb-ba56-4534ac41be95
 md"""
@@ -136,6 +152,13 @@ md"""
 Gradient descent is based on the observation that changing $\mathbf x$ slightly towards the negative gradient direction always decrease $f$ in the first order perturbation.
 ```math
 f(x - \epsilon \nabla f(\mathbf x)) \approx f(\mathbf x) - \epsilon \nabla f(\mathbf x)^T \nabla f(\mathbf x) = f(\mathbf x) - \epsilon \|\nabla f(\mathbf x)\|_2 < f(x)
+```
+"""
+
+# ╔═╡ b98cb08f-c007-4100-b0e3-6c4b87c48cae
+md"""
+```math
+\theta_j \leftarrow \theta_j - \epsilon \nabla_{\theta_j} \mathcal{L}(\theta)
 ```
 """
 
@@ -169,7 +192,8 @@ end
 # ╔═╡ 8d0dbc03-f927-4229-a8ce-6196cb62bde2
 let
 	x0 = [-1, -1.0]
-	history = gradient_descent(rosenbrock, x0; niters=1000, learning_rate=0.002)
+	history = gradient_descent(rosenbrock, x0; niters=10000, learning_rate=0.002)
+	@info rosenbrock(history[end])
 
 	# plot
 	x = -2:0.01:2
@@ -179,8 +203,87 @@ let
 	plot!(plt, getindex.(history, 1), getindex.(history, 2); label="optimization", color="green")
 end
 
+# ╔═╡ 3212c3f2-f3c3-4403-9584-85386db6825c
+md"""
+## SGD with momentum
+
+```math
+\begin{align}
+v_{t+1} \leftarrow \rho v_t + \nabla_\theta \mathcal{L}(\theta)\\
+\theta_j \leftarrow \theta_j - \epsilon v_{t+1}
+\end{align}
+```
+"""
+
+# ╔═╡ 5b911473-57b8-46a4-bdec-6f1960c1e958
+md"""
+## AdaGrad
+AdaGrad is an optimization algorithm used in machine learning for solving convex optimization problems. It is a gradient-based algorithm that adapts the learning rate for each parameter based on the historical gradient information. The main idea behind AdaGrad is to give more weight to the parameters that have a smaller gradient magnitude, which allows for a larger learning rate for those parameters.
+"""
+
 # ╔═╡ a4b4bc11-efb2-46db-b256-ba9632fadd7b
-md"## Adam"
+md"## Adam
+The Adam optimizer is a popular optimization algorithm used in deep learning for training neural networks. It stands for Adaptive Moment Estimation and is a variant of stochastic gradient descent (SGD) that is designed to be more efficient and effective in finding the optimal weights for the neural network.
+
+The Adam optimizer maintains a running estimate of the first and second moments of the gradients of the weights with respect to the loss function. These estimates are used to adaptively adjust the learning rate for each weight parameter during training. The first moment estimate is the mean of the gradients, while the second moment estimate is the uncentered variance of the gradients.
+
+The Adam optimizer combines the benefits of two other optimization algorithms: AdaGrad, which adapts the learning rate based on the historical gradient information, and RMSProp, which uses a moving average of the squared gradients to scale the learning rate.
+
+The Adam optimizer has become a popular choice for training deep neural networks due to its fast convergence and good generalization performance. It is widely used in many deep learning frameworks, such as TensorFlow, PyTorch, and Keras.
+"
+
+# ╔═╡ 8b74adc9-9e82-46db-a87e-a72928aff03f
+md"""
+For each parameter $\theta$
+
+```math
+\begin{align}
+&v_t = \beta_1 v_{t-1} - (1-\beta_1) g_t\\
+&s_t = \beta_2 s_{t-1} - (1-\beta_2) g^2\\
+&\nabla\theta_t = -\eta \frac{v_t}{\sqrt{s_t + \epsilon}}g_t\\
+&\theta_{t+1} = \theta_t + \nabla\theta_t
+&\end{align}
+```
+where
+*  $\eta$ is the initial learning rate,
+*  $g_t$ is the gradient at time $t$ along $\theta$
+*  $v_t$ is the exponential average of gradients along $\theta$
+*  $s_t$ is the exponential average of squares of gradients along $\theta$
+*  $\beta_1, \beta_2$ are hyperparameters.
+"""
+
+# ╔═╡ 6dc932f9-d37b-4cc7-90d9-1ed0bae20c41
+function adam_optimize(f, x; niters, learning_rate, β1=0.9, β2=0.999, ϵ=1e-8)
+	mt = zero(x)
+	vt = zero(x)
+	βp1 = β1
+	βp2 = β2
+	history = [x]
+	for step in 1:niters
+	    Δ = ForwardDiff.gradient(f, x)
+	    @. mt = β1 * mt + (1 - β1) * Δ
+	    @. vt = β2 * vt + (1 - β2) * Δ^2
+	    @. Δ =  mt / (1 - βp1) / (√(vt / (1 - βp2)) + ϵ) * learning_rate
+	    βp1, βp2 = βp1 * β1, βp2 * β2
+	    x = x .- Δ
+		push!(history, x)
+	end
+	return history
+end
+
+# ╔═╡ 8086d721-3360-4e66-b898-b3f1fb9e4392
+let
+	x0 = [-1, -1.0]
+	history = adam_optimize(rosenbrock, x0; niters=10000, learning_rate=0.01)
+	@info rosenbrock(history[end])
+
+	# plot
+	x = -2:0.01:2
+	y = -2:0.01:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
+	plot!(plt, getindex.(history, 1), getindex.(history, 2); label="optimization", color="green")
+end
 
 # ╔═╡ 47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
 md"## Golden section search"
@@ -237,6 +340,20 @@ Newton1d(x->0.5 - x * exp(-x^2), 1.0; tol=1e-5)
 # ╔═╡ 4ade7201-ae81-41ca-affb-fffcb99776fe
 md"## BFGS"
 
+# ╔═╡ 3e406fc4-8bb1-4b11-ae9a-a33604061a8a
+md"""
+The BFGS method is a popular numerical optimization algorithm used to solve unconstrained optimization problems. It is an iterative method that seeks to find the minimum of a function by iteratively updating an estimate of the inverse Hessian matrix of the function.
+
+The BFGS method belongs to a class of quasi-Newton methods, which means that it approximates the Hessian matrix of the function using only first-order derivative information. The BFGS method updates the inverse Hessian matrix at each iteration using information from the current and previous iterations. This allows it to converge quickly to the minimum of the function.
+
+The BFGS method is widely used in many areas of science and engineering, including machine learning, finance, and physics. It is particularly well-suited to problems where the Hessian matrix is too large to compute directly, as it only requires first-order derivative information.
+"""
+
+# ╔═╡ ab2ad24c-a019-4608-9344-23eb1025e108
+md"""
+# Mathematical optimization
+"""
+
 # ╔═╡ afbc321c-c568-4b88-8dc1-9d87a4a0e7af
 md"## Linear Programming"
 
@@ -252,11 +369,13 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 ForwardDiff = "~0.10.35"
 Luxor = "~3.7.0"
 Plots = "~1.38.8"
+PlutoUI = "~0.7.50"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -265,7 +384,13 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "65e43c11288df65a7284beed94ed0f7f58306ffe"
+project_hash = "b649f6c19fca5f9a2d039b78628f55c56fe7eb5a"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -528,6 +653,24 @@ git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
 
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+deps = ["Tricks"]
+git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.4"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
 [[deps.IniFile]]
 git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
 uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
@@ -708,6 +851,11 @@ git-tree-sha1 = "909a67c53fddd216d5e986d804b26b1e3c82d66d"
 uuid = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 version = "3.7.0"
 
+[[deps.MIMEs]]
+git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
+uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+version = "0.1.4"
+
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "42324d08725e200c23d4dfb549e0d5d89dede2d2"
@@ -858,6 +1006,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "f49a45a239e13333b8b936120fe6d793fe58a972"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.38.8"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.50"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -1023,6 +1177,11 @@ deps = ["Random", "Test"]
 git-tree-sha1 = "94f38103c984f89cf77c402f2a68dbd870f8165f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.11"
+
+[[deps.Tricks]]
+git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
+uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
+version = "0.1.6"
 
 [[deps.URIs]]
 git-tree-sha1 = "074f993b0ca030848b897beff716d93aca60f06a"
@@ -1285,6 +1444,10 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─6644b213-63ed-4814-b034-0b39caa04f23
+# ╠═c85bdb41-ce56-48ce-a82c-6599ccbc446c
+# ╠═013c7dac-a8c6-4fff-8837-e4d6751f3fb6
+# ╟─3dc062b0-30d0-4332-9047-0852671cb031
 # ╟─7345a2c1-d4b7-470f-a936-b4cc6c177399
 # ╟─7c26b07f-6a1f-4d40-9152-b8738a1dad62
 # ╟─6b4307ea-33c0-4a20-af35-d05262856528
@@ -1299,13 +1462,19 @@ version = "1.4.1+0"
 # ╟─50f91cd8-c74b-11ed-0b94-cdeb596bf99b
 # ╟─211b6c56-f16b-47fb-ba56-4534ac41be95
 # ╟─eec10666-102c-44b6-a562-75ba78428d1e
+# ╟─b98cb08f-c007-4100-b0e3-6c4b87c48cae
 # ╟─d59aaccf-1435-4c7b-998e-5dfb174990c3
 # ╠═f859faaa-b24e-4af2-8b72-85f2d753e87a
 # ╠═1ed6d587-b984-463f-9db3-220bdfa81ebe
 # ╠═c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
 # ╠═004a79b8-afbd-40b7-9c67-a8e864432179
 # ╠═8d0dbc03-f927-4229-a8ce-6196cb62bde2
+# ╟─3212c3f2-f3c3-4403-9584-85386db6825c
+# ╟─5b911473-57b8-46a4-bdec-6f1960c1e958
 # ╟─a4b4bc11-efb2-46db-b256-ba9632fadd7b
+# ╟─8b74adc9-9e82-46db-a87e-a72928aff03f
+# ╠═6dc932f9-d37b-4cc7-90d9-1ed0bae20c41
+# ╠═8086d721-3360-4e66-b898-b3f1fb9e4392
 # ╟─47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
 # ╠═da2f6865-ff3c-46bd-80d4-f171b0e30ce9
 # ╠═c75753d4-ceec-402e-a4bc-8b00b4934dbf
@@ -1314,6 +1483,8 @@ version = "1.4.1+0"
 # ╠═da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
 # ╠═a4832798-6e20-4630-889d-388fe55272f7
 # ╟─4ade7201-ae81-41ca-affb-fffcb99776fe
+# ╟─3e406fc4-8bb1-4b11-ae9a-a33604061a8a
+# ╟─ab2ad24c-a019-4608-9344-23eb1025e108
 # ╟─afbc321c-c568-4b88-8dc1-9d87a4a0e7af
 # ╟─7db726fc-b537-483a-8898-dd24b4f3aca2
 # ╟─0aec2c02-cbf6-427c-8878-3c7ab600b7af
