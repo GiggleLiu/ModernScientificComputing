@@ -43,5 +43,3 @@ $compute_A = 3 \times 6 \times n \approx 18n$
 $compute_H \approx \sum_{k=1}^{n} 6\times k^2 = (2n+1)(n+1)n  = 2n^3+3n^2 + n$
 
 $FLOPS = compute_A + compute_H \approx 2n^3+ 3n^2 + 19n$
-
-
