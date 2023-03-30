@@ -11,11 +11,11 @@ begin
 	using .PlutoLecturing
 end
 
-# ╔═╡ f020f39c-e756-4c09-8ab3-7d10e78ca43e
-using Optim
-
 # ╔═╡ 1ed6d587-b984-463f-9db3-220bdfa81ebe
 using Plots
+
+# ╔═╡ f020f39c-e756-4c09-8ab3-7d10e78ca43e
+using Optim
 
 # ╔═╡ 4136799e-c4ab-432b-9e8a-208b0eae060e
 using ForwardDiff
@@ -213,6 +213,54 @@ The algorithm initializes a simplex (a high dimensional triangle) with `n+1` ver
 The algorithm then iteratively performs **reflection**, **expansion**, **contraction**, and **shrink** operations on the simplex until convergence is achieved. The best vertex and function value are returned.
 """
 
+# ╔═╡ 1024bec9-6741-4cf6-a214-9777c17d2348
+md"""
+We use the [Rosenbrock function](https://en.wikipedia.org/wiki/Rosenbrock_function) as the test function.
+"""
+
+# ╔═╡ f859faaa-b24e-4af2-8b72-85f2d753e87a
+function rosenbrock(x)
+	(1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end
+
+# ╔═╡ c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
+let
+	x = -2:0.01:2
+	y = -2:0.01:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂")
+end
+
+# ╔═╡ 81b628ce-91b1-4b63-aca1-96e10c49d7b9
+function show_triangles(history)
+	x = -2:0.02:2
+	y = -2:0.02:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	@gif for item in history
+		plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
+		plot!(plt, [item[:,1]..., item[1,1]], [item[:,2]..., item[1, 2]]; label="", color="white")
+	end fps=5
+end
+
+# ╔═╡ 44f3252c-cb3b-458f-b3b9-a87ce9f6e0e2
+let
+	bestx, bestf, history = simplex(rosenbrock, [-1.2, -1.0]; tol=1e-3)
+	@info "converged in $(length(history)) steps, with error $bestf"
+	show_triangles(history)
+end
+
+# ╔═╡ c1c02449-50e7-4dc4-8807-a31b10624921
+let
+	# Set the initial guess
+	x0 = [-1, -1.0]
+	# Set the optimization options
+	options = Optim.Options(iterations = 1000)
+	# Optimize the Rosenbrock function using the simplex method
+	result = optimize(rosenbrock, x0, NelderMead(), options)
+	# Print the optimization result
+	result
+end
+
 # ╔═╡ 50f91cd8-c74b-11ed-0b94-cdeb596bf99b
 md"# Gradient based optimization"
 
@@ -253,49 +301,6 @@ where
 *  $g_t$ is the gradient at time $t$ along $\theta_t$, i.e. $\nabla_{\theta_t} f(\theta_t)$.
 *  $\alpha$ is the learning rate.
 """
-
-# ╔═╡ f859faaa-b24e-4af2-8b72-85f2d753e87a
-function rosenbrock(x)
-	(1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
-
-# ╔═╡ 81b628ce-91b1-4b63-aca1-96e10c49d7b9
-function show_triangles(history)
-	x = -2:0.02:2
-	y = -2:0.02:2
-	f = [rosenbrock((a, b)) for b in y, a in x]
-	@gif for item in history
-		plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
-		plot!(plt, [item[:,1]..., item[1,1]], [item[:,2]..., item[1, 2]]; label="", color="white")
-	end fps=5
-end
-
-# ╔═╡ 44f3252c-cb3b-458f-b3b9-a87ce9f6e0e2
-let
-	bestx, bestf, history = simplex(rosenbrock, [-1.2, -1.0]; tol=1e-3)
-	@info "converged in $(length(history)) steps, with error $bestf"
-	show_triangles(history)
-end
-
-# ╔═╡ c1c02449-50e7-4dc4-8807-a31b10624921
-let
-	# Set the initial guess
-	x0 = [-1, -1.0]
-	# Set the optimization options
-	options = Optim.Options(iterations = 1000)
-	# Optimize the Rosenbrock function using the simplex method
-	result = optimize(rosenbrock, x0, NelderMead(), options)
-	# Print the optimization result
-	result
-end
-
-# ╔═╡ c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
-let
-	x = -2:0.01:2
-	y = -2:0.01:2
-	f = [rosenbrock((a, b)) for b in y, a in x]
-	heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂")
-end
 
 # ╔═╡ 10283699-2ebc-4e61-89e8-5585a2bf054d
 md"One can obtain the gradient with `ForwardDiff`."
@@ -648,7 +653,7 @@ md"## Convex optimization"
 # ╔═╡ 5b433d39-ed60-4831-a139-b6663a284e7a
 md"A set $S\subseteq \mathbb{R}^n$ is convex if it contains the line segment between any two of its points, i.e.,
 ```math
-\{\alpha \mathbf{x} + (1-\alpha)\mathbf{y}: 1\leq \alpha \leq 1\} \subseteq S
+\{\alpha \mathbf{x} + (1-\alpha)\mathbf{y}: 0\leq \alpha \leq 1\} \subseteq S
 ```
 for all $\mathbf{x}, \mathbf{y} \in S$.
 "
@@ -2019,6 +2024,10 @@ version = "1.4.1+0"
 # ╟─66416807-bcb0-4881-90f8-1595756e4a6f
 # ╠═43486a15-7582-4532-b2ac-73db4bb07f97
 # ╟─962f24ff-2adc-41e3-bc5c-2f78952950d2
+# ╟─1024bec9-6741-4cf6-a214-9777c17d2348
+# ╠═f859faaa-b24e-4af2-8b72-85f2d753e87a
+# ╠═1ed6d587-b984-463f-9db3-220bdfa81ebe
+# ╠═c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
 # ╠═81b628ce-91b1-4b63-aca1-96e10c49d7b9
 # ╠═44f3252c-cb3b-458f-b3b9-a87ce9f6e0e2
 # ╠═f020f39c-e756-4c09-8ab3-7d10e78ca43e
@@ -2027,9 +2036,6 @@ version = "1.4.1+0"
 # ╟─211b6c56-f16b-47fb-ba56-4534ac41be95
 # ╟─eec10666-102c-44b6-a562-75ba78428d1e
 # ╟─d59aaccf-1435-4c7b-998e-5dfb174990c3
-# ╠═f859faaa-b24e-4af2-8b72-85f2d753e87a
-# ╠═1ed6d587-b984-463f-9db3-220bdfa81ebe
-# ╠═c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
 # ╟─10283699-2ebc-4e61-89e8-5585a2bf054d
 # ╠═4136799e-c4ab-432b-9e8a-208b0eae060e
 # ╠═3e616d99-7d57-4926-b1d5-dae47dd040e9
