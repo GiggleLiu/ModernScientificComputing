@@ -33,6 +33,7 @@ Please check the following book as a reference.
 * Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/7.fft/), [pdf](notebooks/7.fft.pdf), [source](notebooks/7.fft.jl)]
 
 ### Week 8: Nonlinear equations and optimization
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/8.optimization/), [pdf](notebooks/8.optimization.pdf), [source](notebooks/8.optimization.jl)]
 
 ### Week 9: Random numbers and stochastic simulation
 
