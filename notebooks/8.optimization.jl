@@ -4,17 +4,42 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 4b3de811-278b-4154-bce6-4d67dc19ff38
-using Luxor
+# ╔═╡ 013c7dac-a8c6-4fff-8837-e4d6751f3fb6
+begin
+	using AbstractTrees, PlutoUI, Reexport
+	include("../lib/PlutoLecturing/src/PlutoLecturing.jl")
+	using .PlutoLecturing
+end
 
 # ╔═╡ 1ed6d587-b984-463f-9db3-220bdfa81ebe
 using Plots
 
+# ╔═╡ f020f39c-e756-4c09-8ab3-7d10e78ca43e
+using Optim
+
 # ╔═╡ 4136799e-c4ab-432b-9e8a-208b0eae060e
 using ForwardDiff
 
+# ╔═╡ 4b3de811-278b-4154-bce6-4d67dc19ff38
+using Luxor
+
+# ╔═╡ 6644b213-63ed-4814-b034-0b39caa04f23
+md"""
+# Announcements
+1. How to avoid PR like: [https://github.com/GiggleLiu/ModernScientificComputing/pull/27](https://github.com/GiggleLiu/ModernScientificComputing/pull/27). Help desk event (Saturday night, hosted by Yusheng Zhao) will be announced in the `#coding-club` stream?
+2. Why we should never add a big file into a Github repo?
+2. The ChatGPT bot in [HKUST-GZ Zulip workspace](http://zulip.hkust-gz.edu.cn/), `@ChatGPT` (user stream: `#chatgpt-discussion`), credit Yijie Xu, Github repo: [https://github.com/yeahjack/chatgpt_zulip_bot](https://github.com/yeahjack/chatgpt_zulip_bot).
+3. Have to cancel the next lecture, we will not have final exam!
+"""
+
+# ╔═╡ c85bdb41-ce56-48ce-a82c-6599ccbc446c
+LocalResource("images/chatgpt.png")
+
+# ╔═╡ 3dc062b0-30d0-4332-9047-0852671cb031
+TableOfContents()
+
 # ╔═╡ 7345a2c1-d4b7-470f-a936-b4cc6c177399
-md"## Optimization"
+md"# Optimization"
 
 # ╔═╡ 7c26b07f-6a1f-4d40-9152-b8738a1dad62
 md"Reference: **Scientific Computing - Chapter 6**"
@@ -22,12 +47,605 @@ md"Reference: **Scientific Computing - Chapter 6**"
 # ╔═╡ 6b4307ea-33c0-4a20-af35-d05262856528
 md"""A general continous optimization problem has the following form
 ```math
-\min_{\mathbf x}f(\mathbf x)\text{ subject to }\mathbf{g}(\mathbf{x})=\mathbf{0}\text{ and }\mathbf{h}(\mathbf{x}) \leq \mathbf{0}
+\min_{\mathbf x}f(\mathbf x)~~~\text{ subject to certian constraints}
+```
+The constraints may be either equality or inequality constraints.
+"""
+
+# ╔═╡ 647a7101-ebdc-4717-a343-22edee8a7d92
+md"""
+# Gradient free optimization
+"""
+
+# ╔═╡ f784dc43-5058-4375-9040-f343c346cff8
+md"""
+Gradient-free optimizers are optimization algorithms that do not rely on the gradient of the objective function to find the optimal solution. Instead, they use other methods such as random search, genetic algorithms, or simulated annealing to explore the search space and find the optimal solution. These methods are particularly useful when the objective function is non-differentiable or when the gradient is difficult to compute. However, gradient-free optimizers can be $(PlutoLecturing.highlight("slower and less efficient than gradient-based methods")), especially when the search space is high-dimensional.
+
+There are several popular gradient-free optimizers, including:
+* **Genetic algorithms**: These are optimization algorithms inspired by the process of natural selection. They use a population of candidate solutions and apply genetic operators such as crossover and mutation to generate new solutions.
+
+* **Simulated annealing**: This is a probabilistic optimization algorithm that uses a temperature parameter to control the probability of accepting a worse solution. It starts with a high temperature that allows for exploration of the search space and gradually decreases the temperature to converge to the optimal solution.
+
+* **Particle swarm optimization**: This is a population-based optimization algorithm that simulates the movement of particles in a search space. Each particle represents a candidate solution, and they move towards the best solution found so far.
+
+* **Bayesian optimization**: This is a probabilistic optimization algorithm that uses a probabilistic model to approximate the objective function and guides the search towards promising regions of the search space.
+
+* **Nelder-Mead algorithm**: This is a direct search method that does not require the computation of gradients of the objective function. Instead, it uses a set of simplex (a geometrical figure that generalizes the concept of a triangle to higher dimensions) to iteratively explore the search space and improve the objective function value. The Nelder-Mead algorithm is particularly effective in optimizing nonlinear and non-smooth functions, and it is widely used in engineering, physics, and other fields.
+"""
+
+# ╔═╡ 1a959468-3add-4e34-a9fe-54ca67a12894
+md"NOTE: [Optim.jl documentation](https://julianlsolvers.github.io/Optim.jl/stable/) contains more detailed introduction of gradient free, gradient based and hessian based optimizers."
+
+# ╔═╡ 90472087-2580-496e-989e-e4fa58fd1e17
+md"""
+## The downhill simplex method
+"""
+
+# ╔═╡ 0c5dd6d1-20cd-4ec6-9017-80dbc705b75d
+md"""
+Here are the steps involved in the one dimentional downhill simplex algorithm:
+1. Initialize a one dimensional simplex, evaluate the function at the end points $x_1$ and $x_2$ and assume $f(x_2) > f(x_1)$.
+2. Evaluate the function at $x_c = 2x_1 - x_2$.
+3. Select one of the folloing operations
+    1. If $f(x_c)$ is smaller than $f(x_1)$, **flip** the simplex by doing $x_1 \leftarrow x_c$ and $x_2 \leftarrow x_1$.
+    2. If $f(x_c)$ is larger than $f(x_1)$, but smaller than $f(x_2)$, then $x_2\leftarrow x_c$, goto case 3.
+    3. If $f(x_c)$ is larger than $f(x_2)$, then **shrink** the simplex: evaluate $f$ on $x_d\leftarrow (x_1 + x_2)/2$, if it is larger than $f(x_1)$, then $x_2 \leftarrow x_d$, otherwise $x_1\leftarrow x_d, x_2\leftarrow x_1$.
+4. Repeat step 2-3 until convergence.
+"""
+
+# ╔═╡ e6ab2552-6597-4bef-a9c1-e0cea14b0f67
+function simplex1d(f, x1, x2; tol=1e-6)
+	# initial simplex
+	history = [[x1, x2]]
+	f1, f2 = f(x1), f(x2)
+	while abs(x2 - x1) > tol
+		xc = 2x1 - x2
+		fc = f(xc)
+		if fc < f1   # flip
+			x1, f1, x2, f2 = xc, fc, x1, f1
+		else         # shrink
+			if fc < f2   # let the smaller one be x2.
+				x2, f2 = xc, fc
+			end
+			xd = (x1 + x2) / 2
+			fd = f(xd)
+			if fd < f1   # update x1 and x2
+				x1, f1, x2, f2 = xd, fd, x1, f1
+			else
+				x2, f2 = xd, fd
+			end
+		end
+		push!(history, [x1, x2])
+	end
+	return x1, f1, history
+end
+
+# ╔═╡ d16748d2-e157-43d2-b6fe-69cbe4a5dd9c
+simplex1d(x->x^2, -1.0, 6.0)
+
+# ╔═╡ 66416807-bcb0-4881-90f8-1595756e4a6f
+md"""
+The Nelder-Mead method is well summarized in this [wiki page](https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method).
+Here is a Julia implementation:
+"""
+
+# ╔═╡ 43486a15-7582-4532-b2ac-73db4bb07f97
+function simplex(f, x0; tol=1e-6, maxiter=1000)
+    n = length(x0)
+    x = zeros(n+1, n)
+    fvals = zeros(n+1)
+    x[1,:] = x0
+    fvals[1] = f(x0)
+    alpha = 1.0
+    beta = 0.5
+    gamma = 2.0
+    for i in 1:n
+        x[i+1,:] = x[i,:]
+        x[i+1,i] += 1.0
+        fvals[i+1] = f(x[i+1,:])
+    end
+	history = [x]
+    for iter in 1:maxiter
+        # Sort the vertices by function value
+        order = sortperm(fvals)
+        x = x[order,:]
+        fvals = fvals[order]
+        # Calculate the centroid of the n best vertices
+        xbar = dropdims(sum(x[1:n,:], dims=1) ./ n, dims=1)
+        # Reflection
+        xr = xbar + alpha*(xbar - x[n+1,:])
+        fr = f(xr)
+        if fr < fvals[1]
+            # Expansion
+            xe = xbar + gamma*(xr - xbar)
+            fe = f(xe)
+            if fe < fr
+                x[n+1,:] = xe
+                fvals[n+1] = fe
+            else
+                x[n+1,:] = xr
+                fvals[n+1] = fr
+            end
+        elseif fr < fvals[n]
+            x[n+1,:] = xr
+            fvals[n+1] = fr
+        else
+            # Contraction
+            if fr < fvals[n+1]
+                xc = xbar + beta*(x[n+1,:] - xbar)
+                fc = f(xc)
+                if fc < fr
+                    x[n+1,:] = xc
+                    fvals[n+1] = fc
+                else
+                    # Shrink
+                    for i in 2:n+1
+                        x[i,:] = x[1,:] + beta*(x[i,:] - x[1,:])
+                        fvals[i] = f(x[i,:])
+                    end
+                end
+            else
+                # Shrink
+                for i in 2:n+1
+                    x[i,:] = x[1,:] + beta*(x[i,:] - x[1,:])
+                    fvals[i] = f(x[i,:])
+                end
+            end
+        end
+		push!(history, x)
+        # Check for convergence
+        if maximum(abs.(x[2:end,:] .- x[1,:])) < tol && maximum(abs.(fvals[2:end] .- fvals[1])) < tol
+            break
+        end
+    end
+    # Return the best vertex and function value
+    bestx = x[1,:]
+    bestf = fvals[1]
+    return (bestx, bestf, history)
+end
+
+# ╔═╡ 962f24ff-2adc-41e3-bc5c-2f78952950d2
+md"""
+The `simplex` function takes three arguments: the objective function `f`, the initial guess `x0`, and optional arguments for the tolerance `tol` and maximum number of iterations `maxiter`.
+
+The algorithm initializes a simplex (a high dimensional triangle) with `n+1` vertices, where `n` is the number of dimensions of the problem. The vertices are initially set to `x0` and `x0 + h_i`, where `h_i` is a small step size in the `i`th dimension. The function values at the vertices are also calculated.
+
+The algorithm then iteratively performs **reflection**, **expansion**, **contraction**, and **shrink** operations on the simplex until convergence is achieved. The best vertex and function value are returned.
+"""
+
+# ╔═╡ 1024bec9-6741-4cf6-a214-9777c17d2348
+md"""
+We use the [Rosenbrock function](https://en.wikipedia.org/wiki/Rosenbrock_function) as the test function.
+"""
+
+# ╔═╡ f859faaa-b24e-4af2-8b72-85f2d753e87a
+function rosenbrock(x)
+	(1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end
+
+# ╔═╡ c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
+let
+	x = -2:0.01:2
+	y = -2:0.01:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂")
+end
+
+# ╔═╡ 81b628ce-91b1-4b63-aca1-96e10c49d7b9
+function show_triangles(history)
+	x = -2:0.02:2
+	y = -2:0.02:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	@gif for item in history
+		plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
+		plot!(plt, [item[:,1]..., item[1,1]], [item[:,2]..., item[1, 2]]; label="", color="white")
+	end fps=5
+end
+
+# ╔═╡ 44f3252c-cb3b-458f-b3b9-a87ce9f6e0e2
+let
+	bestx, bestf, history = simplex(rosenbrock, [-1.2, -1.0]; tol=1e-3)
+	@info "converged in $(length(history)) steps, with error $bestf"
+	show_triangles(history)
+end
+
+# ╔═╡ c1c02449-50e7-4dc4-8807-a31b10624921
+let
+	# Set the initial guess
+	x0 = [-1, -1.0]
+	# Set the optimization options
+	options = Optim.Options(iterations = 1000)
+	# Optimize the Rosenbrock function using the simplex method
+	result = optimize(rosenbrock, x0, NelderMead(), options)
+	# Print the optimization result
+	result
+end
+
+# ╔═╡ 50f91cd8-c74b-11ed-0b94-cdeb596bf99b
+md"# Gradient based optimization"
+
+# ╔═╡ 211b6c56-f16b-47fb-ba56-4534ac41be95
+md"""
+If $f: R^n \rightarrow R$ is differentiable, then the vector-valued function $\nabla f: R^n \rightarrow R^n$ defined by
+```math
+\nabla f(x) = \left(\begin{matrix}
+\frac{\partial f(\mathbf{x})}{\partial x_1}\\
+\frac{\partial f(\mathbf{x})}{\partial x_2}\\
+\vdots\\
+\frac{\partial f(\mathbf{x})}{\partial x_n}\\
+\end{matrix}\right)
+```
+is called the gradient of $f$.
+"""
+
+# ╔═╡ eec10666-102c-44b6-a562-75ba78428d1e
+md"""
+Gradient descent is based on the observation that changing $\mathbf x$ slightly towards the negative gradient direction always decrease $f$ in the first order perturbation.
+```math
+f(\mathbf{x} - \epsilon \nabla f(\mathbf x)) \approx f(\mathbf x) - \epsilon \nabla f(\mathbf x)^T \nabla f(\mathbf x) = f(\mathbf x) - \epsilon \|\nabla f(\mathbf x)\|_2 < f(\mathbf{x})
 ```
 """
 
-# ╔═╡ 9ca5ce82-9f7f-4bf1-834e-e02ba8ba33b7
-md"where $f:\mathbb{R}^n\rightarrow \mathbb{R}$, $\mathbf{g}:\mathbb{R}^n\rightarrow \mathbb{R}^m$ and $\mathbf{h}:\mathbb{R}^n\rightarrow \mathbb{R}^p$."
+# ╔═╡ d59aaccf-1435-4c7b-998e-5dfb174990c3
+md"""## Gradient descent
+
+In each iteration, the update rule of the gradient descent method is
+```math
+\begin{align}
+&\theta_{t+1} = \theta_t - \alpha g_t
+\end{align}
+```
+
+where 
+*  $\theta_t$ is the values of variables at time step $t$.
+*  $g_t$ is the gradient at time $t$ along $\theta_t$, i.e. $\nabla_{\theta_t} f(\theta_t)$.
+*  $\alpha$ is the learning rate.
+"""
+
+# ╔═╡ 10283699-2ebc-4e61-89e8-5585a2bf054d
+md"One can obtain the gradient with `ForwardDiff`."
+
+# ╔═╡ 3e616d99-7d57-4926-b1d5-dae47dd040e9
+ForwardDiff.gradient(rosenbrock, [1.0, 3.0])
+
+# ╔═╡ 004a79b8-afbd-40b7-9c67-a8e864432179
+function gradient_descent(f, x; niters::Int, learning_rate::Real)
+	history = [x]
+	for i=1:niters
+		g = ForwardDiff.gradient(f, x)
+		x -= learning_rate * g
+		push!(history, x)
+	end
+	return history
+end
+
+# ╔═╡ 599b0416-d1e7-4e92-8604-80bda896d88b
+function show_history(history)
+	x = -2:0.01:2
+	y = -2:0.01:2
+	f = [rosenbrock((a, b)) for b in y, a in x]
+	plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
+	plot!(plt, getindex.(history, 1), getindex.(history, 2); label="optimization", color="white")
+end
+
+# ╔═╡ 8d0dbc03-f927-4229-a8ce-6196cb62bde2
+let
+	x0 = [-1, -1.0]
+	history = gradient_descent(rosenbrock, x0; niters=10000, learning_rate=0.002)
+	@info rosenbrock(history[end])
+
+	# plot
+	show_history(history)
+end
+
+# ╔═╡ 95ac921c-20c6-432e-8a70-006804d6b0da
+md"""
+The problem of gradient descent: easy trapped by plateaus.
+"""
+
+# ╔═╡ 3212c3f2-f3c3-4403-9584-85386db6825c
+md"""
+## Gradient descent with momentum
+
+We can add a "momentum" term to the weight update, which helps the optimization algorithm to move more quickly in the right direction and avoid getting stuck in local minima.
+
+The intuition behind the momentum method can be understood by considering a ball rolling down a hill. Without momentum, the ball would roll down the hill and eventually come to a stop at the bottom. However, with momentum, the ball would continue to roll past the bottom of the hill and up the other side, before eventually coming to a stop at a higher point. This is because the momentum of the ball helps it to overcome small bumps and obstacles in its path and continue moving in the right direction.
+
+In each iteration, the update rule of gradient descent method with momentum is
+```math
+\begin{align}
+&v_{t+1} = \beta v_t - \alpha g_t\\
+&\theta_{t+1} = \theta_t + v_{t+1}
+\end{align}
+```
+
+where 
+*  $g_t$ is the gradient at time $t$ along $\theta_t$, i.e. $\nabla_{\theta_t} f(\theta_t)$.
+*  $\alpha$ is the initial learning rate.
+*  $\beta$ is the parameter for the gradient accumulation.
+"""
+
+# ╔═╡ 50feee93-6a1f-4256-822f-88ceede1bbec
+function gradient_descent_momentum(f, x; niters::Int, β::Real, learning_rate::Real)
+	history = [x]
+	v = zero(x)
+	for i=1:niters
+		g = ForwardDiff.gradient(f, x)
+		v = β .* v .- learning_rate .* g
+		x += v
+		push!(history, x)
+	end
+	return history
+end
+
+# ╔═╡ 859705f4-9b5f-4403-a9ef-d21e3cbd0b06
+let
+	x0 = [-1, -1.0]
+	history = gradient_descent_momentum(rosenbrock, x0; niters=10000, learning_rate=0.002, β=0.5)
+	@info rosenbrock(history[end])
+
+	# plot
+	show_history(history)
+end
+
+# ╔═╡ e2a17f45-cc79-485b-abf2-fbc81a66f908
+md"""
+The problem of momentum based method, easily got overshoted.
+Moreover, it is not **scale-invariant**.
+"""
+
+# ╔═╡ 5b911473-57b8-46a4-bdec-6f1960c1e958
+md"""
+## AdaGrad
+AdaGrad is an optimization algorithm used in machine learning for solving convex optimization problems. It is a gradient-based algorithm that adapts the learning rate for each parameter based on the historical gradient information. The main idea behind AdaGrad is to give more weight to the parameters that have a smaller gradient magnitude, which allows for a larger learning rate for those parameters.
+"""
+
+# ╔═╡ 29ed621d-0505-4f8c-88fc-642a3ddf3ae8
+md"""
+In each iteration, the update rule of AdaGrad is
+
+```math
+\begin{align}
+	&r_t = r_t + g_t^2\\
+    &\mathbf{\eta} = \frac{\alpha}{\sqrt{r_t + \epsilon}}\\
+    &\theta_{t+1} = \theta_t - \eta \odot g_t
+\end{align}
+```
+
+where 
+*  $\theta_t$ is the values of variables at time $t$.
+*  $\alpha$ is the initial learning rate.
+*  $g_t$ is the gradient at time $t$ along $\theta_t$
+*  $r_t$ is the historical squared gradient sum, which is initialized to $0$.
+*  $\epsilon$ is a small positive number.
+*  $\odot$ is the element-wise multiplication.
+"""
+
+# ╔═╡ 50b8dcf3-9cec-4487-8a57-249c213caa21
+function adagrad_optimize(f, x; niters, learning_rate, ϵ=1e-8)
+	rt = zero(x)
+	η = zero(x)
+	history = [x]
+	for step in 1:niters
+	    Δ = ForwardDiff.gradient(f, x)
+	    @. rt = rt + Δ .^ 2
+		@. η = learning_rate ./ sqrt.(rt + ϵ)
+	    x = x .- Δ .* η
+		push!(history, x)
+	end
+	return history
+end
+
+# ╔═╡ 09f542be-490a-42bc-81ac-07a318371ca3
+let
+	x0 = [-1, -1.0]
+	history = adagrad_optimize(rosenbrock, x0; niters=10000, learning_rate=1.0)
+	@info rosenbrock(history[end])
+
+	# plot
+	show_history(history)
+end
+
+# ╔═╡ a4b4bc11-efb2-46db-b256-ba9632fadd7b
+md"## Adam
+The Adam optimizer is a popular optimization algorithm used in deep learning for training neural networks. It stands for Adaptive Moment Estimation and is a variant of stochastic gradient descent (SGD) that is designed to be more efficient and effective in finding the optimal weights for the neural network.
+
+The Adam optimizer maintains a running estimate of the first and second moments of the gradients of the weights with respect to the loss function. These estimates are used to adaptively adjust the learning rate for each weight parameter during training. The first moment estimate is the mean of the gradients, while the second moment estimate is the uncentered variance of the gradients.
+
+The Adam optimizer combines the benefits of two other optimization algorithms: AdaGrad, which adapts the learning rate based on the historical gradient information, and RMSProp, which uses a moving average of the squared gradients to scale the learning rate.
+
+The Adam optimizer has become a popular choice for training deep neural networks due to its fast convergence and good generalization performance. It is widely used in many deep learning frameworks, such as TensorFlow, PyTorch, and Keras.
+"
+
+# ╔═╡ 8b74adc9-9e82-46db-a87e-a72928aff03f
+md"""
+In each iteration, the update rule of Adam is
+
+```math
+\begin{align}
+&v_t = \beta_1 v_{t-1} - (1-\beta_1) g_t\\
+&s_t = \beta_2 s_{t-1} - (1-\beta_2) g^2\\
+&\hat v_t = v_t / (1-\beta_1^t)\\
+&\hat s_t = s_t / (1-\beta_2^t)\\
+&\theta_{t+1} = \theta_t -\eta \frac{\hat v_t}{\sqrt{\hat s_t} + \epsilon}
+&\end{align}
+```
+where
+*  $\theta_t$ is the values of variables at time $t$.
+*  $\eta$ is the initial learning rate.
+*  $g_t$ is the gradient at time $t$ along $\theta$.
+*  $v_t$ is the exponential average of gradients along $\theta$.
+*  $s_t$ is the exponential average of squares of gradients along $\theta$.
+*  $\beta_1, \beta_2$ are hyperparameters.
+"""
+
+# ╔═╡ 6dc932f9-d37b-4cc7-90d9-1ed0bae20c41
+function adam_optimize(f, x; niters, learning_rate, β1=0.9, β2=0.999, ϵ=1e-8)
+	mt = zero(x)
+	vt = zero(x)
+	βp1 = β1
+	βp2 = β2
+	history = [x]
+	for step in 1:niters
+	    Δ = ForwardDiff.gradient(f, x)
+	    @. mt = β1 * mt + (1 - β1) * Δ
+	    @. vt = β2 * vt + (1 - β2) * Δ^2
+	    @. Δ =  mt / (1 - βp1) / (√(vt / (1 - βp2)) + ϵ) * learning_rate
+	    βp1, βp2 = βp1 * β1, βp2 * β2
+	    x = x .- Δ
+		push!(history, x)
+	end
+	return history
+end
+
+# ╔═╡ 8086d721-3360-4e66-b898-b3f1fb9e4392
+let
+	x0 = [-1, -1.0]
+	history = adam_optimize(rosenbrock, x0; niters=10000, learning_rate=0.01)
+	@info rosenbrock(history[end])
+
+	# plot
+	show_history(history)
+end
+
+# ╔═╡ ce076be7-b930-4d35-b594-1009c87213a6
+md"""
+## The Julia package `Optimisers.jl`
+"""
+
+# ╔═╡ 6bc59fbc-14ae-4e07-8390-3195182e17a5
+import Optimisers
+
+# ╔═╡ ec098a81-5032-4d43-85bf-a51b0a19e94e
+PlutoLecturing.@xbind gradient_based_optimizer Select(["Descent", "Momentum", "Nesterov", "Rprop", "RMSProp", "Adam", "RAdam", "AdaMax", "OAdam", "AdaGrad", "AdaDelta", "AMSGrad", "NAdam", "AdamW", "AdaBelief"])
+
+# ╔═╡ 6778a8ce-73a7-40e8-92bc-c9491daa9012
+PlutoLecturing.@xbind learning_rate NumberField(0:1e-4:1.0, default=1e-4)
+
+# ╔═╡ dcf4a168-1c11-45f2-b7e7-15d6fb4becea
+md"The different optimizers are introduced in the [documentation page](https://fluxml.ai/Optimisers.jl/dev/api/)"
+
+# ╔═╡ 77761a71-65ea-434b-a697-d86278d10abd
+let
+	x0 = [-1, -1.0]
+	method = eval(:(Optimisers.$(Symbol(gradient_based_optimizer))(learning_rate)))
+	state = Optimisers.setup(method, x0)
+	history = [x0]
+	for i=1:10000
+		grad = ForwardDiff.gradient(rosenbrock, x0)
+		state, x0 = Optimisers.update(state, x0, grad)
+		push!(history, x0)
+	end
+	@info rosenbrock(history[end])
+
+	# plot
+	show_history(history)
+end
+
+# ╔═╡ 6bee88e1-d641-4a28-9794-6031e721a79c
+md"""[Optimisers.jl documentation](https://fluxml.ai/Optimisers.jl/dev/api/#Optimisation-Rules) contains **stochastic** gradient based optimizers.
+"""
+
+# ╔═╡ cbdb2ad6-2a7d-4ccb-89f9-5ec836612477
+md"""
+# Hessian based optimizers
+"""
+
+# ╔═╡ 66cbb653-b06d-4b06-880b-f402fd9f1d53
+md"## Newton's Method"
+
+# ╔═╡ 5af90753-f9cc-437f-9b11-98618fdb67aa
+md"""
+Newton's method is an optimization algorithm used to find the roots of a function, which can also be used to find the minimum or maximum of a function. The method involves using the first and second derivatives of the function to approximate the function as a quadratic function and then finding the minimum or maximum of this quadratic function. The minimum or maximum of the quadratic function is then used as the next estimate for the minimum or maximum of the original function, and the process is repeated until convergence is achieved.
+"""
+
+# ╔═╡ e80a6b59-84d4-40e9-bf1b-08719016745e
+md"""
+```math
+\begin{align}
+& H_{k}p_{k}=-g_k\\
+& x_{k+1}=x_{k}+p_k
+\end{align}
+```
+where
+*  $g_k$ is the gradient at time $k$ along $x_k$.
+"""
+
+# ╔═╡ da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
+function newton_optimizer(f, x; tol=1e-5)
+	k = 0
+	history = [x]
+	while k < 1000
+		k += 1
+		gk = ForwardDiff.gradient(f, x)
+		hk = ForwardDiff.hessian(f, x)
+		dx = -hk \ gk
+		x += dx
+		push!(history, x)
+		sum(abs2, dx) < tol && break
+	end
+	return history
+end
+
+# ╔═╡ a4832798-6e20-4630-889d-388fe55272f7
+let
+	x0 = [-1, -1.0]
+	history = newton_optimizer(rosenbrock, x0; tol=1e-5)
+	@info "number iterations = $(length(history)), got $(rosenbrock(history[end]))"
+
+	# plot
+	show_history(history)
+end
+
+# ╔═╡ 89fb89d4-227f-41ba-8e42-68a9c436b930
+md"The drawback of Newton's method is, the Hessian is very expensive to compute!
+While gradients can be computed with the automatic differentiation method with constant overhead. The Hessian requires $O(n)$ times more resources, where $n$ is the number of parameters."
+
+# ╔═╡ 4ade7201-ae81-41ca-affb-fffcb99776fe
+md"## The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm"
+
+# ╔═╡ 3e406fc4-8bb1-4b11-ae9a-a33604061a8a
+md"""
+The BFGS method is a popular numerical optimization algorithm used to solve unconstrained optimization problems. It is an iterative method that seeks to find the minimum of a function by iteratively updating an estimate of the inverse Hessian matrix of the function.
+
+The BFGS method belongs to a class of $(PlutoLecturing.highlight("quasi-Newton methods")), which means that it approximates the Hessian matrix of the function using only first-order derivative information. The BFGS method updates the inverse Hessian matrix at each iteration using information from the current and previous iterations. This allows it to converge quickly to the minimum of the function.
+
+The BFGS method is widely used in many areas of science and engineering, including machine learning, finance, and physics. It is particularly well-suited to problems where the Hessian matrix is too large to compute directly, as it only requires first-order derivative information.
+
+```math
+\begin{align}
+& B_{k}p_{k}=-g_k~~~~~~~~~~\text{// Newton method like update rule}\\
+& \alpha_k = {\rm argmin} ~f(x + \alpha p_k)~~~~~~~~~~\text{// using line search}\\
+& s_k=\alpha_{k}p_k\\
+& x_{k+1}=x_{k}+s_k\\
+&y_k=g_{k+1}-g_k\\
+&B_{k+1}=B_{k}+{\frac {y_{k}y_{k}^{\mathrm {T} }}{y_{k}^{\mathrm {T} }s_{k}}}-{\frac {B_{k}s_{k}s_{k}^{\mathrm {T} }B_{k}^{\mathrm {T} }}{s_{k}^{\mathrm {T} }B_{k}s_{k}}}
+\end{align}
+```
+where
+*  $B_k$ is an approximation of the Hessian matrix, which is intialized to identity.
+*  $g_k$ is the gradient at time $k$ along $x_k$.
+
+We can show $B_{k+1}s_k = y_k$ (secant equation) is satisfied.
+"""
+
+# ╔═╡ d0166fdc-333b-495b-965e-1c77711ba469
+let
+	# Set the initial guess
+	x0 = [-1.0, -1.0]
+	# Set the optimization options
+	options = Optim.Options(iterations = 1000, store_trace=true, extended_trace=true)
+	# Optimize the Rosenbrock function using the simplex method
+	result = optimize(rosenbrock, x->ForwardDiff.gradient(rosenbrock, x), x0, BFGS(), options, inplace=false)
+	# Print the optimization result
+	@info result
+	show_history([t.metadata["x"] for t in result.trace])
+end
+
+# ╔═╡ ab2ad24c-a019-4608-9344-23eb1025e108
+md"""
+# Mathematical optimization
+"""
 
 # ╔═╡ e6dca5dc-dbf9-45ba-970d-23bd9a75769d
 md"## Convex optimization"
@@ -35,7 +653,7 @@ md"## Convex optimization"
 # ╔═╡ 5b433d39-ed60-4831-a139-b6663a284e7a
 md"A set $S\subseteq \mathbb{R}^n$ is convex if it contains the line segment between any two of its points, i.e.,
 ```math
-\{\alpha \mathbf{x} + (1-\alpha)\mathbf{y}: 1\leq \alpha \leq 1\} \subseteq S
+\{\alpha \mathbf{x} + (1-\alpha)\mathbf{y}: 0\leq \alpha \leq 1\} \subseteq S
 ```
 for all $\mathbf{x}, \mathbf{y} \in S$.
 "
@@ -114,76 +732,61 @@ end
 # ╔═╡ ce27c364-9ae3-435a-8153-a1c898ae8984
 md"Any local minimum of a convex function $f$ on a convex set $S\subseteq \mathbb{R}^n$ is a global minimum of $f$ on $S$."
 
-# ╔═╡ 50f91cd8-c74b-11ed-0b94-cdeb596bf99b
-md"## Gradient based optimization"
+# ╔═╡ afbc321c-c568-4b88-8dc1-9d87a4a0e7af
+md"## Linear programming"
 
-# ╔═╡ 211b6c56-f16b-47fb-ba56-4534ac41be95
+# ╔═╡ 7db726fc-b537-483a-8898-dd24b4f3aca2
 md"""
-If $f: R^n \rightarrow R$ is differentiable, then the vector-valued function $\nabla f: R^n \rightarrow R^n$ defined by
+Linear programs are problems that can be expressed in canonical form as
 ```math
-\nabla f(x) = \left(\begin{matrix}
-\frac{\partial f(\mathbf{x})}{\partial x_1}\\
-\frac{\partial f(\mathbf{x})}{\partial x_2}\\
-\vdots\\
-\frac{\partial f(\mathbf{x})}{\partial x_n}\\
-\end{matrix}\right)
+{\begin{aligned}&{\text{Find a vector}}&&\mathbf {x} \\&{\text{that maximizes}}&&\mathbf {c} ^{T}\mathbf {x} \\&{\text{subject to}}&&A\mathbf {x} \leq \mathbf {b} \\&{\text{and}}&&\mathbf {x} \geq \mathbf {0} .\end{aligned}}
 ```
-is called the gradient of $f$.
+Here the components of $\mathbf x$ are the variables to be determined, $\mathbf c$ and $\mathbf b$ are given vectors (with $\mathbf {c} ^{T}$ indicating that the coefficients of $\mathbf c$ are used as a single-row matrix for the purpose of forming the matrix product), and $A$ is a given matrix.
 """
 
-# ╔═╡ eec10666-102c-44b6-a562-75ba78428d1e
-md"""
-Gradient descent is based on the observation that changing $\mathbf x$ slightly towards the negative gradient direction always decrease $f$ in the first order perturbation.
-```math
-f(x - \epsilon \nabla f(\mathbf x)) \approx f(\mathbf x) - \epsilon \nabla f(\mathbf x)^T \nabla f(\mathbf x) = f(\mathbf x) - \epsilon \|\nabla f(\mathbf x)\|_2 < f(x)
-```
+# ╔═╡ c76981ce-f1e5-4681-ad13-6188a962d962
+md"""## Example
+[https://jump.dev/JuMP.jl/stable/tutorials/linear/diet/](https://jump.dev/JuMP.jl/stable/tutorials/linear/diet/)
 """
 
-# ╔═╡ d59aaccf-1435-4c7b-998e-5dfb174990c3
-md"## Optimizing the Rosenbrock function"
+# ╔═╡ 93b69c65-8df3-4782-8b39-20fb3879cbcc
+md"""
+[JuMP.jl documentation](https://jump.dev/JuMP.jl/stable/) also contains mathematical models such as **semidefinite programming** and **integer programming**.
+"""
 
-# ╔═╡ f859faaa-b24e-4af2-8b72-85f2d753e87a
-function rosenbrock(x)
-	(1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-end
+# ╔═╡ 2e17a5f6-a942-4688-bc23-25b1715d9886
+md"""
+# Assignments
 
-# ╔═╡ c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
-let
-	x = -2:0.01:2
-	y = -2:0.01:2
-	f = [rosenbrock((a, b)) for b in y, a in x]
-	heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂")
-end
+1. Show the following graph $G=(V, E)$ has a unit-disk embedding.
+```
+V = 1, 2, ..., 10
+E = [(1, 2), (1, 3),
+	(2, 3), (2, 4), (2, 5), (2, 6),
+	(3, 5), (3, 6), (3, 7),
+	(4, 5), (4, 8),
+	(5, 6), (5, 8), (5, 9),
+	(6, 7), (6, 8), (6, 9),
+	(7,9), (8, 9), (8, 10), (9, 10)]
+```
 
-# ╔═╡ 004a79b8-afbd-40b7-9c67-a8e864432179
-function gradient_descent(f, x; niters::Int, learning_rate::Real)
-	history = [x]
-	for i=1:niters
-		g = ForwardDiff.gradient(f, x)
-		x -= learning_rate * g
-		push!(history, x)
-	end
-	return history
-end
+So what is uni-disk embedding of a graph? Ask Chat-GPT with the following question
+```
+What is a unit-disk embedding of a graph?
+```
 
-# ╔═╡ 8d0dbc03-f927-4229-a8ce-6196cb62bde2
-let
-	x0 = [-1, -1.0]
-	history = gradient_descent(rosenbrock, x0; niters=1000, learning_rate=0.002)
+### Hint:
+To solve this issue, you can utilize an optimizer. Here's how:
 
-	# plot
-	x = -2:0.01:2
-	y = -2:0.01:2
-	f = [rosenbrock((a, b)) for b in y, a in x]
-	plt = heatmap(x, y, log.(f); label="log(f)", xlabel="x₁", ylabel="x₂", xlim=(-2, 2), ylim=(-2, 2))
-	plot!(plt, getindex.(history, 1), getindex.(history, 2); label="optimization", color="green")
-end
+1. Begin by assigning each vertex with a coordinate. You can represent the locations of all vertices as a $2 \times n$ matrix, denoted as $x$, where each column represents a coordinate of vertices in a two-dimensional space.
 
-# ╔═╡ a4b4bc11-efb2-46db-b256-ba9632fadd7b
-md"## Adam"
+2. Construct a loss function, denoted as $f(x)$, that returns a positive value as punishment if any connected vertex pair $(v, w)$ has a distance ${\rm dist}(x_v, x_w) > 1$ (the unit distance), or if any disconnected vertex pair has a distance smaller than $1$. If all unit-disk constraints are satisfied, the function returns $0$.
+
+3. Use an optimizer to optimize the loss function $f(x)$. If the loss can be reduced to $0$, then the corresponding $x$ represents a unit-disk embedding. If not, you may need to try multiple times to ensure that your optimizer does not trap you into a local minimum.
+"""
 
 # ╔═╡ 47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
-md"## Golden section search"
+md"## Golden section search";
 
 # ╔═╡ da2f6865-ff3c-46bd-80d4-f171b0e30ce9
 function golden_section_search(f, a, b; tol=1e-5)
@@ -208,55 +811,34 @@ function golden_section_search(f, a, b; tol=1e-5)
 			f1 = f(x1)
 		end
 	end
-	@info "number of iterations = $k"
+	#@info "number of iterations = $k"
 	return f1 < f2 ? (a, f1) : (b, f2)
-end
+end;
 
 # ╔═╡ c75753d4-ceec-402e-a4bc-8b00b4934dbf
-golden_section_search(x->(x-4)^2, -5, 5; tol=1e-5)
-
-# ╔═╡ 66cbb653-b06d-4b06-880b-f402fd9f1d53
-md"## Newton's Method"
-
-# ╔═╡ da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
-function Newton1d(f, x; tol=1e-5)
-	k = 0
-	while k < 1000
-		k += 1
-		dx = ForwardDiff.gradient(v->f(v[1]), [x])[1]/ForwardDiff.hessian(v->f(v[1]), [x])[1]
-		x -= dx
-		abs(dx) < tol && break
-	end
-	@info "number of iterations = $k"
-	return x
-end
-
-# ╔═╡ a4832798-6e20-4630-889d-388fe55272f7
-Newton1d(x->0.5 - x * exp(-x^2), 1.0; tol=1e-5)
-
-# ╔═╡ 4ade7201-ae81-41ca-affb-fffcb99776fe
-md"## BFGS"
-
-# ╔═╡ afbc321c-c568-4b88-8dc1-9d87a4a0e7af
-md"## Linear Programming"
-
-# ╔═╡ 7db726fc-b537-483a-8898-dd24b4f3aca2
-md"""if $f$, $\mathbf{g}$ and $\mathbf{h}$ are all linear (or affine), then we have a linear programming problem."""
-
-# ╔═╡ 0aec2c02-cbf6-427c-8878-3c7ab600b7af
-md"## Linear programming and mixed-integer programming"
+golden_section_search(x->(x-4)^2, -5, 5; tol=1e-5);
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
+AbstractTrees = "~0.4.4"
 ForwardDiff = "~0.10.35"
 Luxor = "~3.7.0"
+Optim = "~1.7.4"
+Optimisers = "~0.2.15"
 Plots = "~1.38.8"
+PlutoUI = "~0.7.50"
+Reexport = "~1.2.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -265,11 +847,34 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "65e43c11288df65a7284beed94ed0f7f58306ffe"
+project_hash = "7e4e83290afdd2498d991561fdef1b2e36984cec"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.4.4"
+
+[[deps.Adapt]]
+deps = ["LinearAlgebra", "Requires"]
+git-tree-sha1 = "cc37d689f599e8df4f464b2fa3870ff7db7492ef"
+uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+version = "3.6.1"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
+
+[[deps.ArrayInterface]]
+deps = ["Adapt", "LinearAlgebra", "Requires", "SnoopPrecompile", "SparseArrays", "SuiteSparse"]
+git-tree-sha1 = "a89acc90c551067cd84119ff018619a1a76c6277"
+uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+version = "7.2.1"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -359,6 +964,12 @@ deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 version = "1.0.1+0"
 
+[[deps.ConstructionBase]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "89a9db8d28102b094992472d333674bd1a83ce2a"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.5.1"
+
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
@@ -394,6 +1005,10 @@ deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialF
 git-tree-sha1 = "a4ad7ef19d2cdc2eff57abbbe68032b1cd0bd8f8"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.13.0"
+
+[[deps.Distributed]]
+deps = ["Random", "Serialization", "Sockets"]
+uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -433,6 +1048,18 @@ version = "1.16.0"
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
+[[deps.FillArrays]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
+git-tree-sha1 = "3b245d1e50466ca0c9529e2033a3c92387c59c2f"
+uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
+version = "0.13.9"
+
+[[deps.FiniteDiff]]
+deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "ed1b56934a2f7a65035976985da71b6a65b4f2cf"
+uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
+version = "2.18.0"
+
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
@@ -468,6 +1095,16 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.10+0"
+
+[[deps.Functors]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "7ed0833a55979d3d2658a60b901469748a6b9a7c"
+uuid = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
+version = "0.4.3"
+
+[[deps.Future]]
+deps = ["Random"]
+uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pkg", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
@@ -527,6 +1164,24 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll",
 git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
+
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+deps = ["Tricks"]
+git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.4"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
 
 [[deps.IniFile]]
 git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
@@ -683,6 +1338,12 @@ git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
 
+[[deps.LineSearches]]
+deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
+git-tree-sha1 = "7bbea35cec17305fc70a0e5b4641477dc0789d9d"
+uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
+version = "7.2.0"
+
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -707,6 +1368,11 @@ deps = ["Base64", "Cairo", "Colors", "Dates", "FFMPEG", "FileIO", "Juno", "LaTeX
 git-tree-sha1 = "909a67c53fddd216d5e986d804b26b1e3c82d66d"
 uuid = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 version = "3.7.0"
+
+[[deps.MIMEs]]
+git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
+uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+version = "0.1.4"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -753,6 +1419,12 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2022.2.1"
 
+[[deps.NLSolversBase]]
+deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
+git-tree-sha1 = "a0b464d183da839699f4c79e7606d9d186ec172c"
+uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
+version = "7.8.3"
+
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
 git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
@@ -797,6 +1469,18 @@ git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
 
+[[deps.Optim]]
+deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "1903afc76b7d01719d9c30d3c7d501b61db96721"
+uuid = "429524aa-4258-5aef-a3af-852621145aeb"
+version = "1.7.4"
+
+[[deps.Optimisers]]
+deps = ["ChainRulesCore", "Functors", "LinearAlgebra", "Random", "Statistics"]
+git-tree-sha1 = "e5a1825d3d53aa4ad4fb42bd4927011ad4a78c3d"
+uuid = "3bd65402-5787-11e9-1adc-39752487f4e2"
+version = "0.2.15"
+
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "51a08fb14ec28da2ec7a927c4337e4332c2a4720"
@@ -818,6 +1502,12 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jl
 git-tree-sha1 = "84a314e3926ba9ec66ac097e3635e270986b0f10"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
 version = "1.50.9+0"
+
+[[deps.Parameters]]
+deps = ["OrderedCollections", "UnPack"]
+git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
+uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
@@ -858,6 +1548,18 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "f49a45a239e13333b8b936120fe6d793fe58a972"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.38.8"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.50"
+
+[[deps.PositiveFactorizations]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
+uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
+version = "0.2.4"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -935,6 +1637,12 @@ version = "1.2.0"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
+[[deps.Setfield]]
+deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
+git-tree-sha1 = "e2cc6d8c88613c05e1defb55170bf5ff211fbeac"
+uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+version = "1.1.1"
+
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
 git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
@@ -998,6 +1706,10 @@ git-tree-sha1 = "d1bf48bfcc554a3761a133fe3a9bb01488e06916"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.33.21"
 
+[[deps.SuiteSparse]]
+deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
+uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
+
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
@@ -1024,6 +1736,11 @@ git-tree-sha1 = "94f38103c984f89cf77c402f2a68dbd870f8165f"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.11"
 
+[[deps.Tricks]]
+git-tree-sha1 = "6bac775f2d42a611cdfcd1fb217ee719630c4175"
+uuid = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
+version = "0.1.6"
+
 [[deps.URIs]]
 git-tree-sha1 = "074f993b0ca030848b897beff716d93aca60f06a"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
@@ -1032,6 +1749,11 @@ version = "1.4.2"
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
@@ -1285,10 +2007,72 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─6644b213-63ed-4814-b034-0b39caa04f23
+# ╟─c85bdb41-ce56-48ce-a82c-6599ccbc446c
+# ╟─013c7dac-a8c6-4fff-8837-e4d6751f3fb6
+# ╟─3dc062b0-30d0-4332-9047-0852671cb031
 # ╟─7345a2c1-d4b7-470f-a936-b4cc6c177399
 # ╟─7c26b07f-6a1f-4d40-9152-b8738a1dad62
 # ╟─6b4307ea-33c0-4a20-af35-d05262856528
-# ╟─9ca5ce82-9f7f-4bf1-834e-e02ba8ba33b7
+# ╟─647a7101-ebdc-4717-a343-22edee8a7d92
+# ╟─f784dc43-5058-4375-9040-f343c346cff8
+# ╟─1a959468-3add-4e34-a9fe-54ca67a12894
+# ╟─90472087-2580-496e-989e-e4fa58fd1e17
+# ╟─0c5dd6d1-20cd-4ec6-9017-80dbc705b75d
+# ╠═e6ab2552-6597-4bef-a9c1-e0cea14b0f67
+# ╠═d16748d2-e157-43d2-b6fe-69cbe4a5dd9c
+# ╟─66416807-bcb0-4881-90f8-1595756e4a6f
+# ╠═43486a15-7582-4532-b2ac-73db4bb07f97
+# ╟─962f24ff-2adc-41e3-bc5c-2f78952950d2
+# ╟─1024bec9-6741-4cf6-a214-9777c17d2348
+# ╠═f859faaa-b24e-4af2-8b72-85f2d753e87a
+# ╠═1ed6d587-b984-463f-9db3-220bdfa81ebe
+# ╠═c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
+# ╠═81b628ce-91b1-4b63-aca1-96e10c49d7b9
+# ╠═44f3252c-cb3b-458f-b3b9-a87ce9f6e0e2
+# ╠═f020f39c-e756-4c09-8ab3-7d10e78ca43e
+# ╠═c1c02449-50e7-4dc4-8807-a31b10624921
+# ╟─50f91cd8-c74b-11ed-0b94-cdeb596bf99b
+# ╟─211b6c56-f16b-47fb-ba56-4534ac41be95
+# ╟─eec10666-102c-44b6-a562-75ba78428d1e
+# ╟─d59aaccf-1435-4c7b-998e-5dfb174990c3
+# ╟─10283699-2ebc-4e61-89e8-5585a2bf054d
+# ╠═4136799e-c4ab-432b-9e8a-208b0eae060e
+# ╠═3e616d99-7d57-4926-b1d5-dae47dd040e9
+# ╠═004a79b8-afbd-40b7-9c67-a8e864432179
+# ╠═8d0dbc03-f927-4229-a8ce-6196cb62bde2
+# ╠═599b0416-d1e7-4e92-8604-80bda896d88b
+# ╟─95ac921c-20c6-432e-8a70-006804d6b0da
+# ╟─3212c3f2-f3c3-4403-9584-85386db6825c
+# ╠═50feee93-6a1f-4256-822f-88ceede1bbec
+# ╠═859705f4-9b5f-4403-a9ef-d21e3cbd0b06
+# ╟─e2a17f45-cc79-485b-abf2-fbc81a66f908
+# ╟─5b911473-57b8-46a4-bdec-6f1960c1e958
+# ╟─29ed621d-0505-4f8c-88fc-642a3ddf3ae8
+# ╠═50b8dcf3-9cec-4487-8a57-249c213caa21
+# ╠═09f542be-490a-42bc-81ac-07a318371ca3
+# ╟─a4b4bc11-efb2-46db-b256-ba9632fadd7b
+# ╟─8b74adc9-9e82-46db-a87e-a72928aff03f
+# ╠═6dc932f9-d37b-4cc7-90d9-1ed0bae20c41
+# ╠═8086d721-3360-4e66-b898-b3f1fb9e4392
+# ╟─ce076be7-b930-4d35-b594-1009c87213a6
+# ╠═6bc59fbc-14ae-4e07-8390-3195182e17a5
+# ╟─ec098a81-5032-4d43-85bf-a51b0a19e94e
+# ╟─6778a8ce-73a7-40e8-92bc-c9491daa9012
+# ╟─dcf4a168-1c11-45f2-b7e7-15d6fb4becea
+# ╠═77761a71-65ea-434b-a697-d86278d10abd
+# ╟─6bee88e1-d641-4a28-9794-6031e721a79c
+# ╟─cbdb2ad6-2a7d-4ccb-89f9-5ec836612477
+# ╟─66cbb653-b06d-4b06-880b-f402fd9f1d53
+# ╟─5af90753-f9cc-437f-9b11-98618fdb67aa
+# ╟─e80a6b59-84d4-40e9-bf1b-08719016745e
+# ╠═da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
+# ╠═a4832798-6e20-4630-889d-388fe55272f7
+# ╟─89fb89d4-227f-41ba-8e42-68a9c436b930
+# ╟─4ade7201-ae81-41ca-affb-fffcb99776fe
+# ╟─3e406fc4-8bb1-4b11-ae9a-a33604061a8a
+# ╠═d0166fdc-333b-495b-965e-1c77711ba469
+# ╟─ab2ad24c-a019-4608-9344-23eb1025e108
 # ╟─e6dca5dc-dbf9-45ba-970d-23bd9a75769d
 # ╟─5b433d39-ed60-4831-a139-b6663a284e7a
 # ╠═4b3de811-278b-4154-bce6-4d67dc19ff38
@@ -1296,26 +2080,13 @@ version = "1.4.1+0"
 # ╟─2afe850b-cfd3-41de-b3e1-fafa44e9bbe2
 # ╟─8a93097f-00c1-45b0-92a1-092aeccc58a5
 # ╟─ce27c364-9ae3-435a-8153-a1c898ae8984
-# ╟─50f91cd8-c74b-11ed-0b94-cdeb596bf99b
-# ╟─211b6c56-f16b-47fb-ba56-4534ac41be95
-# ╟─eec10666-102c-44b6-a562-75ba78428d1e
-# ╟─d59aaccf-1435-4c7b-998e-5dfb174990c3
-# ╠═f859faaa-b24e-4af2-8b72-85f2d753e87a
-# ╠═1ed6d587-b984-463f-9db3-220bdfa81ebe
-# ╠═c16945b6-397e-4cc2-9f74-9c0e6eb21a8c
-# ╠═004a79b8-afbd-40b7-9c67-a8e864432179
-# ╠═8d0dbc03-f927-4229-a8ce-6196cb62bde2
-# ╟─a4b4bc11-efb2-46db-b256-ba9632fadd7b
-# ╟─47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
-# ╠═da2f6865-ff3c-46bd-80d4-f171b0e30ce9
-# ╠═c75753d4-ceec-402e-a4bc-8b00b4934dbf
-# ╟─66cbb653-b06d-4b06-880b-f402fd9f1d53
-# ╠═4136799e-c4ab-432b-9e8a-208b0eae060e
-# ╠═da2d74e5-d411-499b-b4c3-cb6dfefb8c8d
-# ╠═a4832798-6e20-4630-889d-388fe55272f7
-# ╟─4ade7201-ae81-41ca-affb-fffcb99776fe
 # ╟─afbc321c-c568-4b88-8dc1-9d87a4a0e7af
 # ╟─7db726fc-b537-483a-8898-dd24b4f3aca2
-# ╟─0aec2c02-cbf6-427c-8878-3c7ab600b7af
+# ╟─c76981ce-f1e5-4681-ad13-6188a962d962
+# ╟─93b69c65-8df3-4782-8b39-20fb3879cbcc
+# ╟─2e17a5f6-a942-4688-bc23-25b1715d9886
+# ╟─47747e2d-52c7-47a5-aa06-1ce25f7dd7fe
+# ╟─da2f6865-ff3c-46bd-80d4-f171b0e30ce9
+# ╟─c75753d4-ceec-402e-a4bc-8b00b4934dbf
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
