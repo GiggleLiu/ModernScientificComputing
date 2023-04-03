@@ -4,6 +4,16 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 4b6307f7-af43-4990-a5c4-5be2b6b11364
 using PlutoUI
 
@@ -27,11 +37,11 @@ some_random_matrix = reshape(1:25, 5, 5)
 
 # ╔═╡ 4f1e505c-170b-436f-a8ba-ef61c1d8943e
 struct COOMatrix{T} <: AbstractArray{T, 2}   # Julia does not have a COO data type
-	rowval::Vector{Int}
-	colval::Vector{Int}
-	nzval::Vector{T}
-	m::Int
-	n::Int
+	rowval::Vector{Int}   # row indices
+	colval::Vector{Int}   # column indices
+	nzval::Vector{T}  	  # values
+	m::Int 				  # number of rows
+	n::Int   			  # number of columns
 end
 
 # ╔═╡ a205f6d4-8ecd-4103-9904-505c4ecc7b72
@@ -150,7 +160,7 @@ coo_matrix = COOMatrix([1, 2, 3, 4, 5, 4, 5], [1, 2, 3, 4, 5, 3, 3], [1, 1, 1, 1
 
 # ╔═╡ 6f54c341-383a-4969-95d3-9e347862ddd2
 # uncomment to show the result
-# sizeof(coo_format)
+sizeof(coo_matrix)
 
 # ╔═╡ 0ea729be-40b2-41ab-991a-c87c8a79fbdf
 md"""
@@ -191,7 +201,8 @@ Yep!
 
 # ╔═╡ 3b43ee31-eb5a-4e62-81ba-6196e1ad8420
 md"""
-Quiz: What is the time complexity of COO matrix multiplication?
+* Quiz 1: What is the time complexity of COO matrix `setindex!` (`A[i, j] += v`)?
+* Quiz 2: What is the time complexity of COO matrix multiplication?
 """
 
 # ╔═╡ 86dc94e1-726a-40c5-87fd-6f5ab43774da
@@ -217,7 +228,7 @@ fieldnames(csc_matrix |> typeof)
 md"""
 The `m`, `n`, `rowval` and `nzval` have the same meaning as those in the COO format.
 `colptr` is a integer vector of size $n+1$, the element of which points to the elements in `rowval` and `nzval`. Given a matrix $A \in \mathbb{R}^{m\times n}$ in the CSC format, the $j$-th column of $A$ is defined as
-`A[rowval[colptr[j]:colptr[j+1]-1], j] := rowval[colptr[j]:colptr[j+1]-1]`
+`A[rowval[colptr[j]:colptr[j+1]-1], j] := nzval[colptr[j]:colptr[j+1]-1]`
 """
 
 # ╔═╡ 242a2046-fae4-4a45-9792-2ac06deb08a3
@@ -297,6 +308,11 @@ my_matmul(csc_matrix, csc_matrix)
 # ╔═╡ e8234fbd-61a8-4ff8-9d18-b974267fb062
 csc_matrix^2
 
+# ╔═╡ d7f295c4-ce02-46d0-9f14-5ec3d4f25ab3
+md"""
+Quiz: What is the time complexity of CSC matrix `setindex!` (`A[i, j] = v`)?
+"""
+
 # ╔═╡ fffdf566-3d54-4cbe-8543-bc88bd669f4c
 md"# Large sparse eigenvalue problem"
 
@@ -353,6 +369,89 @@ A Krylov subspace of size $k$ with initial vector $q_1$ is defined by
 ```
 """
 
+# ╔═╡ b9c1e68a-634f-42e0-aa13-e84b4feb2a3a
+md"""
+The Julia package `KrylovKit.jl` contains many Krylov space based algorithms.
+
+`KrylovKit.jl` accepts general functions or callable objects as linear maps, and general Julia
+objects with vector like behavior (as defined in the docs) as vectors.
+
+The high level interface of KrylovKit is provided by the following functions:
+*   `linsolve`: solve linear systems
+*   `eigsolve`: find a few eigenvalues and corresponding eigenvectors
+*   `geneigsolve`: find a few generalized eigenvalues and corresponding vectors
+*   `svdsolve`: find a few singular values and corresponding left and right singular vectors
+*   `exponentiate`: apply the exponential of a linear map to a vector
+*   `expintegrator`: [exponential integrator](https://en.wikipedia.org/wiki/Exponential_integrator)
+    for a linear non-homogeneous ODE, computes a linear combination of the `ϕⱼ` functions which generalize `ϕ₀(z) = exp(z)`.
+
+"""
+
+# ╔═╡ 8dc7e127-187e-48e5-9ed5-d7ecf196a40e
+md"""
+## Projecting a sparse matrix into a subspace
+Given $Q\in \mathbb{R}^{n\times k}$ and $Q^T Q = I$, the following statement is always true.
+```math
+\lambda_1(Q^T_k A Q_k) \leq \lambda_1(A),
+```
+where $\lambda_1(A)$ is the largest eigenvalue of $A \in \mathbb{R}^{n\times n}$.
+"""
+
+# ╔═╡ 89bc81e9-e1ce-459f-bd28-511b534a14fc
+md"""
+## Lanczos Tridiagonalization
+
+In the Lanczos tridiagonalizaiton process, we want to find a orthogonal matrix $Q^T$ such that
+```math
+Q^T A Q = T
+```
+where $T$ is a tridiagonal matrix
+```math
+T = \left(\begin{matrix}
+\alpha_1 & \beta_1 & 0 & \ldots & 0\\
+\beta_1 & \alpha_2 & \beta_2 & \ldots & 0\\
+0 & \beta_2 & \alpha_3 & \ldots & 0\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & 0 & 0 & \beta_{k-1} & \alpha_k
+\end{matrix}\right),
+```
+ $Q = [q_1 | q_2 | \ldots | q_n],$ and ${\rm span}(\{q_1, q_2, \ldots, q_k\}) = \mathcal{K}(A, q_1, k)$.
+"""
+
+# ╔═╡ 03cb1b92-ba98-4065-8761-1a108f6cabfb
+md"We have $Aq_k = \beta_{k-1}q_{k-1} + \alpha_k q_k + \beta_k q_{k+1}$, or equivalently in the recursive style
+```math
+q_{k+1} = (Aq_k - \beta_{k-1}q_{k-1} - \alpha_k q_k)/\beta_k.
+```
+"
+
+# ╔═╡ a2d79593-fd1f-46ea-afe2-578f75e084cf
+md"""
+By multiplying $q_k^T$ on the left, we have
+```math
+\alpha_k  = q_k^T A q_k.
+```
+Since $q_{k+1}$ is normalized, we have
+```math
+\beta_k = \|Aq_k - \beta_{k-1}q_{k-1} - \alpha_k q_k\|_2
+```
+"""
+
+# ╔═╡ 0ada2d40-1052-42f1-9577-3d6e590efca4
+md"""
+If at any moment, $\beta_k = 0$, the interation stops due to convergence of a subspace. We have the following reducible form
+```math
+T(\beta_2 = 0) = \left(\begin{array}{cc|ccc}
+\alpha_1 & \beta_1 & 0 & \ldots & 0\\
+\beta_1 & \alpha_2 & 0 & \ldots & 0\\
+\hline
+0 & 0 & \alpha_3 & \ldots & 0\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & 0 & 0 & \beta_{k-1} & \alpha_k
+\end{array}\right),
+```
+"""
+
 # ╔═╡ 0906b965-f760-4f67-9ddc-498aeb99c3b8
 md"## A naive implementation"
 
@@ -381,16 +480,35 @@ function lanczos(A, q1::AbstractVector{T}; abstol, maxiter) where T
 		end
 		push!(β, nrk)
 	end
+	# returns T and Q
 	return SymTridiagonal(α, β), hcat(q...)
 end
 
 # ╔═╡ 37a68538-2fee-45e2-a1c4-653107f1e0de
 md"""
-## Example: using dominant eigensolver to study the graph spectral
+## Example: using dominant eigensolver to study the spectral graph theory
+"""
+
+# ╔═╡ f75a35cd-d334-4741-8477-7555aec38e92
+md"""
+Laplacian matrix
+Given a simple graph $G$ with $n$ vertices $v_{1},\ldots ,v_{n}$, its Laplacian matrix $L_{n\times n}$ is defined element-wise as
+
+```math
+L_{i,j}:={\begin{cases}\deg(v_{i})&{\mbox{if}}\ i=j\\-1&{\mbox{if}}\ i\neq j\ {\mbox{and}}\ v_{i}{\mbox{ is adjacent to }}v_{j}\\0&{\mbox{otherwise}},\end{cases}}
+```
+or equivalently by the matrix $L=D-A$, where $D$ is the degree matrix and A is the adjacency matrix of the graph. Since $G$ is a simple graph, $A$ only contains 1s or 0s and its diagonal elements are all 0s.
+"""
+
+# ╔═╡ cab1420b-fdf1-42d7-95fd-f37ef416bf49
+md"""Theorem: The number of connected components in the graph is the dimension of the nullspace of the Laplacian and the algebraic multiplicity of the 0 eigenvalue.
 """
 
 # ╔═╡ 294e1dea-4f2f-4731-9327-b1c04c82d2db
 graphsize = 10
+
+# ╔═╡ 273f9cbd-1885-4834-921d-60130c34c028
+md"One can use the `Graphs.laplacian_matrix(graph)` to generate a laplacian matrix (CSC formated) of a graph."
 
 # ╔═╡ 3b299d74-e209-4c1e-a831-fce40c4f43f4
 lmat = laplacian_matrix(random_regular_graph(graphsize, 3))
@@ -404,20 +522,34 @@ eigen(tri).values
 # ╔═╡ 95e3a70a-0c2a-4c87-a7c6-963b607c63ad
 Q' * Q
 
+# ╔═╡ 2a5118ab-c616-4b85-8ea5-737cd319f835
+@bind graph_size Slider(10:2:200; show_value=true, default=10)
+
 # ╔═╡ 05411446-466b-4c6c-bb8a-0caebb516770
 let
-	n = 100
-	graph = random_regular_graph(n, 3)
+	graph = random_regular_graph(graph_size, 3)
 	A = laplacian_matrix(graph)
-	q1 = randn(n)
-	tr, Q = lanczos(A, q1; abstol=1e-8, maxiter=100)
-	@info eigsolve(A, q1, 2, :SR)
-	eigen(tr).values
-end
+	q1 = randn(graph_size)
+	tr, Q = lanczos(-A, q1; abstol=1e-8, maxiter=100)
+	# using function `KrylovKit.eigsolve`
+	@info "KrylovKit.eigsolve: " eigsolve(A, q1, 2, :SR)
+	@info Q' * Q
+	# diagonalize the triangular matrix obtained with our naive implementation
+	@info "Naive approach: " eigen(-tr).values
+end;
+
+# ╔═╡ 4c0f9641-f723-4880-9346-ba7899390d52
+md"""NOTE: with larger `graph_size`, you should see some "ghost" eigenvalues """
 
 # ╔═╡ e68e3e51-2084-45bf-a8d0-42e4f22d0aea
 md"""
 ## Reorthogonalization
+"""
+
+# ╔═╡ 64ed8383-a449-4278-9cd9-ad317ce13574
+md"""
+Let $r_0, \ldots, r_{k-1} \in \mathbb{R}_n$ be given and suppose that Householder matrices $H_0, \ldots, H_{k-1}$ have been computed such that $(H_0\ldots H_{k- 1})^T [r_0\mid\ldots\mid r_{k-1}]$ is upper triangular. Let $[q_1 \mid \ldots \mid q_k ]$ denote the first $k$ columns of the Householderproduct $(H_0 \ldots H_{k-1})$.
+Then $q_k^T q_l = \delta_{kl}$ (machine precision).
 """
 
 # ╔═╡ 75d297f9-892e-44c4-80a4-1e1beb5d7d9c
@@ -517,7 +649,19 @@ md"""
 """
 
 # ╔═╡ d0776be5-6a56-41c2-981c-e992ec8afdc5
-md"If $A$ is not symmetric, then the orthogonal tridiagonalization $Q^T A Q = T$ does not exist in general. The Arnoldi approach involves the column by column generation of an orthogonal $Q$ such athat $Q^TAQ$ is the Hessenberg reduction."
+md"""If $A$ is not symmetric, then the orthogonal tridiagonalization $Q^T A Q = T$ does not exist in general. The Arnoldi approach involves the column by column generation of an orthogonal $Q$ such that $Q^TAQ = H$ is a Hessenberg matrix.
+```math
+H = \left(\begin{matrix}
+h_{11} & h_{12} & h_{13} & \ldots & h_{1k}\\
+h_{21} & h_{22} & h_{23} & \ldots & h_{2k}\\
+0 & h_{32} & h_{33} & \ldots & h_{3k}\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & 0 & 0 & \ldots & h_{kk}
+\end{matrix}\right)
+```
+
+That is, $h_{ij} = 0$ for $i>j+1$.
+"""
 
 # ╔═╡ 71ebaf5b-5f20-4f73-b530-3ae1aea071f2
 function arnoldi_iteration(A::AbstractMatrix{T}, x0::AbstractVector{T}; maxiter) where T
@@ -557,41 +701,89 @@ end
 
 # ╔═╡ 68e61322-1f14-4098-ab3b-6349aaab669a
 let
-	A = randn(10, 10)
-	h, q = arnoldi_iteration(A, randn(10); maxiter=100)
-	@info eigen(A).values
-	eigen(h).values
-end
+	n = 10
+	A = randn(n, n)
+	q1 = randn(n)
+	h, q = arnoldi_iteration(A, q1; maxiter=100)
 
-# ╔═╡ fd1fb365-0079-4fb0-ba26-9cbf2d9ec676
-md"""
-## Comments
-
-### Jacobi-Davidson
-"""
-
-# ╔═╡ 5beef884-84c3-43ef-8928-1b647b3e1e0f
-md"""
-1. Blocking technique is required to handle degenerate eigenvalues properly.
-2. Restarting can improve the subspace vectors.
-"""
-
-# ╔═╡ 16d9fb85-95c5-4c46-8d9b-1403bb15c67c
-md"""
-# Large sparse linear equation
-"""
-
-# ╔═╡ fb385c98-cd94-4d5b-b5cb-c299fbb9b236
-md"""
-## Generalized minimum residual (GMRES) method
-"""
+	# using function `KrylovKit.eigsolve`
+	@info "KrylovKit.eigsolve: " eigsolve(A, q1, 2, :LR)
+	# diagonalize the triangular matrix obtained with our naive implementation
+	@info "Naive approach: " eigen(h).values
+end;
 
 # ╔═╡ b0b1e888-98d9-405c-8b01-a3b4f8cae1dd
 md"# Assignment"
 
 # ╔═╡ 1fd7a9d3-1f63-407b-b44c-1bd198351039
 md"""
+#### 1. Review
+I forgot to copy the definitions of `rowindices`, `colindices` and `data` in the following code. Can you help me figure out what are their possible values?
+```julia
+julia> sp = sparse(rowindices, colindices, data);
 
+julia> sp.colptr
+6-element Vector{Int64}:
+ 1
+ 2
+ 3
+ 5
+ 6
+ 6
+
+julia> sp.rowval
+5-element Vector{Int64}:
+ 3
+ 1
+ 1
+ 4
+ 5
+
+julia> sp.nzval
+5-element Vector{Float64}:
+ 0.799
+ 0.942
+ 0.848
+ 0.164
+ 0.637
+
+julia> sp.m
+5
+
+julia> sp.n
+5
+```
+"""
+
+# ╔═╡ dabdee6d-0c64-4dc7-9c09-15d388a32387
+md"""
+#### 2. Coding (Choose one of the following two problems):
+1. (easy) Implement CSC format sparse matrix-vector multiplication as function `my_spv`. Please include the following test code into your project.
+```julia
+using SparseArrays, Test
+
+@testset "sparse matrix - vector multiplication" begin
+	for k = 1:100
+		m, n = rand(1:100, 2)
+		density = rand()
+		sp = sprand(m, n, density)
+		v = randn(n)
+        @test Matrix(sp) * v ≈ my_spv(sp, v)
+	end
+end
+```
+
+2. (hard) The restarting in Lanczos is a technique technique to reduce memory. Suppose we wish to calculate the largest eigenvalue of $A$. If $q_1 \in \mathbb{R}^{n}$ is a given normalized vector, then it can be refined as follows:
+
+Step 1. Generate $q_2,\ldots,q_s \in \mathbb{R}^{n}$ via the block Lanczos algorithm.
+
+Step 2. Form $T_s = [ q_1 \mid \ldots \mid q_s]^TA [ q_1 \mid \ldots \mid q_s]$, an s-by-s matrix.
+
+Step 3. Compute an orthogonal matrix $U = [ u_1 \mid \ldots\mid u_s]$ such that $U^T T_s U = {\rm diag}(\theta_1, \ldots, \theta_s)$ with $\theta_1\geq \ldots \geq\theta_s$·
+
+Step 4. Set $q_1^{({\rm new})} = [q_1 \mid \ldots \mid q_s]u_1$.
+
+Please implement a Lanczos tridiagonalization process with restarting as a Julia function. You submission should include that function as well as a test. 
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -983,7 +1175,7 @@ version = "17.4.0+0"
 # ╠═a205f6d4-8ecd-4103-9904-505c4ecc7b72
 # ╠═3b72536e-c005-4224-ba9d-b157f1c38310
 # ╟─33c4367d-2475-4cf5-8ac4-7ecd81642bbf
-# ╠═6a3e1a35-762a-4e1e-a706-310e21e618b3
+# ╟─6a3e1a35-762a-4e1e-a706-310e21e618b3
 # ╠═78e46965-d581-4f1b-9b53-283441526571
 # ╠═8b6801b4-0ece-4484-a48f-f9435a868bc1
 # ╠═6f54c341-383a-4969-95d3-9e347862ddd2
@@ -1015,8 +1207,8 @@ version = "17.4.0+0"
 # ╠═778b3d09-1b76-4ad0-bdd7-8cbd06918519
 # ╠═fa3f8189-85eb-4943-8347-83aa6572c2fe
 # ╠═e8234fbd-61a8-4ff8-9d18-b974267fb062
+# ╟─d7f295c4-ce02-46d0-9f14-5ec3d4f25ab3
 # ╟─fffdf566-3d54-4cbe-8543-bc88bd669f4c
-# ╠═0c8bf832-0cf8-4b56-b064-1dd177aceae8
 # ╟─f14621f1-a002-46c5-b0c0-15d008ab382c
 # ╟─3b75625c-2d92-4499-9662-ee1c7a173c30
 # ╠═1981eb8f-e93b-44cb-b81d-6f8c7ed13ec1
@@ -1027,17 +1219,30 @@ version = "17.4.0+0"
 # ╟─339df51a-7623-405a-a590-adc337edc0be
 # ╟─014be843-e2d3-42c8-bbc9-bd66bbb7df93
 # ╟─2a548303-adb7-4189-bb82-2095f920a996
+# ╟─b9c1e68a-634f-42e0-aa13-e84b4feb2a3a
+# ╠═0c8bf832-0cf8-4b56-b064-1dd177aceae8
+# ╟─8dc7e127-187e-48e5-9ed5-d7ecf196a40e
+# ╟─89bc81e9-e1ce-459f-bd28-511b534a14fc
+# ╟─03cb1b92-ba98-4065-8761-1a108f6cabfb
+# ╟─a2d79593-fd1f-46ea-afe2-578f75e084cf
+# ╟─0ada2d40-1052-42f1-9577-3d6e590efca4
 # ╟─0906b965-f760-4f67-9ddc-498aeb99c3b8
 # ╠═166d4ddc-5e58-4210-a389-997c1ea82de2
 # ╟─37a68538-2fee-45e2-a1c4-653107f1e0de
+# ╟─f75a35cd-d334-4741-8477-7555aec38e92
+# ╟─cab1420b-fdf1-42d7-95fd-f37ef416bf49
 # ╠═5b764297-3d06-4899-a8ae-f4378427a6e5
 # ╠═294e1dea-4f2f-4731-9327-b1c04c82d2db
+# ╟─273f9cbd-1885-4834-921d-60130c34c028
 # ╠═3b299d74-e209-4c1e-a831-fce40c4f43f4
 # ╠═1b403168-63b7-4850-8d49-20869d00f71b
 # ╠═e11c71bb-a079-4748-9598-e6c49dfce7a7
 # ╠═95e3a70a-0c2a-4c87-a7c6-963b607c63ad
+# ╠═2a5118ab-c616-4b85-8ea5-737cd319f835
 # ╠═05411446-466b-4c6c-bb8a-0caebb516770
+# ╟─4c0f9641-f723-4880-9346-ba7899390d52
 # ╟─e68e3e51-2084-45bf-a8d0-42e4f22d0aea
+# ╟─64ed8383-a449-4278-9cd9-ad317ce13574
 # ╟─75d297f9-892e-44c4-80a4-1e1beb5d7d9c
 # ╠═191f0c0a-fb45-402e-9fdc-f3427c70bf25
 # ╠═af4d73c4-2f8e-4aaa-aa40-3be0ded47323
@@ -1051,11 +1256,8 @@ version = "17.4.0+0"
 # ╟─d0776be5-6a56-41c2-981c-e992ec8afdc5
 # ╠═71ebaf5b-5f20-4f73-b530-3ae1aea071f2
 # ╠═68e61322-1f14-4098-ab3b-6349aaab669a
-# ╟─fd1fb365-0079-4fb0-ba26-9cbf2d9ec676
-# ╠═5beef884-84c3-43ef-8928-1b647b3e1e0f
-# ╟─16d9fb85-95c5-4c46-8d9b-1403bb15c67c
-# ╟─fb385c98-cd94-4d5b-b5cb-c299fbb9b236
 # ╟─b0b1e888-98d9-405c-8b01-a3b4f8cae1dd
-# ╠═1fd7a9d3-1f63-407b-b44c-1bd198351039
+# ╟─1fd7a9d3-1f63-407b-b44c-1bd198351039
+# ╟─dabdee6d-0c64-4dc7-9c09-15d388a32387
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

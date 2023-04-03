@@ -17,11 +17,8 @@ end
 # ╔═╡ 37dc4b11-8849-41ad-9afe-5f792ea1fab8
 using PlutoUI
 
-# ╔═╡ bf6f8198-d120-4729-af67-ddb23f0c40d9
-using LinearAlgebra
-
 # ╔═╡ 8dc256a3-06be-4df9-aa88-1ef1e574055e
-using Test
+using Test, LinearAlgebra
 
 # ╔═╡ c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
 using BenchmarkTools
@@ -39,7 +36,7 @@ html"<button onclick='present();'>present</button>"
 md"## About assignments"
 
 # ╔═╡ a0fa8273-cf22-4cb4-ad4b-b83aee874556
-md"1. You should submit your homework through Github pull request. Xuanzhao Gao will comment on your PR, then you should resolve the issues to get your PR merged. You should submit different PRs for different assignments. [Open repo](https://github.com/GiggleLiu/ModernScientificComputing)
+md"1. You should submit your homework by opening a pull request to [our Github repo](https://github.com/GiggleLiu/ModernScientificComputing). Xuanzhao Gao will comment on your PR, then you should resolve the issues to get your PR merged. You should submit different PRs for different assignments.
 2. We will grade based on your merged PRs. You will not be failed if your submition is complete.
 4. You may check the answers of other students, but you must credit him in your PR description, e.g.
 ```
@@ -51,8 +48,9 @@ md"1. You should submit your homework through Github pull request. Xuanzhao Gao 
 
 # ╔═╡ 78b6f5be-0aec-4e40-8512-fb58c253a7e9
 md"# System of Linear Equations
+Let $A\in \mathbb{R}^{n\times n}$ be a invertible square matrix and $b \in \mathbb{R}^n$ be a vector. Solving a linear equation means finding a vector $x\in\mathbb{R}^n$ such that
 ```math
-{\text Solving: } ~~\mathbf{A} \mathbf{x} = \mathbf{b}
+A x = b
 ```
 "
 
@@ -75,12 +73,15 @@ md"## Schetch of solving the linear equation"
 
 # ╔═╡ 3a411c5f-264b-4f81-98ba-53eecdad3d28
 md"""
-```math
-\begin{align}
-&A = L U\\
-&x = A^{-1}b = U^{-1} L^{-1} b
-\end{align}
-```
+One can solve a linear equation by following these steps:
+
+1. Decompose the matrix $A \in \mathbb{R}^{n\times n}$ into $L \in \mathbb{R}^{n\times n}$ and $U \in \mathbb{R}^{n\times n}$ matrices using a method such as [Gaussian elimination](https://en.wikipedia.org/wiki/Gaussian_elimination) or [Crout's method](https://en.wikipedia.org/wiki/Crout_matrix_decomposition).
+
+2. Rewrite the equation $Ax = b$ as $LUx = b$.
+
+3. Solve for y in $Ly = b$ by [forward substitution](https://en.wikipedia.org/wiki/Triangular_matrix). This involves substituting the values of $y$ into the equation one at a time, starting with the first row and working downwards.
+
+4. Solve for $x$ in $Ux = y$ by [back substitution](https://en.wikipedia.org/wiki/Triangular_matrix). This involves substituting the values of $x$ into the equation one at a time, starting with the last row and working upwards.
 """
 
 # ╔═╡ 4015a2f9-a281-44ab-974c-7cd46041d105
@@ -93,23 +94,92 @@ Lx = b
 
 # ╔═╡ 53e51d33-9d03-4473-8ed8-aba1ef9ef105
 md"""
+where $L \in \mathbb{R}^{n\times n}$ is a lower triangular matrix defined as
 ```math
 L = \left(\begin{matrix}
-l_{11} & 0 & 0\\
-l_{21} & l_{22} & 0\\
-l_{31} & l_{32} & l_{33}\\
+l_{11} & 0 & \ldots & 0\\
+l_{21} & l_{22} & \ldots & 0\\
+\vdots & \vdots & \ddots & \vdots\\
+l_{n1} & l_{n2} & \ldots & l_{nn}
 \end{matrix}\right)
 ```
 """
 
 # ╔═╡ 02605f8e-b457-11ed-19c4-7d6d14b67507
-md"""## Algorithm 2.1: Forward-Substitution for Lower Triangular System"""
+md"""## Algorithm: Forward-Substitution for Lower Triangular System"""
+
+# ╔═╡ c86b3ac8-3ae2-40bb-8988-d9b9250d627d
+md"""
+Forward substitution is an algorithm used to solve a system of linear equations with a lower triangular matrix. It involves solving for the unknowns in a forward direction, starting from the first equation and moving towards the last. Here's an example of forward substitution algorithm in the matrix form:
+
+Consider the following system of lower triangular linear equations:
+```math
+L = \left(\begin{matrix}
+3 & 0 & 0\\
+2 & 5 & 0\\
+1 & 4 & 2
+\end{matrix}\right)
+\left(\begin{matrix}
+x_1\\
+x_2\\
+x_3
+\end{matrix}\right) = 
+\left(\begin{matrix}
+9\\
+12\\
+13
+\end{matrix}\right)
+```
+
+To solve for $x_1$, $x_2$, and $x_3$ using forward substitution, we start with the first equation:
+```math
+3x_1 + 0x_2 + 0x_3 = 9
+```
+Solving for $x_1$, we get:
+```math
+x_1 = 3
+```
+Substituting $x = 3$ into the second equation (row), we get:
+```math
+2(3) + 5x_2 + 0x_3 = 12
+```
+Solving for $x_2$, we get:
+```math
+x_2 = (12 - 6) / 5 = 1.2
+```
+Substituting $x = 3$ and $x_2 = 1.2$ into the third equation (row), we get:
+
+```math
+1(3) + 4(1.2) + 2x_3 = 13
+```
+Solving for $x_3$, we get:
+```math
+x_3 = (13 - 3 - 4(1.2)) / 2 = 1.5
+```
+Therefore, the solution to the system of equations is:
+```math
+x = \left(\begin{matrix}\
+3\\
+1.2\\
+1.5
+\end{matrix}\right)
+```
+"""
 
 # ╔═╡ fb583209-eb00-41ce-9fc6-906898327ecd
 md"""
+It can be summarized to the following algorithm
 ```math
 x_1 = b_1/l_{11},~~~ x_i = \left(b_i - \sum_{j=1}^{i-1}l_{ij}x_j\right)/l_{ii},~~ i=2, ..., n
 ```
+"""
+
+# ╔═╡ 35d1d353-c3bd-4e2d-90e0-e3031a2133c2
+md"### The implementation"
+
+# ╔═╡ 5c73b504-f8f2-429a-99a2-5f5d98f7e1e6
+md"""
+We implement the above algorithm in Julia language.
 """
 
 # ╔═╡ 742a79b6-6ced-467e-961b-814da8b65af7
@@ -133,57 +203,37 @@ function back_substitution!(l::AbstractMatrix, b::AbstractVector)
 	return x
 end
 
+# ╔═╡ e5e54678-4d3a-40ae-8b39-d5c50a0617b2
+md"""
+We can write a test for this algorithm.
+"""
+
 # ╔═╡ d3e1ef10-3f99-4561-87db-47c0fc47e9e9
-l = tril(randn(4, 4))
+@testset "back substitution" begin
+	# create a random lower triangular matrix
+	l = tril(randn(4, 4))
+	# target vector
+	b = randn(4)
+	# solve the linear equation with our algorithm
+	x = back_substitution!(l, copy(b))
+	@test l * x ≈ b
 
-# ╔═╡ 2381b052-7415-4d22-84f1-292bd7a5c87d
-b = randn(4)
-
-# ╔═╡ d24203f3-9b41-4bdb-8bb4-204bc5afe44f
-back_substitution!(l, copy(b))
-
-# ╔═╡ 5ffcc036-89fa-4bb9-8b9e-5d320d022c67
-md"The Julia's version"
-
-# ╔═╡ f7cffe31-15e4-4c5a-b7be-b49463120ec7
-LowerTriangular(l) \ b
+	# The Julia's standard library `LinearAlgebra` contains a native implementation.
+	x_native = LowerTriangular(l) \ b
+	@test l * x_native ≈ b
+end
 
 # ╔═╡ 7649913c-523f-4fa3-bf1e-ea1566b55114
-md"## LU Factorization"
-
-# ╔═╡ 4aee8572-c0df-4670-b383-a05fb24d8f57
-md"
-```math
-A = LU
-```
+md"## The LU decomposition with Gaussian elimination
+LU decomposition is a method for solving linear equations that involves breaking down a matrix into lower and upper triangular matrices. The $LU$ decomposition of a matrix $A$ is represented as $A = LU$, where $L$ is a lower triangular matrix and $U$ is an upper triangular matrix.
 "
-
-# ╔═╡ 90a658b2-fd6a-4260-a0b6-5b1ae62ed469
-md"## The Gaussian elimination process"
-
-# ╔═╡ 081d4926-e14c-46bb-8e21-fadea25b13a0
-md"""
-```math
-A = \left(\begin{matrix}
-a_{11} & a_{12} & a_{13} \\
-a_{21} & a_{22} & a_{23} \\
-a_{31} & a_{32} & a_{33}
-\end{matrix}\right)
-```
-"""
 
 # ╔═╡ 24fa07b8-6a9c-47d6-8f72-9346f1325ab4
 md"## The elementary elimination matrix"
 
-# ╔═╡ a890cdb6-34b6-4a3c-8749-e1543e9764ba
+# ╔═╡ 851510d9-7703-4545-8c00-ec94d8735a85
 md"""
-```math
-M_1 A = \left(\begin{matrix}
-a_{11} & a_{12} & \ldots \\
-0 & a_{22}' & \ldots \\
-\vdots & \vdots & \ddots
-\end{matrix}\right)
-```
+An elementary elimination matrix is a matrix that is used in the process of Gaussian elimination to transform a system of linear equations into an equivalent system that is easier to solve. It is a square matrix that is obtained by performing a single elementary row operation on the identity matrix.
 """
 
 # ╔═╡ af1f932e-a6db-41ce-ace3-170228bb183b
@@ -195,6 +245,7 @@ a_{11} & a_{12} & \ldots \\
 #\end{cases}
 #```
 md"""
+Let $A = (a_{ij})$ be a square matrix of size $n \times n$. The $k$th elementary elimination matrix for it is defined as
 ```math
 M_k = \left(\begin{matrix}
 
@@ -208,22 +259,45 @@ M_k = \left(\begin{matrix}
 
 \end{matrix}\right)
 ```
-where $m_i = a_i/a_k$.
+where $m_i = a_{ik}/a_{kk}$.
+"""
+
+# ╔═╡ a890cdb6-34b6-4a3c-8749-e1543e9764ba
+md"""
+By applying this elimentary elimination matrix $M_1$ on $A$, we can obtain a new matrix with the $a_{i1}' = 0$ for all $i>1$.
+```math
+M_1 A = \left(\begin{matrix}
+a_{11} & a_{12} & a_{13} & \ldots & a_{1n}\\
+0 & a_{22}' & a_{23}' & \ldots & a_{2n}'\\
+0 & a_{32}' & a_{33}' & \ldots & a_{3n}'\\
+\vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & a_{n2}' & a_{n3}' & \ldots & a_{nn}'\\
+\end{matrix}\right)
+```
 """
 
 # ╔═╡ 9640cc8d-f8c0-4d3b-b51a-3ad3865630bc
-md"Then
+md"For $k=1,2,\ldots,n$, apply $M_k$ on $A$. We will have an upper triangular matrix.
 ```math
-L = M_1^{-1} M_2^{-1} \ldots M_{n-1}^{-1}
+U = M_{n-1}\ldots M_1 A
+```
+
+Since $M_k$ is reversible (as we will show below), we have
+```math
+\begin{align}
+&A = LU\\
+&L = M_1^{-1} M_2^{-1} \ldots M_{n-1}^{-1},
+\end{align}
 ```
 "
 
 # ╔═╡ 83e0cdc0-70d3-48d2-bf1c-8ed364652aed
-md"## Properties of elimination matrices
+md"## Properties of elementary elimination matrices
+1. Its inverse can be computed in $O(n)$ time
 ```math
 M_k^{-1} = 2I - M_k
 ```
-
+2. The multiplication of two elementary matrices can be computed in $O(n)$ time
 ```math
 M_k M_{k' > k} = M_k + M_{k'} - I
 ```
@@ -272,7 +346,12 @@ elementary_elimination_matrix(A3, 2)
 inv(elementary_elimination_matrix(A3, 1)) * inv(elementary_elimination_matrix(A3, 2))
 
 # ╔═╡ 87de48b5-4d4e-4b8a-9f2c-4b6dc328a502
-md"## Algorithm 2.3: LU Factorization by Gaussian Elimination"
+md"## LU Factorization by Gaussian Elimination"
+
+# ╔═╡ b27b9f35-bac1-4d4c-9543-3733ed21e039
+md"""
+A naive implementation of elimentary elimination matrix is as follows
+"""
 
 # ╔═╡ a4b32a01-2d7f-4933-a3cb-2ab2d0c6cb2e
 function lufact_naive!(A::AbstractMatrix{T}) where T
@@ -291,14 +370,14 @@ end
 lufact_naive!(copy(A3))
 
 # ╔═╡ 405450f7-807d-45a8-94ac-54ef9972b234
-let
+@testset "naive LU factorization" begin
 	A = [1 2 2; 4 4 2; 4 6 4]
 	L, U = lufact_naive!(copy(A))
 	@test L * U ≈ A
 end
 
 # ╔═╡ 1df2f386-2b55-4fb0-a035-64cf454e2698
-md"Better implementation"
+md"The above implementation has time complexity $O(n^4)$ since we did not use the sparsity of elimentary elimination matrix. A better implementation that gives $O(n^3)$ time complexity is as follows."
 
 # ╔═╡ fadba4ba-efca-48f7-bf31-959f458f64d5
 function lufact!(a::AbstractMatrix)
@@ -330,7 +409,7 @@ end
 lufact(a::AbstractMatrix) = lufact!(copy(a))
 
 # ╔═╡ 480b6065-f9ca-4770-baa4-f1451fc046b8
-@testset "LU" begin
+@testset "LU factorization" begin
 	a = randn(4, 4)
 	L, U = lufact(a)
 	@test istril(L)
@@ -345,7 +424,7 @@ A4 = randn(4, 4)
 lufact(A4)
 
 # ╔═╡ 5e426a5f-65cf-4adf-8b2b-ea28534e529a
-md"The Julia's version"
+md"Julia language has a much better implementation in the standard library `LinearAlgebra`."
 
 # ╔═╡ 9d30b63e-f437-420b-8c22-037d34e1be2f
 julia_lures = lu(A4, NoPivot())  # the version we implemented above has no pivot
@@ -359,15 +438,13 @@ typeof(julia_lures)
 # ╔═╡ c86a4d3c-adf3-429a-a4b4-8a0aaec83b43
 fieldnames(julia_lures |> typeof)
 
-# ╔═╡ d75af574-ee8e-4e8f-839f-9ebbb288397a
-md"## Complexity Analysis
-```math
-O(n^3)
-```
-"
-
 # ╔═╡ 2fda47ad-08f2-45c5-8f47-0eec1aa49aac
 md"## Issue: how to handle small diagonal entries?"
+
+# ╔═╡ 0d8dc065-4487-41bd-a80d-45f1fc1bf550
+md"""
+The above Gaussian elimination process is not stable if any diagonal entry in $A$ has a value that close to zero.
+"""
 
 # ╔═╡ 77396c1b-f23d-41da-b9e2-d6980a090217
 @bind ϵ Slider(-20:0.01:0.0; default=-2, show_value=true)
@@ -379,10 +456,14 @@ small_diagonal_matrix = [10^(ϵ) 1; 1 1]
 lures = lufact(small_diagonal_matrix)
 
 # ╔═╡ 7a7e8ac0-2af9-42ec-ab17-54d4f86baf70
-md"A better approach"
+md"This issue is not always related to the rank deficiency (or ill-condition). A remedy to this issue is to permute the rows of $A$ before factorizing it.
+For example:"
 
 # ╔═╡ a4c024e4-83a7-4356-9b8e-168ce9ee1cbf
 lufact(small_diagonal_matrix[end:-1:1, :])
+
+# ╔═╡ 99381db6-0735-4bfe-9d20-1e16e08f13c3
+md"This technique is called pivoting."
 
 # ╔═╡ 54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
 md"""
@@ -391,34 +472,35 @@ md"""
 
 # ╔═╡ 178c4193-a45d-460f-a22e-b15f6604b5dd
 md"""
+LU factoriazation (or Gaussian elimination) with pivoting is defined as
 ```math
 P A = L U
 ```
+where $P$ is a permutation matrix.
 """
 
-# ╔═╡ c8399254-ab8f-45ec-8b4e-10860274e8e0
-[10^(ϵ) 1; 1 1][end:-1:1, :]
+# ╔═╡ 5a034215-a5da-4fea-8dc3-004310f5e7be
+md"Pivoting in Gaussian elimination is the process of selecting a pivot element in a matrix and then using it to eliminate other elements in the same column or row. The pivot element is chosen as the largest absolute value in the column, and its row is swapped with the row containing the current element being eliminated if necessary. This is done to avoid division by zero or numerical instability, and to ensure that the elimination process proceeds smoothly. Pivoting is an important step in Gaussian elimination, as it ensures that the resulting matrix is in reduced row echelon form and that the solution to the system of equations is accurate."
 
 # ╔═╡ 9bd48ccc-549a-4057-aa91-16ad79536583
 md"""
 ## Gaussian Elimination process with Partial Pivoting
+Let $A=(a_{ij})$ be a square matrix of size $n\times n$. The Gaussian elimination process with partial pivoting can be represented as
 ```math
-A = \left(\begin{matrix}
-a_{11} & a_{12} & a_{13} \\
-a_{21} & a_{22} & a_{23} \\
-a_{31} & a_{32} & a_{33}
-\end{matrix}\right)
-```
-```math
-\ldots M_2P_2M_1P_1 A = U
+M_{n-1}P_{n-1}\ldots M_2P_2M_1P_1 A = U
 ```
 """
 
 # ╔═╡ 95c78df3-2283-4230-8d8d-9996e4d6fe36
-md"NOTE: $P_{k+1}$ and $M_k$ commute"
+md"Here we emphsis that $P_{k}$ and $M_{j<k}$ commute."
 
 # ╔═╡ e9ba7dc4-1494-4601-8eb7-72127e92815d
-md"## Algorithm 2.4 LU Factoriazation by Gaussian Elimination with Partial Pivoting"
+md"## LU Factoriazation by Gaussian Elimination with Partial Pivoting"
+
+# ╔═╡ 5a8e40b0-1cd7-4a71-94da-64cfd9ab9755
+md"""
+A Julia implementation of the Gaussian elimination with partial pivoting is
+"""
 
 # ╔═╡ 9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
 function lufact_pivot!(a::AbstractMatrix)
@@ -465,7 +547,7 @@ function lufact_pivot!(a::AbstractMatrix)
 end
 
 # ╔═╡ 13493579-9189-4c9a-9361-430868427b59
-let
+@testset "lufact with pivot" begin
 	n = 5
 	A = randn(n, n)
 	L, U, P = lufact_pivot!(copy(A))
@@ -475,6 +557,11 @@ let
 	@test U ≈ lu(A).U
 	@test pmat * A ≈ L * U
 end
+
+# ╔═╡ f3a506b5-669f-4e8f-9424-e04532b9a87a
+md"""
+If you are interested in knowing the performance of our implementation, please check the following check box.
+"""
 
 # ╔═╡ d1b7f00e-2b7e-4c15-8231-a816c59472f9
 @bind benchmark_lu CheckBox()
@@ -496,6 +583,7 @@ end end
 # ╔═╡ ed52cf76-ed66-44af-b98b-b58551bd217f
 md"""
 ## Complete pivoting
+The complete pivoting also allows permuting columns. It produces better numerical stability but is also harder to implement. In most practical using cases, partial pivoting is good enough.
 ```math
 P A Q = L U
 ```
@@ -504,8 +592,18 @@ P A Q = L U
 # ╔═╡ e113247a-b2a5-4acc-8714-342ecb191ac4
 md"# Sensitivity Analysis"
 
+# ╔═╡ 9231de22-d474-4548-b984-fcc3dda27113
+md"""
+Sensitivity analysis in linear algebra is the study of how changes in the input data or parameters of a linear system affect the output or solution of the system. It involves analyzing the sensitivity of the solution to changes in the coefficients of the system, the right-hand side vector, or the constraints of the problem. Sensitivity analysis can be used to determine the effect of small changes in the input data on the optimal solution, to identify critical parameters that affect the solution, and to assess the robustness of the solution to uncertainties or variations in the input data.
+"""
+
 # ╔═╡ 25f870c1-e70a-48b1-a0ce-4c2b9a523d60
 md"## Issue: An Ill Conditioned Matrix"
+
+# ╔═╡ 0c5a1e3f-7383-4705-b63e-e64f4a513f85
+md"""
+An ill conditioned matrix may produce unreliable result, or the output is very sensitive to the input. The following is an example of a matrix close to singular.
+"""
 
 # ╔═╡ b333fc58-0981-4d0f-ba49-0ee15cc78aad
 md"""
@@ -530,38 +628,22 @@ lures2
 # ╔═╡ 713267d1-08f0-4c41-9523-46128ce40430
 cond(ill_conditioned_matrix)
 
-# ╔═╡ 7bb9fda5-7951-40e7-a98b-bbbec4be8229
-md"## Forward Error and Backward Error"
-
-# ╔═╡ dab03daa-99fa-4b1a-9415-395cd4686222
-md"""
-Forward error:
-```math
-{\rm dist}(f(x), \hat f (x))
-```
-
-Backward error
-```math
-{\rm dist}(x, f^{-1}(\hat f(x)))
-```
-
-"""
-
 # ╔═╡ 51433b0f-8fce-4241-bb84-bcea9a687abe
-md"## Absolute Error and Relative Error"
+md"## The relative error"
 
 # ╔═╡ 26207f81-1f6e-4708-8c04-422a1133c5ac
 md"""
-Absolute error: $\|x - \hat x\|$
+The relevant error in floating number system is the relative error.
 
-Relative error: $\frac{\|x - \hat x\|}{\|x\|}$
+* Absolute error: $\|x - \hat x\|$
+* Relative error: $\frac{\|x - \hat x\|}{\|x\|}$
 
 
 where $\|\cdot\|$ is a measure of size.
 """
 
 # ╔═╡ 025101f0-a1c4-47da-bff0-c0ae0cd0da6e
-md"## Coding: Floating point numbers have \"constant\" relative error"
+md"## Numeric experiment: Floating point numbers have \"constant\" relative error"
 
 # ╔═╡ 424638de-6651-4fe2-bc44-82f9675dc43d
 eps(Float64)
@@ -589,15 +671,22 @@ eps(sqrt(2))/sqrt(2)
 # ╔═╡ d1c29e2e-e67d-41d3-bbff-9f384cf0c84d
 md"## (Relative) Condition Number"
 
+# ╔═╡ 2f789e07-69a9-4786-8d82-e363afa4323f
+md"
+Condition number is a measure of the sensitivity of a mathematical problem to changes or errors in the input data. It is a way to quantify how much the output of a function or algorithm can vary due to small changes in the input. A high condition number indicates that the problem is ill-conditioned, meaning that small errors in the input can lead to large errors in the output. A low condition number indicates that the problem is well-conditioned, meaning that small errors in the input have little effect on the output.
+
+In short, the (relative) condition number of an operation $f$ with input $x$ measures the relative error amplication power of $f$ with input $x$, which is formally defined as
+"
+
 # ╔═╡ df17edcb-8b98-4c2e-a628-1a1381b7cf3e
 md"""
 ```math
-\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|\delta f(x)\|/\|f(x)\|}{\|\delta x\|/\|x\|}}
+\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|\delta f(x)\|/\|f(x)\|}{\|\delta x\|/\|x\|}}.
 ```
 """
 
 # ╔═╡ 46176c75-f23e-4aef-a54b-58aa43941855
-md"## Quantify Error of a Scalar Operator"
+md"Quiz 1: What is the condition number of"
 
 # ╔═╡ fe41dd53-f69f-4382-bde1-af86a3a92aef
 md"""
@@ -607,7 +696,7 @@ y = \exp(x)
 """
 
 # ╔═╡ 8651c71c-eb8b-467b-9c9c-f2a173e5b91d
-md"## Why we should avoid using floating point numbers being too big/small?"
+md"Quiz 2: What is the condition number of"
 
 # ╔═╡ d9d88d11-0dd0-4e80-b476-e9b008dfb84c
 md"""
@@ -616,8 +705,16 @@ a + b
 ```
 """
 
+# ╔═╡ 88ad6fff-04d8-477d-a664-c1a6522964cc
+md"""
+With the obtained result, show why we should avoid subtracting two big floating point numbers?
+"""
+
 # ╔═╡ bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
-md"## Measuring the size of a vector: Norms"
+md"## Measuring the size vectors and matrices"
+
+# ╔═╡ e1026249-5d13-418b-a908-b6dc77175434
+md"The vector $p$-norm is formally defined as"
 
 # ╔═╡ f256bf0d-e2bb-49f4-882f-12508e68ff07
 md"""
@@ -627,14 +724,14 @@ md"""
 """
 
 # ╔═╡ f2da27a2-af5f-4f2a-a6d5-fb98b8dcd261
-md"""## Measure the size of a matrix
+md"""Similarly, the matrix $p$-norm is formally defined as
 ```math
-\|A\| = \max_{x\neq 0} \frac{\|Ax\|}{\|x\|}
+\|A\|_p = \max_{x\neq 0} \frac{\|Ax\|_p}{\|x\|_p}
 ```
 """
 
 # ╔═╡ 49d62ec4-bce0-4620-93cc-278f149f848f
-md"## Coding: Vector and Matrix Norms"
+md"## Examples: Vector and Matrix Norms"
 
 # ╔═╡ 33a6261a-2b21-4b37-bcd8-b5c0db6b509f
 norm([3, 4], 2)
@@ -673,6 +770,11 @@ cond(mat)
 # ╔═╡ 5653168f-80b5-4435-a711-d8a1d8f9c429
 md"## Condition Number of a Linear Operator"
 
+# ╔═╡ c165a6b1-78da-40b5-b925-a657193ade6a
+md"""
+The condition number of a linear system $Ax = b$ is defined as
+"""
+
 # ╔═╡ a1a55972-4baa-4a29-8c3f-ac7e13036136
 md"""
 ```math
@@ -680,8 +782,35 @@ md"""
 ```
 """
 
+# ╔═╡ 0b1c4d61-b748-4e9d-9a29-9ee50fa90e79
+md"""
+Using the defintion of condition number, we have
+```math
+\begin{align}
+{\rm cond(A, x)}&=\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|\delta (Ax)\|/\|A x\|}{\|\delta x\|/\|x\|}}\\
+&=\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|A\delta x\|\|x\|}{\|\delta x\|\|Ax\|}}
+\end{align}
+```
+Let $y = Ax$, we have
+```math
+\begin{align}
+{\rm cond(A, x)}&=\lim _{\varepsilon \rightarrow 0^{+}}\,\sup _{\|\delta x\|\,\leq \,\varepsilon }{\frac {\|A\delta x\|\|A^{-1}y\|}{\|\delta x\|\|y\|}}\\
+&=\|A\|\frac{\|A^{-1}y\|}{\|y\|}
+\end{align}
+```
+Suppose we want to get an upper bound for any input $x$, then using the definiton of matrix norm, we have
+```math
+{\rm cond}(A) = \|A\|\sup_y \frac{\|A^{-1}y\|}{\|y\|} = \|A\| \|A^{-1}\|
+```
+"""
+
 # ╔═╡ 8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
-md"""## Coding: Numeric experiment on condition number"""
+md"""## Numeric experiment: Numeric experiment on condition number"""
+
+# ╔═╡ 180b4de9-9b37-47c2-905a-0156210be5cc
+md"""
+We randomly generate matrices of size $10\times 10$ and show the condition number approximately upper bounds the numeric error amplification factor of a linear equation solver.
+"""
 
 # ╔═╡ b71889e3-85d0-4873-a94a-63a9c4c0c009
 let
@@ -697,46 +826,10 @@ let
 		errors[k] = (norm(sx - dx, p)/norm(dx, p)) / (norm(b-Float32.(b), p)/norm(b, p))
 		conds[k] = cond(A, p)
 	end
-	plt = plot(conds, conds; label="upper bound", xlim=(1, 10000), ylim=(1, 10000), xscale=:log10, yscale=:log10)
+	plt = plot(conds, conds; label="condition number", xlim=(1, 10000), ylim=(1, 10000), xscale=:log10, yscale=:log10)
 	scatter!(plt, conds, errors; label="samples")
 end
 
-
-# ╔═╡ d5c75146-50a2-4cd3-a2f8-4d743f54c448
-md"# Computing Matrix Inverse"
-
-# ╔═╡ c50dbe8c-6c09-47aa-a798-0673875e1e42
-md"""
-## Gauss Jordan Elimination Matrix
-```math
-N_k = \left(\begin{matrix}
-
-1 & \ldots & 0 & -m_1 & 0 & \ldots & 0\\
-\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
-0 & \ldots & 1 & -m_{k-1} & 0 & \ldots & 0\\
-0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
-0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
-\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
-0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
-
-\end{matrix}\right)
-```
-where $m_i = a_i/a_k$.
-"""
-
-# ╔═╡ ca87e541-b520-4231-b949-4675456f6c0b
-md"""## Computing the inverse
-```math
-SN_{n}N_{n-1}\ldots N_1 A = I
-```
-Then
-```math
-A^{-1} = SN_{n}N_{n-1}\ldots N_1
-```
-"""
-
-# ╔═╡ c98ed46e-31da-49fc-9ed4-776aaff7d6d1
-md"# Special Matrices"
 
 # ╔═╡ 927272dc-d60c-4263-8139-7f43887df52c
 md"## Positive definite symmetric matrix"
@@ -749,14 +842,18 @@ md"""
 
 # ╔═╡ 8dced7f2-8eab-41d8-95f7-5c23e0035466
 md"## Cholesky decomposition
+
+Cholesky decomposition is a method of decomposing a positive-definite matrix into a product of a lower triangular matrix and its transpose. It is named after the mathematician André-Louis Cholesky, who developed the method in the early 1900s. The Cholesky decomposition is useful in many areas of mathematics and science, including linear algebra, numerical analysis, and statistics. It is often used in solving systems of linear equations, computing the inverse of a matrix, and generating random numbers with a given covariance matrix. The Cholesky decomposition is computationally efficient and numerically stable, making it a popular choice in many applications.
+
+Given a positive definite symmetric matrix $A\in \mathbb{R}^{n\times n}$, the Cholesky decomposition is formally defined as
 ```math
-A = LL^T
+A = LL^T,
 ```
+where $L$ is an upper triangular matrix.
 "
 
-# ╔═╡ bcdefd39-5ac3-4a0f-b6a8-1dac8c03de9a
-md"## Algorithm 2.7 Cholesky Factorization
-"
+# ╔═╡ d0bf8157-9139-418f-9bd8-2791e52aed8e
+md"The implementation of Cholesky decomposition is similar to LU decomposition."
 
 # ╔═╡ 79a5bc5d-a2bf-485a-95ee-07d3b8546e75
 function chol!(a::AbstractMatrix)
@@ -777,34 +874,14 @@ function chol!(a::AbstractMatrix)
 end
 
 # ╔═╡ 7945c565-d226-437c-83ad-5b1e3149c076
-let
+@testset "cholesky" begin
 	n = 10
 	Q, R = qr(randn(10, 10))
 	a = Q * Diagonal(rand(10)) * Q'
 	L = chol!(copy(a))
-	tril(L) * tril(L)' - a
+	@test tril(L) * tril(L)' ≈ a
 	# cholesky(a) in Julia
 end
-
-# ╔═╡ a628b607-a301-4abd-ad3f-99c784223a56
-md"## Banded matrices"
-
-# ╔═╡ 406c0ed5-a739-4771-8c5e-6c8b3c76dd89
-md"## Sparse matrices and linear operators
-Accessing every element is not allowed, but matrix-vector multiplication is defined.
-"
-
-# ╔═╡ dbbd7062-6971-4620-840e-ee4346405b11
-md"You need iterative solvers like `GMRES` (Package: [IterativeSolvers](https://github.com/JuliaLinearAlgebra/IterativeSolvers.jl))."
-
-# ╔═╡ 7e91942d-f526-4310-9e96-bc5533b564b7
-md"## Rank 1 update: Sherman-Morrison formula
-```math
-(A - u v^T)^{-1} = A^{-1} + A^{-1}u(1-v^TA^{-1}u)^{-1}v^T A^{-1}
-```
-
-which requires only $O(n^2)$ extra work.
-"
 
 # ╔═╡ 011e1b39-a73d-4eaf-8847-ae5fa5ffd2f0
 md"""# Assignments
@@ -836,6 +913,41 @@ end
 ```
 """
 
+# ╔═╡ ca87e541-b520-4231-b949-4675456f6c0b
+md"""Simular to computing Guassian elimination with elementary elimination matrices, computing the inverse can be done by repreatedly applying the Guass-Jordan elimination matrix and convert the target matrix to identity.
+```math
+SN_{n}N_{n-1}\ldots N_1 A = I
+```
+Then
+```math
+A^{-1} = SN_{n}N_{n-1}\ldots N_1
+```
+"""
+
+# ╔═╡ c50dbe8c-6c09-47aa-a798-0673875e1e42
+md"""
+Here, the Gauss-Jordan elimination matrix $N_k$ eliminates the $k$th column except the diagonal element $a_{kk}$.
+```math
+N_k = \left(\begin{matrix}
+
+1 & \ldots & 0 & -m_1 & 0 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 1 & -m_{k-1} & 0 & \ldots & 0\\
+0 & \ldots & 0 & 1 & 0 & \ldots & 0\\
+0 & \ldots & 0 & -m_{k+1} & 1 & \ldots & 0\\
+\vdots & \ddots & \vdots & \vdots & \vdots & \ddots & \vdots\\
+0 & \ldots & 0 & -m_{n} & 0 & \ldots & 1\\
+
+\end{matrix}\right)
+```
+where $m_i = a_i/a_k$.
+"""
+
+# ╔═╡ b429c34b-122e-4d3d-b8bd-96dab8b18368
+md"""
+ $S$ is a diagonal matrix.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -857,7 +969,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "2fa32da7d4dd328c33d253ffedd635bb8436b01a"
+project_hash = "858d441359aea71f7f7b3a457de6e8128433ac4c"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -942,9 +1054,9 @@ version = "0.12.10"
 
 [[deps.Compat]]
 deps = ["Dates", "LinearAlgebra", "UUIDs"]
-git-tree-sha1 = "61fdd77467a5c3ad071ef8277ac6bd6af7dd4c04"
+git-tree-sha1 = "7a60c856b9fa189eb34f5f8a6f6b5529b7942957"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.6.0"
+version = "4.6.1"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1124,9 +1236,9 @@ uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
 version = "0.1.8"
 
 [[deps.IrrationalConstants]]
-git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
+git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
-version = "0.1.1"
+version = "0.2.2"
 
 [[deps.JLFzf]]
 deps = ["Pipe", "REPL", "Random", "fzf_jll"]
@@ -1376,9 +1488,9 @@ version = "10.40.0+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "6f4fbcd1ad45905a5dee3f4256fabb49aa2110c6"
+git-tree-sha1 = "478ac6c952fddd4399e71d4779797c538d0ff2bf"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.7"
+version = "2.5.8"
 
 [[deps.Pipe]]
 git-tree-sha1 = "6842804e7867b115ca9de748a0cf6b364523c16d"
@@ -1410,9 +1522,9 @@ version = "1.3.4"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SnoopPrecompile", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "8ac949bd0ebc46a44afb1fdca1094554a84b086e"
+git-tree-sha1 = "cfcd24ebf8b066b4f8e42bade600c8558212ed83"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.38.5"
+version = "1.38.7"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -1483,9 +1595,9 @@ version = "0.7.0"
 
 [[deps.Scratch]]
 deps = ["Dates"]
-git-tree-sha1 = "f94f779c94e58bf9ea243e77a37e16d9de9126bd"
+git-tree-sha1 = "30449ee12237627992a99d5e30ae63e4d78cd24a"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
-version = "1.1.1"
+version = "1.2.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1522,9 +1634,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "d75bda01f8c31ebb72df80a46c88b25d1c79c56d"
+git-tree-sha1 = "ef28127915f4229c971eb43f3fc075dd3fe91880"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.1.7"
+version = "2.2.0"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1842,21 +1954,19 @@ version = "1.4.1+0"
 # ╟─4015a2f9-a281-44ab-974c-7cd46041d105
 # ╟─53e51d33-9d03-4473-8ed8-aba1ef9ef105
 # ╟─02605f8e-b457-11ed-19c4-7d6d14b67507
+# ╟─c86b3ac8-3ae2-40bb-8988-d9b9250d627d
 # ╟─fb583209-eb00-41ce-9fc6-906898327ecd
+# ╟─35d1d353-c3bd-4e2d-90e0-e3031a2133c2
+# ╟─5c73b504-f8f2-429a-99a2-5f5d98f7e1e6
 # ╠═742a79b6-6ced-467e-961b-814da8b65af7
+# ╟─e5e54678-4d3a-40ae-8b39-d5c50a0617b2
+# ╠═8dc256a3-06be-4df9-aa88-1ef1e574055e
 # ╠═d3e1ef10-3f99-4561-87db-47c0fc47e9e9
-# ╠═2381b052-7415-4d22-84f1-292bd7a5c87d
-# ╠═d24203f3-9b41-4bdb-8bb4-204bc5afe44f
-# ╟─5ffcc036-89fa-4bb9-8b9e-5d320d022c67
-# ╠═bf6f8198-d120-4729-af67-ddb23f0c40d9
-# ╠═f7cffe31-15e4-4c5a-b7be-b49463120ec7
 # ╟─7649913c-523f-4fa3-bf1e-ea1566b55114
-# ╟─4aee8572-c0df-4670-b383-a05fb24d8f57
-# ╟─90a658b2-fd6a-4260-a0b6-5b1ae62ed469
-# ╟─081d4926-e14c-46bb-8e21-fadea25b13a0
 # ╟─24fa07b8-6a9c-47d6-8f72-9346f1325ab4
-# ╟─a890cdb6-34b6-4a3c-8749-e1543e9764ba
+# ╟─851510d9-7703-4545-8c00-ec94d8735a85
 # ╟─af1f932e-a6db-41ce-ace3-170228bb183b
+# ╟─a890cdb6-34b6-4a3c-8749-e1543e9764ba
 # ╟─9640cc8d-f8c0-4d3b-b51a-3ad3865630bc
 # ╟─83e0cdc0-70d3-48d2-bf1c-8ed364652aed
 # ╟─2b3596d7-17a3-46bb-b687-302c1255a4af
@@ -1871,9 +1981,9 @@ version = "1.4.1+0"
 # ╠═32ce956f-a90f-44fb-8473-438dd2a6ba78
 # ╠═2a8da2fe-f21e-44ac-9253-583c06dd5134
 # ╟─87de48b5-4d4e-4b8a-9f2c-4b6dc328a502
+# ╟─b27b9f35-bac1-4d4c-9543-3733ed21e039
 # ╠═a4b32a01-2d7f-4933-a3cb-2ab2d0c6cb2e
 # ╠═4d8276dc-9356-47f8-afa6-5329dde63468
-# ╠═8dc256a3-06be-4df9-aa88-1ef1e574055e
 # ╠═405450f7-807d-45a8-94ac-54ef9972b234
 # ╟─1df2f386-2b55-4fb0-a035-64cf454e2698
 # ╠═fadba4ba-efca-48f7-bf31-959f458f64d5
@@ -1886,35 +1996,38 @@ version = "1.4.1+0"
 # ╠═4a18900a-9051-4451-9736-724b19c3bd5d
 # ╠═aacd052d-b6e7-4f40-b08a-872aa9420c46
 # ╠═c86a4d3c-adf3-429a-a4b4-8a0aaec83b43
-# ╟─d75af574-ee8e-4e8f-839f-9ebbb288397a
 # ╟─2fda47ad-08f2-45c5-8f47-0eec1aa49aac
+# ╟─0d8dc065-4487-41bd-a80d-45f1fc1bf550
 # ╠═77396c1b-f23d-41da-b9e2-d6980a090217
 # ╠═97e373df-32cc-491e-8066-e3a33b9b2764
 # ╠═1201b122-b071-4f13-83e0-6bec0de08e2b
 # ╟─7a7e8ac0-2af9-42ec-ab17-54d4f86baf70
 # ╠═a4c024e4-83a7-4356-9b8e-168ce9ee1cbf
+# ╟─99381db6-0735-4bfe-9d20-1e16e08f13c3
 # ╟─54db9443-a0f9-48f1-97bb-bcab2ae3cfd5
 # ╟─178c4193-a45d-460f-a22e-b15f6604b5dd
-# ╠═c8399254-ab8f-45ec-8b4e-10860274e8e0
+# ╟─5a034215-a5da-4fea-8dc3-004310f5e7be
 # ╟─9bd48ccc-549a-4057-aa91-16ad79536583
 # ╟─95c78df3-2283-4230-8d8d-9996e4d6fe36
 # ╟─e9ba7dc4-1494-4601-8eb7-72127e92815d
+# ╟─5a8e40b0-1cd7-4a71-94da-64cfd9ab9755
 # ╠═9b4fa87d-c40c-4677-82f2-2fff3b87f4c6
 # ╠═13493579-9189-4c9a-9361-430868427b59
 # ╠═c5aaa7ec-9af4-45eb-86f1-e87cef9c8384
+# ╟─f3a506b5-669f-4e8f-9424-e04532b9a87a
 # ╠═d1b7f00e-2b7e-4c15-8231-a816c59472f9
 # ╠═3bcf8d78-3678-4749-99ac-0a7e43830d2d
 # ╠═e206e554-64cd-422d-963d-8284eb9625fe
 # ╟─ed52cf76-ed66-44af-b98b-b58551bd217f
 # ╟─e113247a-b2a5-4acc-8714-342ecb191ac4
+# ╟─9231de22-d474-4548-b984-fcc3dda27113
 # ╟─25f870c1-e70a-48b1-a0ce-4c2b9a523d60
+# ╟─0c5a1e3f-7383-4705-b63e-e64f4a513f85
 # ╟─b333fc58-0981-4d0f-ba49-0ee15cc78aad
 # ╠═0beab22f-5411-403c-a116-cf552083382e
 # ╠═63cddfd1-bdef-4601-ab57-48314952fb73
 # ╠═c5b109da-ab9c-4a44-ab2d-168b9711c2cc
 # ╠═713267d1-08f0-4c41-9523-46128ce40430
-# ╟─7bb9fda5-7951-40e7-a98b-bbbec4be8229
-# ╟─dab03daa-99fa-4b1a-9415-395cd4686222
 # ╟─51433b0f-8fce-4241-bb84-bcea9a687abe
 # ╟─26207f81-1f6e-4708-8c04-422a1133c5ac
 # ╟─025101f0-a1c4-47da-bff0-c0ae0cd0da6e
@@ -1924,12 +2037,15 @@ version = "1.4.1+0"
 # ╠═8e055682-baef-4c78-b044-d22d51676844
 # ╠═ee1aba8e-5992-4ff1-9ae1-09d35a2abf00
 # ╟─d1c29e2e-e67d-41d3-bbff-9f384cf0c84d
+# ╟─2f789e07-69a9-4786-8d82-e363afa4323f
 # ╟─df17edcb-8b98-4c2e-a628-1a1381b7cf3e
 # ╟─46176c75-f23e-4aef-a54b-58aa43941855
 # ╟─fe41dd53-f69f-4382-bde1-af86a3a92aef
 # ╟─8651c71c-eb8b-467b-9c9c-f2a173e5b91d
 # ╟─d9d88d11-0dd0-4e80-b476-e9b008dfb84c
+# ╟─88ad6fff-04d8-477d-a664-c1a6522964cc
 # ╟─bb5e9e72-8cc7-4c0c-96c2-9c1ca9d1b38c
+# ╟─e1026249-5d13-418b-a908-b6dc77175434
 # ╟─f256bf0d-e2bb-49f4-882f-12508e68ff07
 # ╟─f2da27a2-af5f-4f2a-a6d5-fb98b8dcd261
 # ╟─49d62ec4-bce0-4620-93cc-278f149f848f
@@ -1945,24 +2061,22 @@ version = "1.4.1+0"
 # ╠═71e6ed15-bb0f-4510-901c-c9f53b3e701c
 # ╠═898a511d-7c18-4eb0-b68b-3c1dd8208cfe
 # ╟─5653168f-80b5-4435-a711-d8a1d8f9c429
+# ╟─c165a6b1-78da-40b5-b925-a657193ade6a
 # ╟─a1a55972-4baa-4a29-8c3f-ac7e13036136
+# ╟─0b1c4d61-b748-4e9d-9a29-9ee50fa90e79
 # ╟─8ee2c9f5-3dbf-4ab0-a638-5a8c2d5d1367
+# ╟─180b4de9-9b37-47c2-905a-0156210be5cc
 # ╠═d959c85c-0895-475c-b9f8-57368fc5e744
 # ╠═b71889e3-85d0-4873-a94a-63a9c4c0c009
-# ╟─d5c75146-50a2-4cd3-a2f8-4d743f54c448
-# ╟─c50dbe8c-6c09-47aa-a798-0673875e1e42
-# ╟─ca87e541-b520-4231-b949-4675456f6c0b
-# ╟─c98ed46e-31da-49fc-9ed4-776aaff7d6d1
 # ╟─927272dc-d60c-4263-8139-7f43887df52c
 # ╟─eac7780a-5e0b-4518-907f-9ff75dfb4b2f
 # ╟─8dced7f2-8eab-41d8-95f7-5c23e0035466
-# ╟─bcdefd39-5ac3-4a0f-b6a8-1dac8c03de9a
+# ╟─d0bf8157-9139-418f-9bd8-2791e52aed8e
 # ╠═79a5bc5d-a2bf-485a-95ee-07d3b8546e75
 # ╠═7945c565-d226-437c-83ad-5b1e3149c076
-# ╟─a628b607-a301-4abd-ad3f-99c784223a56
-# ╟─406c0ed5-a739-4771-8c5e-6c8b3c76dd89
-# ╟─dbbd7062-6971-4620-840e-ee4346405b11
-# ╟─7e91942d-f526-4310-9e96-bc5533b564b7
 # ╟─011e1b39-a73d-4eaf-8847-ae5fa5ffd2f0
+# ╟─ca87e541-b520-4231-b949-4675456f6c0b
+# ╟─c50dbe8c-6c09-47aa-a798-0673875e1e42
+# ╟─b429c34b-122e-4d3d-b8bd-96dab8b18368
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
