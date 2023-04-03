@@ -9,12 +9,6 @@ begin
     using Graphs,Plots, GraphRecipes, Optim, Optimisers, Random, ForwardDiff, Combinatorics
 end
 
-# ╔═╡ b2516842-0cfc-4e80-8be9-4d6387774516
-begin
-    # let's use the UnitDiskMapping to check my result
-    using UnitDiskMapping
-end
-
 # ╔═╡ c82fd2da-71cb-47ec-a487-af8100bdb705
 md"
 # ChaptGPT's definition of Unit Disk
@@ -29,15 +23,18 @@ graph represent wireless devices or sensors and the edges represent
 communication or sensing ranges.
 "
 
-# ╔═╡ 3bee9c9a-3802-4180-b5d8-240bef0f1237
-begin
-E = [(1, 2), (1, 3),
+# ╔═╡ 5e0f25a5-096a-4702-86d2-a472e901d743
+#this is used everywhere, DRY
+global E = [(1, 2), (1, 3),
 	(2, 3), (2, 4), (2, 5), (2, 6),
 	(3, 5), (3, 6), (3, 7),
 	(4, 5), (4, 8),
 	(5, 6), (5, 8), (5, 9),
 	(6, 7), (6, 8), (6, 9),
 	(7,9), (8, 9), (8, 10), (9, 10)]
+
+# ╔═╡ 3bee9c9a-3802-4180-b5d8-240bef0f1237
+begin
 edges = Edge.(E)
 # create a graph from the vertex and edge lists above
 g = SimpleGraphFromIterator(edges)
@@ -45,22 +42,6 @@ end
 
 # ╔═╡ 70091c2b-2f0e-4767-a1d8-ab23ee947de8
 graphplot(g)
-
-# ╔═╡ c6793088-02cd-47b7-a5dd-26d9ee0c947b
-function newton_optimizer(f, x; tol=1e-5)
-	k = 0
-	history = [x]
-	while k < 1000
-		k += 1
-		gk = ForwardDiff.gradient(f, x)
-		hk = ForwardDiff.hessian(f, x)
-		dx = -hk \ gk
-		x += dx
-		push!(history, x)
-		sum(abs2, dx) < tol && break
-	end
-	return history
-end
 
 # ╔═╡ 91bf072a-df45-494a-b393-46fa311c057f
 function dist(a::AbstractVector{T},b::AbstractVector{T}) where T
@@ -70,13 +51,6 @@ end
 # ╔═╡ 67822069-6128-4600-9e8a-84e3a1e75b16
 function loss_f(x::AbstractMatrix)
     loss = 0.0
-    E = [(1, 2), (1, 3),
-	     (2, 3), (2, 4), (2, 5), (2, 6),
-	     (3, 5), (3, 6), (3, 7),
-	     (4, 5), (4, 8),
-	     (5, 6), (5, 8), (5, 9),
-	     (6, 7), (6, 8), (6, 9),
-	     (7,9), (8, 9), (8, 10), (9, 10)]
     for (a,b) in combinations(1:10,2)
 		if (a,b) in E
 			prop_dist = dist(x[:,a],x[:,b])
@@ -92,30 +66,40 @@ function loss_f(x::AbstractMatrix)
     return loss
 end
 
+# ╔═╡ 41673ddb-cc58-41d8-868d-e934dd7f4d1f
+function isunitdisk(x::AbstractMatrix{T}) where T
+	for (a,b) in combinations(1:10,2)
+		if(a,b) in E
+			@assert dist(x[:,a],x[:,b]) <= 1.0 "Error, got $x[:,a] and $x[:,b] with distance $(dist(x[:,a],x[:,b]))"
+		else
+			@assert dist(x[:,a], x[:,b]) > 1.0 "Error, non connected points $a and $b are too close, got distance $(dist(x[:,a],x[:,b]))"
+		end
+	end
+	println("Test passed")
+end
+
 # ╔═╡ 077a8b69-f787-4f30-a105-b6381f23e33a
 begin
     #make a grid of 100  by 100
 	# try more times
-    x0 =  float.(vcat(shuffle(1:100)[1:10]',shuffle(1:100)[1:10]'))
-    his = optimize(loss_f,x0,NelderMead());
+	success = false
+	for _ in 1:100
+		#initialize so that points start without getting too close to any
+    	x0 =  float.(vcat(shuffle(1:100)[1:10]',shuffle(1:100)[1:10]'))
+    	his = optimize(loss_f,x0,NelderMead())
+		if  minimum(his) == 0.0
+			@info minimum(his)
+			@info Optim.minimizer(his)
+			ans = Optim.minimizer(his)
+			isunitdisk(ans)
+			success = true
+			break
+		end
+	end
+	if !success
+		println("Did not get correct answer in 100 random initial points, retry")
+	end
 end
-
-# ╔═╡ 529fe94d-bd1f-4434-a28b-a4fc1ba9791b
-minimum(his)
-
-# ╔═╡ acd362b3-27fe-4398-a528-bdb2acc8a989
-ans = Optim.minimizer(his)
-
-# ╔═╡ 6e3ad22a-0f3a-45b2-95c1-6afe7df9af5f
-for pt in eachcol(ans)
-	println(pt)
-end
-
-# ╔═╡ 875612b8-1c32-4584-af61-f83282024ad3
-loss_f(ans)
-
-# ╔═╡ aa61ca35-b413-4587-a8bd-3ffca1065acc
-embed_graph(g)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -128,7 +112,6 @@ Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Optimisers = "3bd65402-5787-11e9-1adc-39752487f4e2"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-UnitDiskMapping = "1b61a8d9-79ed-4491-8266-ef37f39e1727"
 
 [compat]
 Combinatorics = "~1.0.2"
@@ -138,7 +121,6 @@ Graphs = "~1.8.0"
 Optim = "~1.7.4"
 Optimisers = "~0.2.17"
 Plots = "~1.38.8"
-UnitDiskMapping = "~0.3.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -147,7 +129,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "9efbc0e39c6af411a5b45348cbe694b62459a7a1"
+project_hash = "7bffc5000e9f4698c2bc9bc413ba422bc4b32a32"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
@@ -198,12 +180,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "19a35467a82e236ff51bc17a3a44b69ef35185a2"
 uuid = "6e34b625-4abd-537c-b88f-471c36dfa7a0"
 version = "1.0.8+0"
-
-[[deps.Cairo]]
-deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
-git-tree-sha1 = "d0b3f8b4ad16cb0a2988c6788646a5e6a17b6b1b"
-uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "1.0.5"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -366,12 +342,6 @@ git-tree-sha1 = "74faea50c1d007c85837327f6775bea60b5492dd"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.2+2"
 
-[[deps.FileIO]]
-deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "7be5f99f7d15578798f338f5433b6c432ea8037b"
-uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.16.0"
-
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
@@ -493,12 +463,6 @@ git-tree-sha1 = "e5f13c467f99f6b348020369c519cd6c8b56f75d"
 uuid = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 version = "0.5.12"
 
-[[deps.Graphics]]
-deps = ["Colors", "LinearAlgebra", "NaNMath"]
-git-tree-sha1 = "d61890399bc535850c4bf08e4e0d3a7ad0f21cbd"
-uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
-version = "1.1.2"
-
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
@@ -593,12 +557,6 @@ git-tree-sha1 = "6f2675ef130a300a112286de91973805fcc5ffbc"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.91+0"
 
-[[deps.Juno]]
-deps = ["Base64", "Logging", "Media", "Profile"]
-git-tree-sha1 = "07cb43290a840908a771552911a6274bc6c072c7"
-uuid = "e5e0dc1b-0480-54bc-9374-aad01c23163d"
-version = "0.8.4"
-
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "f6250b16881adf048549549fba48b1161acdac8c"
@@ -686,12 +644,6 @@ git-tree-sha1 = "9c30530bf0effd46e15e0fdcf2b8636e78cbbd73"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
 version = "2.35.0+0"
 
-[[deps.Librsvg_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pango_jll", "Pkg", "gdk_pixbuf_jll"]
-git-tree-sha1 = "ae0923dab7324e6bc980834f709c4cd83dd797ed"
-uuid = "925c91fb-5dd6-59dd-8e8c-345e74382d89"
-version = "2.54.5+0"
-
 [[deps.Libtiff_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
 git-tree-sha1 = "3eb79b0ca5764d4799c06699573fd8f533259713"
@@ -729,18 +681,6 @@ git-tree-sha1 = "cedb76b37bc5a6c702ade66be44f831fa23c681e"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.0.0"
 
-[[deps.Luxor]]
-deps = ["Base64", "Cairo", "Colors", "Dates", "FFMPEG", "FileIO", "Juno", "LaTeXStrings", "Random", "Requires", "Rsvg", "SnoopPrecompile"]
-git-tree-sha1 = "909a67c53fddd216d5e986d804b26b1e3c82d66d"
-uuid = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
-version = "3.7.0"
-
-[[deps.LuxorGraphPlot]]
-deps = ["Graphs", "LinearAlgebra", "Luxor"]
-git-tree-sha1 = "25b388309ae6733813055fcc836d5cdd5a14b5b7"
-uuid = "1f49bdf2-22a7-4bc4-978b-948dc219fbbc"
-version = "0.2.0"
-
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "42324d08725e200c23d4dfb549e0d5d89dede2d2"
@@ -766,12 +706,6 @@ version = "2.28.0+0"
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.2"
-
-[[deps.Media]]
-deps = ["MacroTools", "Test"]
-git-tree-sha1 = "75a54abd10709c01f1b86b84ec225d26e840ed58"
-uuid = "e89f7d12-3494-54d1-8411-f7d8b9ae1f27"
-version = "0.5.0"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -876,12 +810,6 @@ deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
 version = "10.40.0+0"
 
-[[deps.Pango_jll]]
-deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "84a314e3926ba9ec66ac097e3635e270986b0f10"
-uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.50.9+0"
-
 [[deps.Parameters]]
 deps = ["OrderedCollections", "UnPack"]
 git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
@@ -944,10 +872,6 @@ version = "1.3.0"
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
-[[deps.Profile]]
-deps = ["Printf"]
-uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
-
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
 git-tree-sha1 = "0c03844e2231e12fda4d0086fd7cbe4098ee8dc5"
@@ -996,12 +920,6 @@ deps = ["UUIDs"]
 git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.0"
-
-[[deps.Rsvg]]
-deps = ["Cairo", "Glib_jll", "Librsvg_jll"]
-git-tree-sha1 = "3d3dc66eb46568fb3a5259034bfc752a0eb0c686"
-uuid = "c4c386cf-5103-5370-be45-f3a111cca3b8"
-version = "1.0.0"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -1165,12 +1083,6 @@ deps = ["REPL"]
 git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
-
-[[deps.UnitDiskMapping]]
-deps = ["Graphs", "LuxorGraphPlot"]
-git-tree-sha1 = "961ab9b48ff51fe185aa1595ceac24b8d9b6c0a4"
-uuid = "1b61a8d9-79ed-4491-8266-ef37f39e1727"
-version = "0.3.1"
 
 [[deps.Unzip]]
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
@@ -1350,12 +1262,6 @@ git-tree-sha1 = "868e669ccb12ba16eaf50cb2957ee2ff61261c56"
 uuid = "214eeab7-80f7-51ab-84ad-2988db7cef09"
 version = "0.29.0+0"
 
-[[deps.gdk_pixbuf_jll]]
-deps = ["Artifacts", "Glib_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pkg", "Xorg_libX11_jll", "libpng_jll"]
-git-tree-sha1 = "e9190f9fb03f9c3b15b9fb0c380b0d57a3c8ea39"
-uuid = "da03df04-f53b-5353-a52f-6a8b0620ced0"
-version = "2.42.8+0"
-
 [[deps.libaom_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "3a2ea60308f0996d26f1e5354e10c24e9ef905d4"
@@ -1423,17 +1329,12 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╟─c82fd2da-71cb-47ec-a487-af8100bdb705
 # ╠═454da7d4-d103-11ed-389e-df4bbc1c34ff
+# ╠═5e0f25a5-096a-4702-86d2-a472e901d743
 # ╠═3bee9c9a-3802-4180-b5d8-240bef0f1237
 # ╠═70091c2b-2f0e-4767-a1d8-ab23ee947de8
-# ╠═c6793088-02cd-47b7-a5dd-26d9ee0c947b
 # ╠═91bf072a-df45-494a-b393-46fa311c057f
 # ╠═67822069-6128-4600-9e8a-84e3a1e75b16
+# ╠═41673ddb-cc58-41d8-868d-e934dd7f4d1f
 # ╠═077a8b69-f787-4f30-a105-b6381f23e33a
-# ╠═529fe94d-bd1f-4434-a28b-a4fc1ba9791b
-# ╠═acd362b3-27fe-4398-a528-bdb2acc8a989
-# ╠═6e3ad22a-0f3a-45b2-95c1-6afe7df9af5f
-# ╠═875612b8-1c32-4584-af61-f83282024ad3
-# ╠═b2516842-0cfc-4e80-8be9-4d6387774516
-# ╠═aa61ca35-b413-4587-a8bd-3ffca1065acc
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
