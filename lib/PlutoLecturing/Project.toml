@@ -1,0 +1,24 @@
+name = "PlutoLecturing"
+uuid = "3e1d68ed-7204-4e43-84e1-610205b9583d"
+authors = ["GiggleLiu <cacate0129@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+
+[compat]
+AbstractTrees = "0.4"
+PlutoUI = "0.7"
+Reexport = "1"
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
