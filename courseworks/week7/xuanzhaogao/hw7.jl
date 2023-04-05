@@ -31,12 +31,12 @@ E = [(1, 2), (1, 3),
 	(7,9), (8, 9), (8, 10), (9, 10)]
 
 # ╔═╡ 492e08b2-bcf9-4506-91d3-39620a9f9af3
-function distance!(x, i, j)
+function distance(x, i, j)
 	return sqrt((x[2 * i - 1] - x[2 * j - 1])^2 + (x[2 * i] - x[2 * j])^2)
 end
 
 # ╔═╡ 742dba9c-2c54-4e31-a528-567690298d48
-function is_unit_disk!(x::AbstractArray)
+function is_unit_disk(x::AbstractArray)
 	E = [(1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (2, 6), (3, 5), (3, 6), (3, 7),(4, 5), (4, 8), (5, 6), (5, 8), (5, 9), (6, 7), (6, 8), (6, 9), (7,9), (8, 9), (8, 10), (9, 10)]
 
 	Loss = 0
@@ -44,12 +44,12 @@ function is_unit_disk!(x::AbstractArray)
 	for i in 1:10
 		for j in i + 1:10
 			if (i, j) in E
-				d_ij = distance!(x, i, j)
+				d_ij = distance(x, i, j)
 				if d_ij >= 1
 					Loss += 1
 				end
 			else
-				d_ij = distance!(x, i, j)
+				d_ij = distance(x, i, j)
 				if d_ij <= 1
 					Loss += 1
 				end
@@ -71,32 +71,35 @@ Here we define the loss function based on distance, given as
 ```math
 \begin{align}
 L &= L_{Edge} + L_{NonEdge}\\
-L_{Edge} &= \sum_{i, j} 2 * {|x - 1|}^{0.2} * \text{sign}(x - 1)\\
-L_{NonEdge} &= - \sum_{i, j} {|x - 1|}^{0.2} * \text{sign}(x - 1)
+L_{Edge} &= \sum_{i, j} 2 * {|x - 0.95|}^{0.2} * \text{sign}(x - 0.95)\\
+L_{NonEdge} &= - \sum_{i, j} {|x - 1.05|}^{0.2} * \text{sign}(x - 1.05)
 \end{align}
 ```
+Here we set the cutoff slightly larger or smaller than $1$ to fasten the convergence.
 Such a loss function will have a continium ```ForwardDiff``` so that gradient based optimalizer can be applied. 
 """
 
 # ╔═╡ 4758aa71-953a-4fb5-853c-69cec593875d
 function Loss_distance_12(x::AbstractArray)
 	E = [(1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (2, 6), (3, 5), (3, 6), (3, 7),(4, 5), (4, 8), (5, 6), (5, 8), (5, 9), (6, 7), (6, 8), (6, 9), (7,9), (8, 9), (8, 10), (9, 10)]
-	Non_E = [(1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 7), (2, 8), (2, 9), (2, 10), (3, 4), (3, 8), (3, 9), (3, 10), (4, 6), (4, 7), (4, 9), (4, 10), (5, 7), (5, 10), (6, 10), (7, 8), (7, 10)]
 
 	Loss_1 = 0
 	Loss_2 = 0
+	cut_1 = 0.95
+	cut_2 = 1.05
 
 	for i in 1:10
 		for j in i + 1:10
 			if (i, j) in E
-				d_ij = distance!(x, i, j)
-				if d_ij >= 1
-					Loss_1 += 2 * (abs(d_ij - 1))^(.2) * sign(d_ij - 1)
+				d_ij = distance(x, i, j)
+				
+				if d_ij >= cut_1
+					Loss_1 += 2 * (abs(d_ij - cut_1))^(.2) * sign(d_ij - cut_1)
 				end
 			else
-				d_ij = distance!(x, i, j)
-				if d_ij <= 1
-					Loss_2 += - (abs(d_ij - 1))^(.2) * sign(d_ij - 1)
+				d_ij = distance(x, i, j)
+				if d_ij <= cut_2
+					Loss_2 += - (abs(d_ij - cut_2))^(.2) * sign(d_ij - cut_2)
 				end
 			end
 		end
@@ -130,7 +133,7 @@ end
 begin
 	x_0 = 3 * rand(20)
 	best_x, best_loss = gradient_descent(Loss_distance, x_0; niters = 500000, learning_rate = 0.0001)
-	is_unit_disk = is_unit_disk!(best_x)
+	result = is_unit_disk(best_x)
 end
 
 # ╔═╡ f93e0f9c-dbf2-4752-92cb-910f5ff45669
