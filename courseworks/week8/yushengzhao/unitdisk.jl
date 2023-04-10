@@ -58,7 +58,7 @@ function loss_f(x::AbstractMatrix)
 			prop_dist = 1/dist(x[:,a],x[:,b])
 		end
 
-		if prop_dist > 1
+		if prop_dist > 0.999
 			loss  +=  prop_dist
 		end
 
@@ -82,7 +82,7 @@ end
 begin
     #make a grid of 100  by 100
 	# try more times
-	success = false
+	task_success = false
 	for _ in 1:100
 		#initialize so that points start without getting too close to any
     	x0 =  float.(vcat(shuffle(1:100)[1:10]',shuffle(1:100)[1:10]'))
@@ -92,14 +92,32 @@ begin
 			@info Optim.minimizer(his)
 			ans = Optim.minimizer(his)
 			isunitdisk(ans)
-			success = true
+			task_success = true
+			minx = min(ans[1,:]...)
+			miny = min(ans[2,:]...)
+			for coord in eachcol(ans)
+				println(coord' .- [minx miny])
+			end
 			break
 		end
 	end
-	if !success
+	if !task_success
 		println("Did not get correct answer in 100 random initial points, retry")
 	end
+
 end
+
+# ╔═╡ 1973b40b-3ec6-468e-89c0-1a0aa2038f20
+colinoneline = vec([[2.2490371994754668 1.1621385133565898]
+[1.2947378447973108 1.4028954462551226]
+[1.699195041576516 0.6525427838582569]
+[0.48246896100668835 1.9307606620049338]
+[0.9499047231454512 1.203220815068768]
+[1.0315930897860852 0.7640779835266613]
+[1.0822325288874879 0.0]
+[0.28115129740687905 1.2991380020347325]
+[0.571020271202741 0.4672471065353392]
+[0.0 0.5669289153709496]])
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1336,5 +1354,6 @@ version = "1.4.1+0"
 # ╠═67822069-6128-4600-9e8a-84e3a1e75b16
 # ╠═41673ddb-cc58-41d8-868d-e934dd7f4d1f
 # ╠═077a8b69-f787-4f30-a105-b6381f23e33a
+# ╠═1973b40b-3ec6-468e-89c0-1a0aa2038f20
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
