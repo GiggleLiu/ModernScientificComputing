@@ -35,7 +35,8 @@ Please check the following book as a reference.
 ### Week 8: Nonlinear equations and optimization
 * Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/8.optimization/), [pdf](notebooks/8.optimization.pdf), [source](notebooks/8.optimization.jl)]
 
-### Week 9: Random numbers and stochastic simulation
+### Week 9: Automatic differentiation
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/9.autodiff/), [pdf](notebooks/9.autodiff.pdf), [source](notebooks/9.autodiff.jl)]
 
 # *PART 3: Scientific applications*
 ### Week 10: Probabilistic modeling
