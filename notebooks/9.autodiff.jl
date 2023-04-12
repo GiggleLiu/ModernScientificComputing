@@ -14,20 +14,11 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ f6cd50b4-ce0a-11ed-01cf-63021b4eb012
-using ForwardDiff
-
-# ╔═╡ 45bc0bb7-fcd1-4527-a51f-05ab7df03dc8
-using Plots
-
 # ╔═╡ f2e3f609-33ff-4798-bf6b-f69ab5209519
 using PlutoUI
 
-# ╔═╡ 8822acfd-2b9a-45f7-aff2-1670f092605d
-using TaylorSeries
-
-# ╔═╡ 0753e9d3-bc33-43e3-9c7f-cfed0b8d66c5
-using SymEngine
+# ╔═╡ 45bc0bb7-fcd1-4527-a51f-05ab7df03dc8
+using Plots
 
 # ╔═╡ 62dd6d53-7f55-4933-95ae-2350d1992cf6
 using FiniteDifferences
@@ -35,14 +26,11 @@ using FiniteDifferences
 # ╔═╡ 4647fb94-2b5d-467a-8952-5aba5da87527
 using BenchmarkTools
 
-# ╔═╡ bf2ddd62-b32e-4e25-a263-85225f62bd98
-using ForwardDiff: Dual
+# ╔═╡ f6cd50b4-ce0a-11ed-01cf-63021b4eb012
+using ForwardDiff
 
 # ╔═╡ 4d5d8755-7774-4364-aba4-cb69ed898809
 using Enzyme
-
-# ╔═╡ 79921035-aafb-478c-ba36-e5655a4515dd
-TableOfContents(depth=2)
 
 # ╔═╡ 838b51c0-3987-4fb4-b8b8-1799f724ecd6
 md"""
@@ -51,8 +39,13 @@ md"""
 ```
 """
 
-# ╔═╡ 11639628-7e3a-4751-9c42-34bd398f7092
-md"A memo for myself: setup Zoom!!!"
+# ╔═╡ 385dda1d-8cab-42ee-9242-132032d66b7f
+html"""
+<button onclick="present()"> present </button>
+"""
+
+# ╔═╡ 79921035-aafb-478c-ba36-e5655a4515dd
+TableOfContents(depth=2)
 
 # ╔═╡ 1dace657-b9ca-4ec2-81c9-209c823e9adb
 md"# The four methods to differentiate a function"
@@ -137,7 +130,7 @@ let
 		if select_gradient_method == "Forward"
 			gi = [autodiff(Forward, poor_besselj, i, Enzyme.Duplicated(xi, 1.0))[1] for xi in x]
 		elseif select_gradient_method == "Manual"
-			gi = (poor_besselj.(i-1, x) - poor_besselj.(i+1, x)) ./ 2
+			gi = ((i == 0 ? -poor_besselj.(i+1, x) : poor_besselj.(i-1, x)) - poor_besselj.(i+1, x)) ./ 2
 		elseif select_gradient_method == "Backward"
 			gi = [autodiff(Reverse, poor_besselj, i, Enzyme.Active(xi))[1] for xi in x]
 		elseif select_gradient_method == "FiniteDiff"
@@ -215,6 +208,9 @@ let
 	A' \ b
 end
 
+# ╔═╡ b2d72996-27a0-467e-8c2d-20afcc28b24c
+[i^j for i=-2:2, j=0:4]
+
 # ╔═╡ 84182832-c653-49df-aa55-a78181974612
 central_fdm(5, 1)(x->poor_besselj(2, x), 0.5)
 
@@ -242,10 +238,10 @@ f((x, g)) = (f(x), f'(x)*g)
 """
 
 # ╔═╡ 4b3a4f50-4339-43e5-9bc1-473151c1f436
-res = sin(Dual(π/4, 2.0))
+res = sin(ForwardDiff.Dual(π/4, 2.0))
 
 # ╔═╡ 9359eddc-bfbb-428d-8197-00d1e9cd8eeb
-res === Dual(sin(π/4), cos(π/4)*2.0)
+res === ForwardDiff.Dual(sin(π/4), cos(π/4)*2.0)
 
 # ╔═╡ bbadece5-e92a-42f5-998c-6149c067b130
 md"
@@ -263,18 +259,18 @@ md"""
 **Example:** Computing two gradients $\frac{\partial z\sin x}{\partial x}$ and $\frac{\partial \sin^2x}{\partial x}$ at one sweep
 """
 
+# ╔═╡ d2222941-f31b-4411-aac8-6de450aa2fbe
+autodiff(Forward, poor_besselj, 2, Duplicated(0.5, 1.0))[1]
+
+# ╔═╡ 5db5eef5-d217-4a61-9230-62ada8b7606f
+@benchmark autodiff(Forward, poor_besselj, 2, Duplicated(x, 1.0))[1] setup=(x=0.5)
+
 # ╔═╡ 0956c11a-63d7-4ab1-a99b-9056208759ac
 md"""
 **What if we want to compute gradients for multiple inputs?**
 
 The computing time grows **linearly** as the number of variables that we want to differentiate. But does not grow significantly with the number of outputs.
 """
-
-# ╔═╡ d2222941-f31b-4411-aac8-6de450aa2fbe
-autodiff(Forward, poor_besselj, 2, Duplicated(0.5, 1.0))[1]
-
-# ╔═╡ 5db5eef5-d217-4a61-9230-62ada8b7606f
-@benchmark autodiff(Forward, poor_besselj, 2, Duplicated(x, 1.0))[1] setup=(x=0.5)
 
 # ╔═╡ 38cc8a4d-0107-4dee-b0f0-76959ad9cc92
 md"""
@@ -294,14 +290,19 @@ md"""
 ```
 """
 
-# ╔═╡ 298873a4-ba02-43c3-9507-ce99a00f7245
-md"### How to visit local Jacobians in the reversed order? "
-
 # ╔═╡ 18065ade-1e2d-4b37-a075-8de966de306d
 autodiff(Reverse, poor_besselj, 2, Enzyme.Active(0.5))[1]
 
 # ╔═╡ 4a4d5c19-a784-4285-8ea0-f2203cd80eb3
 @benchmark autodiff(Reverse, poor_besselj, 2, Enzyme.Active(x))[1] setup=(x=0.5)
+
+# ╔═╡ 298873a4-ba02-43c3-9507-ce99a00f7245
+md"### How to visit local Jacobians in the reversed order? "
+
+# ╔═╡ 62484b76-033b-455a-bf51-d1f57adbc8a0
+md"""
+Caching intermediate results in a stack!
+"""
 
 # ╔═╡ 52fa22a0-98ae-4d32-884d-b40cdb9cff62
 md"""
@@ -312,7 +313,10 @@ md"""
 md"""
 The backward rule of the Bessel function is
 ```math
-J'_{\nu}(z) =  \frac{J_{\nu-1}(z) - J_{\nu+1}(z) }2
+\begin{align}
+&J'_{\nu}(z) =  \frac{J_{\nu-1}(z) - J_{\nu+1}(z) }2\\
+&J'_{0}(z) =  - J_{1}(z)
+\end{align}
 ```
 """
 
@@ -321,6 +325,14 @@ J'_{\nu}(z) =  \frac{J_{\nu-1}(z) - J_{\nu+1}(z) }2
 
 # ╔═╡ ee1f777e-c8fb-4139-aae8-503ed4fd2391
 @benchmark 0.5 * (poor_besselj(1, x) - poor_besselj(3, x)) setup=(x=0.5)
+
+# ╔═╡ 88199efc-975c-4971-8481-3319209bf139
+md"""
+# Deriving the backward rule of matrix multiplication
+"""
+
+# ╔═╡ 3d1bfe11-a863-4a63-9bb7-0a052dc04d25
+md"Please check [blog](https://giggleliu.github.io/posts/2019-04-02-einsumbp/)"
 
 # ╔═╡ 0e1de67c-592a-408d-849f-984dd47664cd
 md"""
@@ -332,8 +344,8 @@ html"""
 <table>
 <tr>
 <th width=200></th>
-<th width=300>on tensors</th>
-<th width=300>on finite instructions</th>
+<th width=300>rule based</th>
+<th width=300>differential programming</th>
 </tr>
 <tr style="vertical-align:top">
 <td>meaning</td>
@@ -369,19 +381,6 @@ html"""
 </table>
 """
 
-# ╔═╡ 88199efc-975c-4971-8481-3319209bf139
-md"""
-# Deriving the backward rule of matrix multiplication
-"""
-
-# ╔═╡ 3d1bfe11-a863-4a63-9bb7-0a052dc04d25
-md"Please check [blog](https://giggleliu.github.io/posts/2019-04-02-einsumbp/)"
-
-# ╔═╡ 9db19e03-e010-43e5-95cb-03a949496a6a
-md"""
-# Deriving the backward rule of QR decomposition
-"""
-
 # ╔═╡ b648761c-1fa7-4e70-b0d6-654c51b2935f
 md"""
 # Obtaining Hessian
@@ -389,7 +388,7 @@ md"""
 
 # ╔═╡ 2fac953b-7a04-4fc1-a54d-a2062b590b20
 md"""
-Hessian is the Jacobian of the gradient.
+Hessian is the Jacobian of the gradient. We can use **forward over backward**.
 """
 
 # ╔═╡ 18ae2723-f947-4ff6-864e-2dd4a0bb32f9
@@ -420,6 +419,35 @@ Otherwise, you may
 * put down the hand: deallocate a checkpoint.
 """
 
+# ╔═╡ 2f715b1a-2e32-4068-86fd-912d735b307a
+md"# Homeworks
+1. Given the binomial function $\eta(\tau, \delta) = \frac{(\tau + \delta)!}{\tau!\delta!}$, show that the following statement is true.
+```math
+\eta(\tau,\delta) = \sum_{k=0}^\delta \eta(\tau-1,k)
+```
+2. Given the following program to compute the $l_2$-norm of a vector $x\in R^n$.
+```julia
+function poorman_norm(x::Vector{<:Real})
+	nm2 = zero(real(eltype(x)))
+	for i=1:length(x)
+		nm2 += abs2(x[i])
+	end
+	ret = sqrt(nm2)
+	return ret
+end
+```
+
+In the program, the `abs2` and `sqrt` functions can be treated as primitive functions, which means they should not be further decomposed as more elementary functions.
+
+### Tasks
+1. Rewrite the program (on paper or with code) to implement the forward mode autodiff, where you can use the notation $\dot y_i \equiv \frac{\partial y}{\partial x_i}$ to denote a derivative.
+2. Rewrite the program (on paper or with code) to implement the reverse mode autodiff, where you can use the notation $\overline y \equiv \frac{\partial \mathcal{L}}{\partial y}$ to denote an adjoint, $y \rightarrow T$ to denote pushing a variable to the global stack, and $y \leftarrow T$ to denote poping a variable from the global stack. In your submission, both the forward pass and backward pass should be included.
+3. Estimate how many intermediate states is cached in your reverse mode autodiff program?
+
+### Reference
+* Griewank A, Walther A. Evaluating derivatives: principles and techniques of algorithmic differentiation[M]. Society for industrial and applied mathematics, 2008.
+"
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -429,8 +457,6 @@ FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
-TaylorSeries = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
 
 [compat]
 BenchmarkTools = "~1.3.2"
@@ -439,8 +465,6 @@ FiniteDifferences = "~0.12.26"
 ForwardDiff = "~0.10.35"
 Plots = "~1.38.8"
 PlutoUI = "~0.7.50"
-SymEngine = "~0.9.0"
-TaylorSeries = "~0.14.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -449,7 +473,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "9a34b297d75c43eeb2183b7ae35f4236ec98af59"
+project_hash = "0e5cee4aa40dec1a75bbf8e896ff28c08c4ec1ca"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -494,18 +518,6 @@ version = "1.0.8+0"
 git-tree-sha1 = "eb4cb44a499229b3b8426dcfb5dd85333951ff90"
 uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 version = "0.4.2"
-
-[[deps.CRlibm]]
-deps = ["CRlibm_jll"]
-git-tree-sha1 = "32abd86e3c2025db5172aa182b982debed519834"
-uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.0.1"
-
-[[deps.CRlibm_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
-uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
-version = "1.0.1+0"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -637,11 +649,6 @@ git-tree-sha1 = "ab56cf1c49ca27bce4e4f7cc91889cedfe83bd03"
 uuid = "7cc45869-7501-5eee-bdea-0790c847d4ef"
 version = "0.0.48+1"
 
-[[deps.ErrorfreeArithmetic]]
-git-tree-sha1 = "d6863c556f1142a061532e79f611aa46be201686"
-uuid = "90fa49ef-747e-5e6f-a989-263ba693cf1a"
-version = "0.5.2"
-
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "bad72f730e9e91c08d9427d5e8db95478a3c323d"
@@ -664,12 +671,6 @@ deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers",
 git-tree-sha1 = "74faea50c1d007c85837327f6775bea60b5492dd"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.4.2+2"
-
-[[deps.FastRounding]]
-deps = ["ErrorfreeArithmetic", "LinearAlgebra"]
-git-tree-sha1 = "6344aa18f654196be82e62816935225b3b9abe44"
-uuid = "fa42c844-2597-5d31-933b-ebd51ab2693f"
-version = "0.3.1"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -721,11 +722,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pkg", "Xorg_libXcu
 git-tree-sha1 = "d972031d28c8c8d9d7b41a536ad7bb0c2579caca"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.3.8+0"
-
-[[deps.GMP_jll]]
-deps = ["Artifacts", "Libdl"]
-uuid = "781609d7-10c4-51f6-84f2-b8444358ff6d"
-version = "6.2.1+2"
 
 [[deps.GPUCompiler]]
 deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "TimerOutputs", "UUIDs"]
@@ -806,12 +802,6 @@ version = "0.5.1"
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
-
-[[deps.IntervalArithmetic]]
-deps = ["CRlibm", "FastRounding", "LinearAlgebra", "Markdown", "Random", "RecipesBase", "RoundingEmulator", "SetRounding", "StaticArrays"]
-git-tree-sha1 = "c1c88395d09366dae431556bcb598ad08fa1392b"
-uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-version = "0.20.8"
 
 [[deps.InverseFunctions]]
 deps = ["Test"]
@@ -986,17 +976,6 @@ version = "1.0.0"
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "0.1.4"
-
-[[deps.MPC_jll]]
-deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "MPFR_jll", "Pkg"]
-git-tree-sha1 = "9618bed470dcb869f944f4fe4a9e76c4c8bf9a11"
-uuid = "2ce0c516-f11f-5db3-98ad-e0e1048fbd70"
-version = "1.2.1+0"
-
-[[deps.MPFR_jll]]
-deps = ["Artifacts", "GMP_jll", "Libdl"]
-uuid = "3a97d323-0669-5f0c-9066-3539efd106a3"
-version = "4.1.1+1"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -1212,11 +1191,6 @@ git-tree-sha1 = "e03ca566bec93f8a3aeb059c8ef102f268a38949"
 uuid = "708f8203-808e-40c0-ba2d-98a6953ed40d"
 version = "1.4.0"
 
-[[deps.RoundingEmulator]]
-git-tree-sha1 = "40b9edad2e5287e05bd413a38f61a8ff55b9557b"
-uuid = "5eaf0fd0-dfba-4ccb-bf02-d820a40db705"
-version = "0.2.1"
-
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
@@ -1229,11 +1203,6 @@ version = "1.2.0"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
-
-[[deps.SetRounding]]
-git-tree-sha1 = "d7a25e439d07a17b7cdf97eecee504c50fedf5f6"
-uuid = "3cc68bcd-71a2-5612-b932-767ffbe40ab0"
-version = "0.2.1"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1304,18 +1273,6 @@ git-tree-sha1 = "010dc73c7146869c042b49adcdb6bf528c12e859"
 uuid = "53d494c1-5632-5724-8f4c-31dff12d585f"
 version = "0.3.0"
 
-[[deps.SymEngine]]
-deps = ["Compat", "Libdl", "LinearAlgebra", "RecipesBase", "Serialization", "SpecialFunctions", "SymEngine_jll"]
-git-tree-sha1 = "b8e68d3d66f3429a4f5f0393a39d4c0f6b990a04"
-uuid = "123dc426-2d89-5057-bbad-38513e3affd8"
-version = "0.9.0"
-
-[[deps.SymEngine_jll]]
-deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "MPC_jll", "MPFR_jll", "Pkg"]
-git-tree-sha1 = "63dd14f9bbac36184162334627431165a13a2220"
-uuid = "3428059b-622b-5399-b16f-d347a77089a4"
-version = "0.9.0+1"
-
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
@@ -1325,12 +1282,6 @@ version = "1.0.0"
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 version = "1.10.1"
-
-[[deps.TaylorSeries]]
-deps = ["IntervalArithmetic", "LinearAlgebra", "Markdown", "Requires", "SparseArrays"]
-git-tree-sha1 = "b123e0614b0f366e2073c4da7b1367cebda3f579"
-uuid = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
-version = "0.14.0"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -1614,12 +1565,10 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═f6cd50b4-ce0a-11ed-01cf-63021b4eb012
-# ╠═45bc0bb7-fcd1-4527-a51f-05ab7df03dc8
-# ╠═f2e3f609-33ff-4798-bf6b-f69ab5209519
-# ╠═79921035-aafb-478c-ba36-e5655a4515dd
-# ╠═838b51c0-3987-4fb4-b8b8-1799f724ecd6
-# ╟─11639628-7e3a-4751-9c42-34bd398f7092
+# ╟─838b51c0-3987-4fb4-b8b8-1799f724ecd6
+# ╟─385dda1d-8cab-42ee-9242-132032d66b7f
+# ╟─f2e3f609-33ff-4798-bf6b-f69ab5209519
+# ╟─79921035-aafb-478c-ba36-e5655a4515dd
 # ╟─1dace657-b9ca-4ec2-81c9-209c823e9adb
 # ╟─f76cf1c5-3801-4c6d-ba10-195a69e63e45
 # ╟─86874020-ec91-44c1-83cc-483cb0cd9337
@@ -1629,48 +1578,49 @@ version = "1.4.1+0"
 # ╟─53c29044-94d3-4470-bacb-e72bd2401d1c
 # ╠═8da8ed7e-bfd2-4be0-a764-ad04566b9632
 # ╟─c28f22cc-71b7-4339-8c81-9d76d2244c94
+# ╠═45bc0bb7-fcd1-4527-a51f-05ab7df03dc8
 # ╠═ff53a172-634f-438f-a04a-1481ac20f140
 # ╠═c763e489-a6a9-42ac-8da1-a2ba48a0f1a8
 # ╠═5e782b60-3721-40d2-ae61-69edb4fc50f0
 # ╟─1d2a3579-b9c4-4ffb-819c-2689d3f1b83c
 # ╟─742504f5-8ae3-4388-8f05-f0a256815cbc
-# ╠═8822acfd-2b9a-45f7-aff2-1670f092605d
-# ╠═0753e9d3-bc33-43e3-9c7f-cfed0b8d66c5
 # ╟─1fbdd9c5-fb52-4bcc-9a6a-156ab8bfe4f6
 # ╠═cee92def-01e4-4199-a964-b81412a0563f
+# ╠═b2d72996-27a0-467e-8c2d-20afcc28b24c
 # ╠═62dd6d53-7f55-4933-95ae-2350d1992cf6
 # ╠═84182832-c653-49df-aa55-a78181974612
 # ╠═4647fb94-2b5d-467a-8952-5aba5da87527
 # ╠═78e9ebd0-92eb-4fdc-b440-56b4fdaf7a60
 # ╟─54f754d5-6cb4-47ef-9b19-aa8c47c14b36
 # ╟─f25a2d8e-5cd5-4df7-bd39-2830d6e2dea6
-# ╠═bf2ddd62-b32e-4e25-a263-85225f62bd98
+# ╠═f6cd50b4-ce0a-11ed-01cf-63021b4eb012
 # ╠═4b3a4f50-4339-43e5-9bc1-473151c1f436
 # ╠═9359eddc-bfbb-428d-8197-00d1e9cd8eeb
 # ╟─bbadece5-e92a-42f5-998c-6149c067b130
 # ╟─2ec9461e-c7a3-43f5-9fef-fb52980fa196
-# ╟─0956c11a-63d7-4ab1-a99b-9056208759ac
 # ╠═4d5d8755-7774-4364-aba4-cb69ed898809
 # ╠═d2222941-f31b-4411-aac8-6de450aa2fbe
 # ╠═5db5eef5-d217-4a61-9230-62ada8b7606f
+# ╟─0956c11a-63d7-4ab1-a99b-9056208759ac
 # ╟─38cc8a4d-0107-4dee-b0f0-76959ad9cc92
 # ╟─17e21230-2299-4dda-87ef-40e629d66213
 # ╟─38ca5970-78ed-495b-9d69-74a6a22ec027
-# ╟─298873a4-ba02-43c3-9507-ce99a00f7245
 # ╠═18065ade-1e2d-4b37-a075-8de966de306d
 # ╠═4a4d5c19-a784-4285-8ea0-f2203cd80eb3
+# ╟─298873a4-ba02-43c3-9507-ce99a00f7245
+# ╟─62484b76-033b-455a-bf51-d1f57adbc8a0
 # ╟─52fa22a0-98ae-4d32-884d-b40cdb9cff62
 # ╟─721bfffc-b76f-4d0d-8ed6-be0c327eef59
 # ╠═0aaa152e-29cf-43f4-8a07-ad7dd4a5f304
 # ╠═ee1f777e-c8fb-4139-aae8-503ed4fd2391
-# ╟─0e1de67c-592a-408d-849f-984dd47664cd
-# ╟─164c3f50-cb0c-4f74-8580-303dedbc712b
 # ╟─88199efc-975c-4971-8481-3319209bf139
 # ╟─3d1bfe11-a863-4a63-9bb7-0a052dc04d25
-# ╟─9db19e03-e010-43e5-95cb-03a949496a6a
+# ╟─0e1de67c-592a-408d-849f-984dd47664cd
+# ╟─164c3f50-cb0c-4f74-8580-303dedbc712b
 # ╟─b648761c-1fa7-4e70-b0d6-654c51b2935f
 # ╟─2fac953b-7a04-4fc1-a54d-a2062b590b20
 # ╟─18ae2723-f947-4ff6-864e-2dd4a0bb32f9
 # ╟─02ca5e2f-1705-4de8-bd89-0b4b69e1fee7
+# ╟─2f715b1a-2e32-4068-86fd-912d735b307a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
