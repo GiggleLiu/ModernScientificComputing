@@ -1,0 +1,13 @@
+#+TITLE: HW9
+#+AUTHOR: Yusheng Zhao
+
+
+
+
+* Problem 1
+\begin{align}
+& \sum_{k = 0}^{\delta} \eta(\tau - 1, k) \\
+& = \sum_{k = 0}^{\delta} \frac{(\tau -1 + k)!}{(\tau -1)!k!} \\
+& = \sum_{k = 0}^{\delta} \frac{(\tau -1 + k)!}{(\tau -1)!k!} \frac{(\tau +k)...(\tau + \delta)}{(\tau + k)...(\tau + \delta)} \frac{\tau (k+1)...\delta}{\tau (k+1)... \delta}\\
+& = \frac{(\tau + \delta)!}{\tau! \delta!}\sum_{k = 0}^{\delta} \frac{\tau (k+1)...\delta}{(\tau +k)...(\tau + \delta)}
+\end{align}
