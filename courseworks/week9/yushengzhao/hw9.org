@@ -29,3 +29,58 @@
  Therefore, we have reached the conclusion that $\sum_{k = 0}^{\delta}
  \frac{\tau (k+1)...\delta}{(\tau +k)...(\tau + \delta)} = 1$. Therefore,
  $\sum_{k = 0}^{\delta} \eta(\tau - 1, k) = \eta(\tau,\delta)$.
+
+* Problem 2
+** Forward Mode Diff
+#+begin_src julia
+# the input is a vector of Duplicated type as defined in Enzyme
+# we denote abs2() as y1()
+# we denote sqrt() as y2()
+function fd_poorman_norm(x::Vector{Duplicated{<:Real}})
+    #initialization does not get derivatives
+    vtype, dtype = eltype(x).types
+    dual_nm2 = Duplicated(zero(val_type),zero(deri_type))
+    for i=1:length(x)
+        # diff_abs2(x[i]) denotes \frac{\partial y_1}{\partial x_i}
+        # note, we don't treat x[i] as independent variable
+        # i.e, we allow \frac{\partial x_i}{\partial x_i} != 1
+        dual_nm2 += Duplicated(x[i].val,x[i].dval * diff_abs2(x[i].val))
+    end
+    # similarily, we denote diff_sqrt(nm2.val) as \frac{\partial y2}{\partial y1}
+    ret = Duplicated(sqrt(dual_nm2.val), diff_sqrt(nm2.val) * dual_nm2.dval)
+    return ret
+end
+#+end_src
+
+**  Reverse Mode Diff
+#+begin_src julia
+function rd_poorman_norm(x::Vector{<:Real})
+    # start of forward pass
+    nm2 = zero(real(eltype(x)))
+    for i=1:length(x)
+        nm2 += abs2(x[i])
+    end
+
+    # nm2 -> T
+    # we need to cache nm2 value here
+    # although, I  highly doubt that
+    # you will need to explicitly cache nm2 since
+    # the variable storing it will not be modified
+
+    ret = sqrt(nm2)
+
+    # start to do the backward pass
+    # this is \bar{ret}
+    ret_bar = diff_sqrt(nm2)
+
+    # nm2 <- T
+    # calculate a vector of diff
+    nm2_bar = diff_abs2.(x)
+    total_bar = ret_bar * nm2_bar
+    return ret, total_bar
+end
+#+end_src
+** Estimate cached number
+I found it hard to understand this problem, we only have one jacobian to compute
+in order to get to the final derivative of this function. Therefore, we only
+need to cache one jacobian of dimension $1 \times length(x)$.
