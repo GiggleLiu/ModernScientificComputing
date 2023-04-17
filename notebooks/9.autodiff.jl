@@ -440,7 +440,28 @@ end
 In the program, the `abs2` and `sqrt` functions can be treated as primitive functions, which means they should not be further decomposed as more elementary functions.
 
 ### Tasks
-1. Rewrite the program (on paper or with code) to implement the forward mode autodiff, where you can use the notation $\dot y_i \equiv \frac{\partial y}{\partial x_i}$ to denote a derivative.
+1. Rewrite the program (on paper or with code) to implement the forward mode autodiff, where you can use the notation $\dot y \equiv (\frac{\partial y}{\partial x_i}, \frac{\partial y}{\partial x_2},\ldots \frac{\partial y}{\partial x_n})$ to denote a derivative.
+
+**Example**
+To compute the gradient of
+```julia
+function f(x, y)
+	a = 2 * x
+	b = sin(a)
+	c = cos(y)
+    return b + c
+end
+```
+
+The forward autodiff rewritten program is
+```julia
+function f_forward((x, ̇̇x), (y, ̇y))
+	(a, ̇a) = (2 * x, 2 * ̇x)
+	(b, ̇b) = (sin(a), cos(a) .* ̇a)
+	(c, ̇c) = （cos(y), -sin(y) .* ̇y）
+    return (b + c, ̇b + ̇c)
+end
+```
 2. Rewrite the program (on paper or with code) to implement the reverse mode autodiff, where you can use the notation $\overline y \equiv \frac{\partial \mathcal{L}}{\partial y}$ to denote an adjoint, $y \rightarrow T$ to denote pushing a variable to the global stack, and $y \leftarrow T$ to denote poping a variable from the global stack. In your submission, both the forward pass and backward pass should be included.
 3. Estimate how many intermediate states is cached in your reverse mode autodiff program?
 
