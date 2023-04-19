@@ -40,6 +40,7 @@ Please check the following book as a reference.
 
 # *PART 3: Scientific applications*
 ### Week 10: Probabilistic modeling
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/10.inference/), [pdf](notebooks/10.inference.pdf), [source](notebooks/10.inference.jl)]
 
 ### Week 11: Sparsity detection
 
