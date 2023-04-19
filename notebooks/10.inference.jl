@@ -16,12 +16,6 @@ using LinearAlgebra
 # ╔═╡ f699d333-bafd-4ad6-9a9c-8e08c5230891
 using OMEinsum
 
-# ╔═╡ 96a0ac7f-3676-4035-947b-5c06ce8466a0
-using Enzyme
-
-# ╔═╡ 5cc42128-866e-402e-9981-8560319cc04b
-using Enzyme: EnzymeRules
-
 # ╔═╡ dffe3a4c-1043-4320-bf10-f3c023459c31
 TableOfContents()
 
@@ -97,6 +91,8 @@ We have the backward rules for matrix multiplication as
 # ╔═╡ 84a58161-9986-497b-b13b-0cc9c2127b09
 md"# The backward rule of eigen decomposition
 Ref: [https://arxiv.org/abs/1710.08717](https://arxiv.org/abs/1710.08717)
+
+Given a symmetric matrix $A$, the eigen decomposition is
 
 ```math
 A = UEU^\dagger
@@ -462,8 +458,8 @@ md"""
 """
 
 # ╔═╡ 72445647-b14d-4133-9980-d55ae6bb19ea
-contract([1.0, 0.0], [0.0, 1.0], [1.0, 1.0], # A, S, T
-		[1.0, 1.0], [1.0, 1.0], # L, B
+contract([0.0, 1.0], [1.0, 0.0], [1.0, 1.0], # A, S, T
+		[0.0, 1.0], [1.0, 1.0], # L, B
 		[1.0, 1.0], # E
 		[1.0, 1.0], [1.0, 1.0] # X, D
 		)
@@ -482,65 +478,20 @@ md"""
 |        D         | Patient has dyspnoea            |
 """
 
-# ╔═╡ f652fd80-c7fb-4486-86b0-5b27cd64bd60
-function EnzymeRules.augmented_primal(config::EnzymeRules.ConfigWidth{1}, func::Const{typeof(einsum)}, ::Type{<:Duplicated},
-               code::Const, xs::Duplicated, size_dict)
-   @info("In custom augmented primal rule.")
-   # Compute primal
-   if EnzymeRules.needs_primal(config)
-	   primal = func.val(code.val, xs.val, size_dict.val); shadow=zero(primal)
-   else
-	   #func.val(code.val, xs.val, size_dict.val) # y still needs to be mutated even if primal not needed!
-	   primal, shadow = nothing, nothing
-   end
-   # Save x in tape if x will be overwritten
-   if EnzymeRules.overwritten(config)[3]
-	   tape = copy(x.val)
-   else
-	   tape = nothing
-   end
-   # Return an AugmentedReturn object with shadow = nothing
-   return EnzymeRules.AugmentedReturn(primal, shadow, tape)
-end
-
-# ╔═╡ a0f76ad4-5556-421a-801a-05ea05663190
-function EnzymeRules.reverse(config::EnzymeRules.ConfigWidth{1}, func::Const{typeof(einsum)}, dret::Duplicated, tape, code::Const, xs::Duplicated, size_dict)
-   @info "In custom reverse rule."
-   # retrieve x value, either from original x or from tape if x may have been overwritten.
-   xval = EnzymeRules.overwritten(config)[3] ? tape : xs.val
-   # accumulate dret into x's shadow. don't assign!
-   # x.dval .+= 2 .* xval .* dret.val
-   # also accumulate any derivative in y's shadow into x's shadow.
-   # x.dval .+= 2 .* xval .* y.dval
-   # y.dval .= 0
-   for i=1:length(xs.val)
-	   xs.dval[i] .+= OMEinsum.einsum_grad(OMEinsum.getixs(code.val), xval, OMEinsum.getiy(code.val), size_dict.val, conj(dret.dval), i)
-   end
-   return (nothing, nothing, nothing)
-end
-
-# ╔═╡ 1c3e9770-afd4-4573-b648-52b30c12368f
-let
-	x = randn(3, 3)
-	gx = zero(x)
-	autodiff(Reverse, x->sum(einsum(ein"ii->i", x, Dict('i'=>3))), Duplicated((x,), (gx,)))
-	gx
-end
-
-# ╔═╡ babeac53-4056-45fd-89c0-95137a915302
-autodiff(Reverse, contract, Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)), Duplicated(ones(2), ones(2)))
-
-# ╔═╡ 5bb553c8-37d1-4c03-b15b-91e5251e8cbd
-let
-	g = zeros(2)
-	autodiff(Reverse, sum, Duplicated(ones(2), g))
-	g
-end
+# ╔═╡ 336ee05e-94eb-4b7f-9b5b-4f86c9253bc4
+md"""
+# Homework
+1. What is the einsum notation for outer product of two vectors?
+2. What does the einsum notation `"jk,kl,lm,mj->"` stands for?
+2. The tensor network `"abc,cde,efg,ghi,ijk,klm,mno->abdfhjlno"` is known as matrix product state in physics or tensor train in mathematics. Please
+    1. Draw a diagramatic representation for it.
+    2. If we contract it with another tensor network `"pbq,qdr,rfs,sht,tju,ulv,vnw->pbdfhjlnw"`, i.e., computing `abc,cde,efg,ghi,ijk,klm,mno,pbq,qdr,rfs,sht,tju,ulv,vnw->apow`. What is the optimal contraction order in the diagram, and estimate the contraction complexity (degree of freedoms have the same size $n$).
+    3. Using `OMEinsum` (check the section "Probability graph") to obtain a contraction order and compare it with your answer.
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
 LuxorGraphPlot = "1f49bdf2-22a7-4bc4-978b-948dc219fbbc"
@@ -548,7 +499,6 @@ OMEinsum = "ebe7aa44-baf0-506c-a96f-8464559b3922"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
-Enzyme = "~0.11.0"
 Luxor = "~3.7.0"
 LuxorGraphPlot = "~0.2.0"
 OMEinsum = "~0.7.4"
@@ -561,7 +511,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "3ccd0c9627804eb4be74e191c9a7ec08511b56fc"
+project_hash = "7819d7f5f54ce432adf36d516ed4607a2f0c4ad8"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -736,24 +686,6 @@ version = "0.9.3"
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 version = "1.6.0"
-
-[[deps.Enzyme]]
-deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "Printf", "Random"]
-git-tree-sha1 = "28c09cee567a3b62a8ae2a99035bd477fdbaee3f"
-uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-version = "0.11.0"
-
-[[deps.EnzymeCore]]
-deps = ["Adapt"]
-git-tree-sha1 = "d0840cfff51e34729d20fd7d0a13938dc983878b"
-uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.3.0"
-
-[[deps.Enzyme_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "TOML"]
-git-tree-sha1 = "b83b072e7a5eee2050800658f5676b0ff7b37dc6"
-uuid = "7cc45869-7501-5eee-bdea-0790c847d4ef"
-version = "0.0.53+0"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1122,12 +1054,6 @@ git-tree-sha1 = "0d4fbd4f2d368bf104671187dcd716a2fac533e0"
 uuid = "6f22d1fd-8eed-4bb7-9776-e7d684900715"
 version = "0.8.1"
 
-[[deps.ObjectFile]]
-deps = ["Reexport", "StructIO"]
-git-tree-sha1 = "55ce61d43409b1fb0279d1781bf3b0f22c83ab3b"
-uuid = "d8793406-e978-5875-9003-1fc021f44a92"
-version = "0.3.7"
-
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
@@ -1308,12 +1234,6 @@ version = "1.4.0"
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-
-[[deps.StructIO]]
-deps = ["Test"]
-git-tree-sha1 = "010dc73c7146869c042b49adcdb6bf528c12e859"
-uuid = "53d494c1-5632-5724-8f4c-31dff12d585f"
-version = "0.3.0"
 
 [[deps.Suppressor]]
 git-tree-sha1 = "c6ed566db2fe3931292865b966d6d140b7ef32a9"
@@ -1559,12 +1479,6 @@ version = "3.5.0+0"
 # ╟─66db0b4f-f1b5-4174-9045-1e4af2fd1422
 # ╠═72445647-b14d-4133-9980-d55ae6bb19ea
 # ╟─2a9f6028-63a2-4719-affd-8327150c40ad
-# ╠═96a0ac7f-3676-4035-947b-5c06ce8466a0
-# ╠═5cc42128-866e-402e-9981-8560319cc04b
-# ╠═f652fd80-c7fb-4486-86b0-5b27cd64bd60
-# ╠═a0f76ad4-5556-421a-801a-05ea05663190
-# ╠═1c3e9770-afd4-4573-b648-52b30c12368f
-# ╠═babeac53-4056-45fd-89c0-95137a915302
-# ╠═5bb553c8-37d1-4c03-b15b-91e5251e8cbd
+# ╟─336ee05e-94eb-4b7f-9b5b-4f86c9253bc4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
