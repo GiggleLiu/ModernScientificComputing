@@ -156,7 +156,7 @@ Suppose $A \in R^{n_1\times n_2\times n_3}$ and assume that $r \leq {\rm rank}(A
 ```
 such that 
 ```math
-X_{lmn} = \sum_{j_1=j_2=j_3=1}^{r_1, r_2, r_3} S_j (U_1)_{lj_1}(U_2)_{mj_2}(U_3)_{nj_3}.
+X_{lmn} = \sum_{j_1=j_2=j_3=1}^{r_1, r_2, r_3} S_{j_1j_2j_3} (U_1)_{lj_1}(U_2)_{mj_2}(U_3)_{nj_3}.
 ```
 
 We refer to this as the Tucker approximation problem.
@@ -271,7 +271,7 @@ md"""
 &~~~~~~~~~~~~\text{ with respect to }\tilde{F}(k).\\
 &~~~~~~~~\texttt{for}~~j = l:r\\
 &~~~~~~~~~~~~\lambda_j = \|\tilde{F}_{(k)}( :,j)\|\\
-&~~~~~~~~~~~~F^{(k)}(:,j) = \tilde{F}_k ( :,j)/\lambda_j\|\\
+&~~~~~~~~~~~~F^{(k)}(:,j) = \tilde{F}_k ( :,j)/\lambda_j\\
 &~~~~~~~~\texttt{end}\\
 &~~~~\texttt{end}
 \end{align}
