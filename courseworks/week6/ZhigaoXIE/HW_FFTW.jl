@@ -7,9 +7,11 @@ using FFTW
 # generating the signal
 
 N = 5000
+
+
 brain_signal = sin.(LinRange(0, 1000, N) ./ 10) .+ rand(N)
-plot1 = plot(brain_signal)
-display(plot1)
+# plot1 = plot(brain_signal)
+
 
 # plot the wavelet
 function ricker(x, a)
@@ -17,11 +19,9 @@ function ricker(x, a)
 	return A * (1 - (x/a)^2) * exp(-x^2/a^2/2)
 end
 
-
 x = -10:0.01:10
 y = ricker.(x, 0.6)
-plot2 = plot(x, y)
-display(plot2)
+# plot2 = plot(x, y)
 
 
 function wavelet_transformation(signal::AbstractVector{T}, fw) where T
@@ -48,12 +48,14 @@ end
 
 
 # the width parameter `a` in the Ricker wavelet is 1..500
-widths = 1:N÷10
-res = []
-for (j, a) in enumerate(widths)
+let
+  widths = 1:N÷10
+  res = []
+  for (j, a) in enumerate(widths)
 	fw = ricker.(-1000:1000, a)   # the descretized wavelet of width `a`
 	res_a = wavelet_transformation(brain_signal, fw)
 	push!(res, res_a)
+  end
+  plot3 = heatmap(hcat(res...); ylabel="time", xlabel="widths")
+  savefig(plot3,"wavelet.png")
 end
-plot3 = heatmap(hcat(res...); ylabel="time", xlabel="widths")
-display(plot3)
