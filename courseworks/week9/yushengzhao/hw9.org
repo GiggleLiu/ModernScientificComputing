@@ -1,0 +1,91 @@
+#+TITLE: HW9
+#+AUTHOR: Yusheng Zhao
+
+* Problem 1
+\begin{align}
+& \sum_{k = 0}^{\delta} \eta(\tau - 1, k) \\
+& = \sum_{k = 0}^{\delta} \frac{(\tau -1 + k)!}{(\tau -1)!k!} \\
+& = \sum_{k = 0}^{\delta} \frac{(\tau -1 + k)!}{(\tau -1)!k!} \frac{(\tau +k)...(\tau + \delta)}{(\tau + k)...(\tau + \delta)} \frac{\tau (k+1)...\delta}{\tau (k+1)... \delta}\\
+& = \frac{(\tau + \delta)!}{\tau! \delta!}\sum_{k = 0}^{\delta} \frac{\tau (k+1)...\delta}{(\tau +k)...(\tau + \delta)}
+\end{align}
+
+ Now, let's look at the summation in the last line. We could substitute $\tau
+ =0$ into the summation and get $0$. Therefore, we could conclude that the
+ polynomial expansion of the summation does not contain $\tau^-n$ terms, for $n
+ > 1$. Let's assume $\sum_{k = 0}^{\delta} \frac{\tau (k+1)...\delta}{(\tau
+ +k)...(\tau + \delta)} = poly(\tau)$ and then multiply both sides by $(\tau ) *
+ ....*(\tau + \delta)$. We get,
+
+ \begin{equation}
+    \sum_{k=0}^{\delta} \tau * (k+1) * ... * \delta * \tau * ... * (\tau +k+1) = \tau * ...  *(\tau + \delta) * poly(\tau)
+ \end{equation}
+
+ We then compare the highest order term in $\tau$ on both sides. The l.h.s gives
+ $\tau * \delta! * \frac{\tau^{\delta -1}}{\delta!} = \tau^\delta$. And the
+ r.h.s gives $\tau^delta$ multilied by the leading order of $poly(\tau)$.
+ Therefore, the leading order of $poly(\tau)$ must be $1$. Since $\poly(\tau)$
+ does not contain $\tau^{-n}$ terms, $poly(\tau) = 1$.
+
+ Therefore, we have reached the conclusion that $\sum_{k = 0}^{\delta}
+ \frac{\tau (k+1)...\delta}{(\tau +k)...(\tau + \delta)} = 1$. Therefore,
+ $\sum_{k = 0}^{\delta} \eta(\tau - 1, k) = \eta(\tau,\delta)$.
+
+* Problem 2
+** Forward Mode Diff
+#+begin_src julia
+# the input is a vector of Duplicated type as defined in Enzyme
+# we denote abs2() as y1()
+# we denote sqrt() as y2()
+function fd_poorman_norm(x::Vector{Duplicated{<:Real}})
+    #initialization does not get derivatives
+    vtype, dtype = eltype(x).types
+    dual_nm2 = Duplicated(zero(val_type),zero(deri_type))
+    for i=1:length(x)
+        # diff_abs2(x[i]) denotes \frac{\partial y_1}{\partial x_i}
+        # note, we don't treat x[i] as independent variable
+        # i.e, we allow \frac{\partial x_i}{\partial x_i} != 1
+        dual_nm2 += Duplicated(x[i].val,x[i].dval * diff_abs2(x[i].val))
+    end
+    # similarily, we denote diff_sqrt(nm2.val) as \frac{\partial y2}{\partial y1}
+    ret = Duplicated(sqrt(dual_nm2.val), diff_sqrt(nm2.val) * dual_nm2.dval)
+    return ret
+end
+#+end_src
+
+**  Reverse Mode Diff
+#+begin_src julia
+function rd_poorman_norm(x::Vector{<:Real},stack::Vector{<:Real})
+    # start of forward pass
+    nm2 = zero(real(eltype(x)))
+    for i=1:length(x)
+        push!(stack,x[i])
+        nm2 += abs2(x[i])
+    end
+
+    push!(stack,nm2)
+    # we need to cache nm2 value here
+    # although, I  highly doubt that
+    # you will need to explicitly cache nm2 since
+    # the variable storing it will not be modified
+
+    ret = sqrt(nm2)
+
+    return ret, stack
+end
+
+function bk_poorman_norm(partial_x::Vector{<:Real},stack::Vector{<:Real})
+    nm2 = pop!(stack)
+    # start to do the backward pass
+    # this is \bar{ret}
+    partial_x = diff_sqrt(nm2)
+
+	N = length(partial_x)
+	for i in 1:N
+		x = pop!(stack)
+		partial_x[N + 1 - i] *= 2 * x
+	end
+    return partial_x, stack
+end
+#+end_src
+** Estimate cached number
+We cached $N+1$ items, $N$ being number of elements in $x$ and $1$ being $nm2$.
