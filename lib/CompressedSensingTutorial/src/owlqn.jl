@@ -119,6 +119,7 @@ function line_search(method, f, ∇f, pg::AbstractArray{T},
     return xnew
 end
 
+####################### The line search method implements the interface in `LineSearches``.
 Base.@kwdef struct SimpleLinesearch
     β::Real=0.5           # decay rate of the step size α
     γ::Real=1e-4          # determine the sufficient decrease condition
