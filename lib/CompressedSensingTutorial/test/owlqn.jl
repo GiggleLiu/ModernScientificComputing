@@ -25,16 +25,16 @@ using Random
     # initialize parameters
     beta = ones(size(X)[2])
 
-    # optimization with lambda = 0.2 regularization strength
-    lambda = 0.2
-    M = OWLQN(beta, lambda=lambda);
+    # optimization with λ = 0.2 regularization strength
+    λ = 0.2
+    M = OWLQN(typeof(beta); λ);
 
     for i in 1:100    
         step!(M, f, ∇f, beta);
         
         mse = f(beta);
         nrm = sum(abs.(beta))
-        loss = mse + lambda * nrm
+        loss = mse + λ * nrm
         
         print(string("Iteration: ", i, " Loss: ", loss, " MSE: ", mse, "\n"))
     end
@@ -44,6 +44,6 @@ using Random
 
     # OLS
     print(string("OLS solution: ", round.(inv(X' * X) * X' * y, digits=3),"\n"))
+
+    @test isapprox(round.(beta, digits=3), round.(inv(X' * X) * X' * y, digits=3); atol=0.3)
 end
-
-

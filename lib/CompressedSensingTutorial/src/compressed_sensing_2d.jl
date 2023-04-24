@@ -62,18 +62,47 @@ where ``A`` is the sampled rows of the 2D DCT matrix, ``x`` is the image in the 
 
 ### Arguments
 * `samples` is an [`ImageSamples`](@ref) instance.
-* `C` is the factor to reduce the l₁ norm of the image in momentum space.
+
+### Keyword arguments
+* `img0` is the initial guess of the image, default value is a random matrix.
+* `C = 0.2` is the factor to reduce the l₁ norm of the image in momentum space.
+* `iterations = 100` is the number of iterations to optimize.
+* `g_tol = 1e-5` is the value below which the gradient norm will trigger a program break condition.
+* `show_trace = false` is the switch to print optimization information.
+* `optimizer = :OWLQN` is the optimizer, it should be one of :OWLQN and :LBFGS.
 """
-function sensing_image(samples::ImageSamples; C)
-    optres = optimize(
-        x->objective_f(x, samples.indices, samples.values; C),
-        (g, x)->objective_g!(g, x, samples.indices, samples.values; C),
-        rand(Float64, samples.size...),
-        LBFGS(),
-        Optim.Options(g_tol = 1e-5,
-                    iterations = 200,
-                    store_trace = false,
-                    show_trace = true)
-    )
-    return idct(optres)
+function sensing_image(samples::ImageSamples;
+            img0 = StatsBase.rand!(similar(samples.values, samples.size...)),
+            C::Real=0.2,
+            iterations::Int=100,
+            g_tol::Real=1e-5,
+            show_trace::Bool=false,
+            optimizer::Symbol = :OWLQN
+        )
+    # initial vector
+    x0 = dct(img0)
+    # objective function
+    f(x) = objective_dct(x, samples; C)
+    if optimizer == :LBFGS
+        g!(g, x) = gradient_dct!(g, x, samples; C)
+        optres = optimize(f, g!, x0,
+            LBFGS(),
+            Optim.Options(; g_tol,
+                        iterations,
+                        show_trace)
+        )
+        return idct(optres.minimizer)
+    elseif optimizer == :OWLQN
+        g(x) = gradient_dct(x, samples; C)
+        opt = L1Convex.OWLQN(typeof(x0); λ=1.0, m=6)
+        for i = 1:iterations
+            L1Convex.step!(opt, f, g, x0)
+            if show_trace
+                @info "Iteration: $i, f(x): $(f(x0)), l1-norm: $(norm(x0, 1)), loss = $(f(x0) + C*norm(x0, 1))"
+            end
+            norm(opt.Δg) < g_tol && return idct(x0)
+        end
+    else
+        error("Unknown optimizer: $optimizer")
+    end
 end

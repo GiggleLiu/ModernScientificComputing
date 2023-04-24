@@ -1,5 +1,5 @@
 module CompressedSensingTutorial
-using FFTW, StatsBase, LinearAlgebra
+using FFTW, StatsBase, LinearAlgebra, Optim
 
 export sensing_image, sample_image_pixels, ImageSamples
 

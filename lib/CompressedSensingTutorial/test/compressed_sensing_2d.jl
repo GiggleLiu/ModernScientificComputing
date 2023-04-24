@@ -40,6 +40,14 @@ end
     restored_img = FFTW.idct(optres.minimizer)
     @test norm(restored_img[samples.indices] - img[samples.indices]) <= 5
     @test norm(optres.minimizer, 1) <= 30000
-    display(Gray.(FFTW.idct(optres.minimizer)))
-    display(Gray.(optres.minimizer))
+    #display(Gray.(FFTW.idct(optres.minimizer)))
+    #display(Gray.(optres.minimizer))
+end
+
+@testset "optimization OWL-QN" begin
+    C = 0.01
+    sample_probability = 0.1
+    img = Float64.(Gray.(Images.load(joinpath(@__DIR__, "waterfall.jpeg"))))
+    samples = sample_image_pixels(img, sample_probability)
+    sensing_image(samples; C, optimizer=:OWLQN, show_trace=true)
 end
