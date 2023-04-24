@@ -1,0 +1,24 @@
+#+TITLE: HW 10
+#+AUTHOR: Yusheng Zhao
+
+* P1
+#+begin_src  julia
+ein"i,j->ij" (A,B)
+#+end_src
+
+* P2
+It stands for $Tr(A*B*C*D)$ where $A,B,C,D$ are rank 2 tensors.
+
+* P3
+1) See the part of graph in black ink
+2) The contraction order is to first contract away the 7 vertical legs. Each
+   costs $\mathcal{O}(n^{5})$. Following that, we constract away the 6 pairs of
+   parallel legs, each costs $\mathcal{O}(n^{6})$. In total, we require
+   $7*n^{5} + 6 * n^{6}$ which is $\mathcal{O}(n^{6})$
+3) See code below
+   #+begin_src julia :exports both
+using OMEinsum
+eincode = ein"abc,cde,efg,ghi,ijk,klm,mno,pbq,qdr,rfs,sht,tju,ulv,vnw->apow"
+optimize_code(eincode, uniformsize(eincode, 2), TreeSA())
+   #+end_src
+
