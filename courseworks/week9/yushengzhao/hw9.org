@@ -69,6 +69,13 @@ function rd_poorman_norm(x::Vector{<:Real})
 
     ret = sqrt(nm2)
 
+    # note, this is sort of pseudo code, I  don't  put
+    # the cached  part into consideration.
+    return ret, bk_poorman_norm(nm2)
+end
+
+function bk_poorman_norm(nm2::Vector{<:Real})
+
     # start to do the backward pass
     # this is \bar{ret}
     ret_bar = diff_sqrt(nm2)
@@ -77,7 +84,7 @@ function rd_poorman_norm(x::Vector{<:Real})
     # calculate a vector of diff
     nm2_bar = diff_abs2.(x)
     total_bar = ret_bar * nm2_bar
-    return ret, total_bar
+    return total_bar
 end
 #+end_src
 ** Estimate cached number
