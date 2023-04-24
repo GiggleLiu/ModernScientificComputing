@@ -30,14 +30,22 @@ end
 function objective_dct(x, samples::ImageSamples; C=0.0)
     # constraint A*x = sample_values, minimize norm(x, 1)
     Ax_b = idct(x)[samples.indices] .- samples.values
-    return Ax_b' * Ax_b .+ C .* norm(x, 1)
+    loss = norm(Ax_b, 2)
+    if !iszero(C)
+        loss += C .* norm(x, 1)
+    end
+    return loss
 end
 
 function gradient_dct!(g, x, samples::ImageSamples; C=0.0)
     # gradient is 2 * (A' * A x - A' * sample_values) + sign(x)
     Ax_b = idct(x)[samples.indices] .- samples.values
     padded = zero_padded(samples, Ax_b)
-    g .= 2 .* dct(padded) .+ C .* sign.(x)
+    if !iszero(C)
+        g .= 2 .* dct(padded) .+ C .* sign.(x)
+    else
+        g .= 2 .* dct(padded)
+    end
     return g
 end
 gradient_dct(x, samples::ImageSamples; C=0.0) = gradient_dct!(zero(x), x, samples; C)
@@ -77,31 +85,34 @@ function sensing_image(samples::ImageSamples;
             iterations::Int=100,
             g_tol::Real=1e-5,
             show_trace::Bool=false,
-            optimizer::Symbol = :OWLQN
+            optimizer::Symbol = :OWLQN,
+            linesearch = L1Convex.SimpleLinesearch()
         )
     # initial vector
     x0 = dct(img0)
     # objective function
-    f(x) = objective_dct(x, samples; C)
     if optimizer == :LBFGS
-        g!(g, x) = gradient_dct!(g, x, samples; C)
+        f = x->objective_dct(x, samples; C)
+        g! = (g, x)->gradient_dct!(g, x, samples; C)
         optres = optimize(f, g!, x0,
-            LBFGS(),
+            LBFGS(; linesearch),
             Optim.Options(; g_tol,
                         iterations,
                         show_trace)
         )
         return idct(optres.minimizer)
     elseif optimizer == :OWLQN
-        g(x) = gradient_dct(x, samples; C)
-        opt = L1Convex.OWLQN(typeof(x0); λ=1.0, m=6)
+        f = x -> objective_dct(x, samples; C=0.0)
+        g = x -> gradient_dct(x, samples; C=0.0)
+        opt = L1Convex.OWLQN(typeof(x0); λ=C, m=10, linesearch)
         for i = 1:iterations
-            L1Convex.step!(opt, f, g, x0)
+            x0 = L1Convex.step!(opt, f, g, x0)
             if show_trace
                 @info "Iteration: $i, f(x): $(f(x0)), l1-norm: $(norm(x0, 1)), loss = $(f(x0) + C*norm(x0, 1))"
             end
             norm(opt.Δg) < g_tol && return idct(x0)
         end
+        return idct(x0)
     else
         error("Unknown optimizer: $optimizer")
     end

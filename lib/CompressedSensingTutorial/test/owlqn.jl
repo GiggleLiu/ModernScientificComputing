@@ -30,7 +30,7 @@ using Random
     M = OWLQN(typeof(beta); λ);
 
     for i in 1:100    
-        step!(M, f, ∇f, beta);
+        beta = step!(M, f, ∇f, beta);
         
         mse = f(beta);
         nrm = sum(abs.(beta))

@@ -1,8 +1,8 @@
 # source: https://gist.github.com/yegortk/ce18975200e7dffd1759125972cd54f4
 module L1Convex
 
-using LinearAlgebra
-export OWLQN, step!
+using LinearAlgebra, NLSolversBase
+export OWLQN, step!, SimpleLinesearch
 
 # This is a Julia module implementing OWL-QN algorithm for large-scale L1-regularized convex optimization
 # https://www.microsoft.com/en-us/research/wp-content/uploads/2007/01/andrew07scalable.pdf
@@ -21,21 +21,21 @@ export OWLQN, step!
 # libary to support ⋅ vector dot product notation
 
 # struct with key algorithm parameters
-struct OWLQN{T, AT<:AbstractArray{T}}
+struct OWLQN{T, L, AT<:AbstractArray{T}}
     Δx::Vector{AT}                # param_t+1 - param_t [max size of m]
     Δg::Vector{AT}                # grad_t+1 - grad_t [max size of m]
     rho::Vector{T}                # 1/Δx[i]'Δg[i]
     m::Int                        # L-BFGS history length 
-    λ::Float64                    # L1 penalty
-    line_search_iterations::Int
+    λ::T                          # L1 penalty
+    linesearch!::L                # line searcher
 end
 # constructor
-function OWLQN(::Type{AT}; λ = 1.0, m::Int=6, line_search_iterations::Int=20) where {T, AT<:AbstractArray{T}}
-    return OWLQN(AT[], AT[], T[], m, Float64(λ), line_search_iterations)
+function OWLQN(::Type{AT}; λ = 1.0, m::Int=6, linesearch=SimpleLinesearch()) where {T, AT<:AbstractArray{T}}
+    return OWLQN(AT[], AT[], T[], m, Float64(λ), linesearch)
 end
 
 # projected gradient based on raw gradient, parameter values, and L1 reg. strength
-function pseudo_gradient(g::AbstractArray{T}, x::AbstractArray{T}, λ::Real) where T
+function pseudo_gradient(g::AbstractArray{T}, x::AbstractArray{T}, λ::T) where T
     @assert size(g) == size(x)
     return map(g, x) do gi, xi
         if xi > 0
@@ -43,10 +43,12 @@ function pseudo_gradient(g::AbstractArray{T}, x::AbstractArray{T}, λ::Real) whe
         elseif xi < 0
             gi - λ
         else
-            if gi + λ < 0
+            if gi < -λ
                 gi + λ
-            else
+            elseif gi > λ
                 gi - λ
+            else
+                zero(T)
             end
         end
     end
@@ -58,12 +60,7 @@ function step!(M::OWLQN, f::Function, ∇f::Function, x::AbstractArray{T}) where
     
     # "(Local) minimum found: ∇f(x) == 0"
     all(iszero, g) && return
-    
     m = min(M.m, length(Δx))
-    
-    x_copy = copy(x)
-    g_copy = g
-    
     pg = pseudo_gradient(g, x, λ)
     
     if m > 0
@@ -85,58 +82,74 @@ function step!(M::OWLQN, f::Function, ∇f::Function, x::AbstractArray{T}) where
         project!(z, pg)
         
         # fancy way to do x .-= z
-        line_search!(f, pg, x, z, λ; iterations=M.line_search_iterations)
+        # TODO: optimize
+        xnew = line_search(M.linesearch!, f, ∇f, pg, x, -z, λ)
     else
         # fancy way to do  x .-= g
-        line_search!(f, pg, x, pg, λ, α = 1 / norm(pg, 2); iterations=M.line_search_iterations)
+        xnew = line_search(M.linesearch!, f, ∇f, pg, x, -pg, λ, α = 1 / norm(pg, 2))
     end
     
-    push!(Δx, x .- x_copy)
-    push!(Δg, ∇f(x) .- g_copy)
-    push!(rho, 1 ./ dot(Δg[end], Δx[end]))
+    push!(Δx, xnew .- x)
+    push!(Δg, ∇f(xnew) .- g)
+    push!(rho, 1 / dot(Δg[end], Δx[end]))
     
     while length(Δx) > M.m
         popfirst!(Δx)
         popfirst!(Δg)
         popfirst!(rho)
     end
+    return xnew
 end
 
 # projected backtracking line search
-function line_search!(f::Function, pg::AbstractArray{T},
+function line_search(method, f, ∇f, pg::AbstractArray{T},
             x::AbstractArray{T}, z::AbstractArray{T},
             λ::Float64;
             α::Real=1.0,
-            β::Real=0.5,
-            γ::Real=1e-4,
-            iterations::Int=20,
         ) where T
-    # the loss
+    # the loss function
     loss(x) = f(x) + λ * norm(x, 1)
-    y = loss(x)
+    φ_0 = loss(x)
+    # the gradient function
+    g!(store, x) = (store .= pseudo_gradient(∇f(x), x, λ); store)
+    dφ_0 =  dot(pg, z)
 
+    xnew = similar(x)
+    method(NLSolversBase.OnceDifferentiable(loss, g!, x), x, z, α, xnew, φ_0, dφ_0)
+    return xnew
+end
+
+Base.@kwdef struct SimpleLinesearch
+    β::Real=0.5           # decay rate of the step size α
+    γ::Real=1e-4          # determine the sufficient decrease condition
+    iterations::Int=100  # maximum number of iterations
+end
+function (ls::SimpleLinesearch)(df::NLSolversBase.AbstractObjective, x::AbstractArray{T},
+                          s::AbstractArray{T}, α::Real,
+                          x_new::AbstractArray{T}, phi_0::Real, dphi_0::Real) where T
+    @assert dphi_0 < 0 "the direction can not reduce the loss!"
+    β, γ, iterations = ls.β, ls.γ, ls.iterations
     # choose orthant for the new point
-    orthant(xi, pgi) = iszero(xi) ? sign(-pgi) : sign(xi)
-    xi = orthant.(x, pg)
+    orthant(xi, pgi) = iszero(xi) ? sign(pgi) : sign(xi)
+    xi = orthant.(x, s)
 
-    xt = similar(x)
     for _ = 1:iterations
         # update current point
-        xt .= x .- α .* z
+        x_new .= x .+ α .* s
 
         # project point onto orthant
-        project!(xt, xi)
+        project!(x_new, xi)
 
         # sufficient decrease condition
-        if loss(xt) <= y .+ γ .* dot(pg, xt .- x)
+        y = NLSolversBase.value!(df, x_new)
+        if y <= phi_0 + γ * dphi_0 * α
             break
         end
 
         # update step size
         α *= β
     end
-    x .= xt
-    return x
+    return α, phi_0 + γ * dphi_0 * α
 end
 # pi alignment operator - projection of a on orthat defined by b
 function project!(a::AbstractArray{T}, b::AbstractArray{T}) where T
@@ -146,3 +159,5 @@ function project!(a::AbstractArray{T}, b::AbstractArray{T}) where T
 end
 
 end
+
+import .L1Convex: SimpleLinesearch
