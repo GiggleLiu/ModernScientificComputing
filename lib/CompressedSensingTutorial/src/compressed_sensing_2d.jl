@@ -51,7 +51,7 @@ end
 gradient_dct(x, samples::ImageSamples; C=0.0) = gradient_dct!(zero(x), x, samples; C)
 
 # zero pad the sample to target size
-function zero_padded(samples::ImageSamples{T}, values::AbstractVector{T}) where T
+function zero_padded(samples::ImageSamples{T}, values::AbstractVector{T}=samples.values) where T
     x = similar(values, samples.size...)
     fill!(x, zero(T))
     x[samples.indices] .= values
