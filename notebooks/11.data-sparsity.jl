@@ -17,6 +17,9 @@ end
 # ╔═╡ 3cbcac23-9c60-4deb-9777-797854933b0b
 using PlutoUI
 
+# ╔═╡ 5df95033-ec18-4520-98eb-c0df71a70092
+using DataStructures
+
 # ╔═╡ 3755fc48-77a8-49ef-bddf-f6efb3f64dc0
 using Plots
 
@@ -35,32 +38,106 @@ using LinearAlgebra
 # ╔═╡ 4455086c-029d-48cf-b696-af011cb563a8
 using Images
 
+# ╔═╡ 147c6133-3c53-4ad3-b1af-1b46821c33ce
+using NLSolversBase
+
 # ╔═╡ 9ce82cd0-da0e-409c-b127-655365f37ad4
 using Optim
 
 # ╔═╡ 7e66c503-22d5-4768-ac40-096f15340aae
 using FiniteDifferences
 
+# ╔═╡ eb0daec5-acb4-438b-a71c-73b2382f9018
+begin
+	function ingredients(path::String)
+		# this is from the Julia source code (evalfile in base/loading.jl)
+		# but with the modification that it returns the module instead of the last object
+		name = Symbol(basename(path))
+		m = Module(name)
+		Core.eval(m,
+	        Expr(:toplevel,
+	             :(eval(x) = $(Expr(:core, :eval))($name, x)),
+	             :(include(x) = $(Expr(:top, :include))($name, x)),
+	             :(include(mapexpr::Function, x) = $(Expr(:top, :include))(mapexpr, $name, x)),
+	             :(include($path))))
+		m
+	end
+	function highlight(str)
+	    HTML("""<span style="background-color:yellow">$(str)</span>""")
+	end
+end;
+
 # ╔═╡ b405e338-bcdb-4b1c-9b9d-d48d67c2d1cc
 md"""
 # Sparsity Detection
 """
 
+# ╔═╡ 56f87742-fd58-47cd-ab10-63c2968f540a
+md"Beyond sparse matrices and Principle Component Analysis (PCA)!"
+
 # ╔═╡ c27b97ac-f6ca-489a-ab68-4d5f6407f4ac
 TableOfContents()
+
+# ╔═╡ 6d603a05-624a-439b-841c-c1049fc35008
+md"""
+# Information
+
+A measure of $(highlight("randomness")), usually measured by the entropy
+```math
+S = -\sum_k p_k\log p_k.
+```
+
+Quiz: Which knowledge bellow removes more information?
+1. When I toss a coin, its head side will be up,
+1. Tomorrow will rain,
+2. Today's lecture will be a successful one.
+"""
 
 # ╔═╡ bbd1494a-fd20-45b9-9288-130b618a9c6e
 md"""
 # Huffman coding
-In computer science and information theory, a Huffman code is a particular type of optimal prefix code that is commonly used for **lossless data compression**. The process of finding or using such a code proceeds by means of Huffman coding.
+In computer science and information theory, a Huffman code is a particular type of optimal prefix code that is commonly used for $(highlight("lossless data compression")). The process of finding or using such a code proceeds by means of Huffman coding.
 """
 
 # ╔═╡ 68a1c41c-71e5-4ad1-8bc4-9d6045c8552c
 md"Ref: [https://www.programiz.com/dsa/huffman-coding](https://www.programiz.com/dsa/huffman-coding)"
 
+# ╔═╡ 8c7d2068-784a-45dd-b8a9-966433f41338
+md"**Task**: describe the following image in computer."
+
+# ╔═╡ 9f44ee56-c945-4fc4-b119-9bb54b0573fa
+md"Mondrian - Trafalgar Square, 1939-43 - a picture having little information from various perspective."
+
+# ╔═╡ ed54a4ec-1936-4adf-8022-0de1b4e00c99
+LocalResource("images/trafalgar-square.jpg", :width=>300)
+
+# ╔═╡ 3307c8e5-3a82-4188-a8cc-16aaf16cd7bc
+md"""
+## The naive approach
+* R: 000
+* Y: 001
+* B: 010
+* K: 011
+* W: 100
+"""
+
+# ╔═╡ 301169f6-c5c8-4d29-bfab-417bd8b55a8f
+md"We need $3mn$ bits to store this image. Can we do better?"
+
+# ╔═╡ 686486c5-8f4c-4071-8406-f1c9c0eb6d1a
+md"""
+## Observation
+Calculate the frequency of each color in the image.
+* R: 3%
+* Y: 7%
+* B: 1%
+* K: 10%
+* W: 79%
+"""
+
 # ╔═╡ 07b770d9-780f-4217-a2c4-852d7b028d7b
 md"""
-### Formalized description
+## Formalized description
 **Input**
 
 Alphabet ``A=(a_{1},a_{2},\dots ,a_{n})``, which is the symbol alphabet of size ``n``.
@@ -76,84 +153,92 @@ Code
 Let ``{\textstyle L\left(C\left(W\right)\right)=\sum _{i=1}^{n}{w_{i}\operatorname {length} \left(c_{i}\right)}}`` be the weighted path length of code ``C``. Condition: ``{\displaystyle L\left(C\left(W\right)\right)\leq L\left(T\left(W\right)\right)}`` for any code ``{\displaystyle T\left(W\right)}``.
 """
 
-# ╔═╡ 9f44ee56-c945-4fc4-b119-9bb54b0573fa
-md"Mondrian - Trafalgar Square, 1939-43"
-
 # ╔═╡ 69c73a47-56ed-43b5-88e4-fe9b1be66f54
 md"""
-### Algorithm
-Let ``p`` be the probability distribution of the set of symbols ``Σ``.
-Algorithm ``{\rm Huffman}(Σ, p)``
-1. If ``|Σ| = 1``, then return a single vertex.
-2. Let x and y be symbols with the least probabilities, breaking ties arbitrarily.
-3. ``Σ0 ← Σ \ {x, y} ∪ {z}``, where ``z \not\in Σ``.
-4. Let ``p'(x) = p(x)`` if ``x ∈ Σ'\\ {z}``, and ``p'(z) = p(x) + p(y)``.
-5. ``T ← {\rm Huffman}(Σ', p')``.
-6. Create ``T`` from ``T'`` by adding ``x`` and ``y`` as children of ``z``.
-7. Return ``T``.
+## Algorithm
 """
 
-# ╔═╡ ed54a4ec-1936-4adf-8022-0de1b4e00c99
-html"""
-<img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Mondrian_-_Trafalgar_Square%2C_1939-43.jpg" width=300/>
-"""
-
-# ╔═╡ 686486c5-8f4c-4071-8406-f1c9c0eb6d1a
+# ╔═╡ 2640bfca-c26d-43fd-8556-685909c801db
 md"""
-1. Calculate the frequency of each character in the string.
-* R: 3%
-* Y: 7%
-* B: 1%
-* K: 10%
-* W: 79%
+The simplest construction algorithm uses a priority queue where the node with lowest probability is given highest priority:
+
+1. Create a leaf node for each symbol and add it to the priority queue.
+2. While there is more than one node in the queue:
+    1. Remove the two nodes of highest priority (lowest probability) from the queue
+    2. Create a new internal node with these two nodes as children and with probability equal to the sum of the two nodes' probabilities.
+    3. Add the new node to the queue.
+3. The remaining node is the root node and the tree is complete.
+
+Since efficient priority queue data structures require $O(\log n)$ time per insertion, and a tree with n leaves has $2n−1$ nodes, this algorithm operates in $O(n \log n)$ time, where $n$ is the number of symbols.
+"""
+
+# ╔═╡ a3e16dea-465f-457b-b1fa-767a9ea75d8d
+md"## Implementation"
+
+# ╔═╡ 6c6f8150-83cc-4b19-9ae1-7667246061fc
+md"""
+Build a huffman tree
 """
 
 # ╔═╡ b83e597f-723c-477d-9806-f18b4df5fb2f
-struct Node
-    value::Union{Char, Nothing}
-    freq::Int
-    left::Union{Node, Nothing}
-    right::Union{Node, Nothing}
+struct Node{VT, PT}
+    value::Union{VT,Nothing}
+	prob::PT
+    left::Union{Node{VT,PT}, Nothing}
+    right::Union{Node{VT,PT}, Nothing}
 end
 
-# ╔═╡ 84652f84-3a33-449d-a1f5-767cad739733
-function huffman_encode(text)
-    # Calculate the frequency of each character
-    freq_dict = Dict{Char, Int}()
-    for c in text
-        freq_dict[c] = get(freq_dict, c, 0) + 1
-    end
-
-    # Build the Huffman tree
-    nodes = [Node(c, f, nothing, nothing) for (c, f) in freq_dict]
+# ╔═╡ 64cc4e63-861a-483f-a93a-51b6deb7ea8f
+function huffman_tree(symbols, probs)
+	isempty(symbols) && error("empty input!")
+	# priority queue can keep the items ordered with log(# of items) effort.
+	nodes = PriorityQueue(Base.Order.Forward,
+		[Node(c, f, nothing, nothing)=>f for (c, f) in zip(symbols, probs)])
     while length(nodes) > 1
-        sort!(nodes, by=n -> n.freq)
-        left = popfirst!(nodes)
-        right = popfirst!(nodes)
-        parent = Node(nothing, left.freq + right.freq, left, right)
-        push!(nodes, parent)
+        left = dequeue!(nodes)
+        right = dequeue!(nodes)
+        parent = Node(nothing, left.prob + right.prob, left, right)
+        enqueue!(nodes, parent=>left.prob + right.prob)
     end
-
-    # Generate the Huffman codes for each character
-    code_dict = Dict{Char, String}()
-    function traverse(node, code)
-        if node.value != nothing
-            code_dict[node.value] = code
-        else
-            traverse(node.left, code * "0")
-            traverse(node.right, code * "1")
-        end
-    end
-    traverse(nodes[1], "")
-
-    # Encode the text using the Huffman codes
-    encoded_text = join([code_dict[c] for c in text])
-
-    return encoded_text, code_dict
+	return dequeue!(nodes)
 end
 
-# ╔═╡ 93c7f772-8241-424d-84dc-108be0169666
-huffman_encode("BCAADDDCCACACAC")
+# ╔═╡ aad28726-d9bb-4474-ab13-2ee96d682f2c
+ht = huffman_tree("RYBKW", [0.03, 0.07, 0.01, 0.1, 0.79])
+
+# ╔═╡ 0e88e129-06fa-4d86-bf29-d1f256d609c1
+md"From the tree, we generate the binary code."
+
+# ╔═╡ b8b4d527-1a87-4e5b-9c06-301a4e14aa83
+function decent!(tree::Node{VT}, prefix::String="", d::Dict = Dict{VT,String}()) where VT
+	if tree.left === nothing # leaft
+		d[tree.value] = prefix
+	else   # non-leaf
+		decent!(tree.left, prefix*"0", d)
+		decent!(tree.right, prefix*"1", d)
+	end
+	return d
+end
+
+# ╔═╡ 14b0302a-815a-450f-88f1-68261728a7fe
+code_dict = decent!(ht)
+
+# ╔═╡ 50d3c466-1091-4548-a279-86a061d872d2
+mean_code_length = let
+	code_length = 0.0
+	for (symbol, prob) in zip("RYBKW", [0.03, 0.07, 0.01, 0.1, 0.79])
+		code_length += length(code_dict[symbol]) * prob
+	end
+	code_length
+end
+
+# ╔═╡ 87bf6416-a399-40f7-81b1-d40fb69df70f
+md"""
+We only need $1.36mn$ bits to represent the Mondrian's Trafalgar Square!
+"""
+
+# ╔═╡ 4a1484ad-ad3d-44ac-a158-1b5e3a3bb975
+md"## The optimality"
 
 # ╔═╡ 2a19dd51-b855-4b67-b3fe-cbf266b88309
 md"*Lemma*: Huffman Encoding produces an optimal tree.
@@ -161,37 +246,21 @@ md"*Lemma*: Huffman Encoding produces an optimal tree.
 
 # ╔═╡ adb18186-982a-45c2-8b63-d93d3f80c5d4
 md"""
-The compressed text has a minimum size of $Sn$. Which is reached when all non-leaf nodes in the tree are ballanced, i.e. having the same weight for left and right children.
-"""
-
-# ╔═╡ 5f3ec76c-6e48-4e71-b3f6-da22ec5285f0
-md"""
+The compressed text has a minimum size of $Sn$, where
 ```math
-S = -\sum_k p_k\log p_k
+S = -\sum_k p_k\log p_k.
 ```
+It is reached when all non-leaf nodes in the tree are ballanced, i.e. having the same weight for left and right children.
 """
 
-# ╔═╡ 56f87742-fd58-47cd-ab10-63c2968f540a
-md"# Sparse Matrices"
-
-# ╔═╡ 12beafc3-ad18-4816-a832-64d89b9832d7
-md"""
-# Principle Component Analysis (PCA)
-"""
-
-# ╔═╡ 20ffcbb5-f416-4508-a1ef-0906871a8e1e
-md"""
-# Kernel PCA
-"""
-
-# ╔═╡ 963a5c10-70da-4e1f-b26d-ce1368d15eec
-md"""
-# Tensor Network
-"""
+# ╔═╡ d363841d-39bc-4aaa-87bd-31fc81680576
+S_trafalgar = StatsBase.entropy([0.03, 0.07, 0.01, 0.1, 0.79], 2)
 
 # ╔═╡ d8953176-d094-4d03-ad86-edaa1320c56f
 md"""
 # Matrix Product State/Tensor Train
+
+Calculate the compression ratio.
 """
 
 # ╔═╡ 688bd350-0efb-4dee-aaa0-81da147130c5
@@ -315,17 +384,17 @@ md"We use ``l_1`` norm because ``l_0`` is very hard to optimize."
 # ╔═╡ 52d24c58-3807-4d63-8470-f363854ec698
 if run_optimize
 	optimize!(model)
-	plot([value.(x), FFTW.idct(value.(x))]; layout=(2, 1), xlim=(0, 1000), labels=["spectrum", "recovered"])
+	plot([JuMP.value.(x), FFTW.idct(JuMP.value.(x))]; layout=(2, 1), xlim=(0, 1000), labels=["spectrum", "recovered"])
 end
 
 # ╔═╡ dc0a1b78-7afa-4844-9497-882c3a48a3dd
-#A*value.(x) - y2
+# A*JuMP.value.(x) - y2
 
 # ╔═╡ aa19b43e-cb3a-444d-8aff-b83ce4dd4fa3
 A * FFTW.dct(interp_linear.(t)) - y2
 
 # ╔═╡ 88a714c5-fbb6-4222-9a65-fe49399376a5
-#norm(value.(x), 1)
+# norm(JuMP.value.(x), 1)
 
 # ╔═╡ f06bd52e-77fa-4af4-b89c-959f2130beb8
 norm(FFTW.dct(interp_linear.(t)), 1)
@@ -340,7 +409,7 @@ md"""
 
 # ╔═╡ 6151ba1d-6727-475c-8d79-e55a3ba589c4
 md"""
-## Create a Julia Package
+## Creating a Julia Package
 1. Go to the folder for package development,
 ```bash
 cd path/to/julia/dev/folder
@@ -369,12 +438,18 @@ code .
 In the VSCode, please use your project environment as your julia project environment, check [here](https://www.julia-vscode.org/docs/dev/userguide/env/).
 4. Please configure your project dependency by typing in the `pkg>` mode.
 ```julia
-(CompressedSensingTutorial) pkg> add FFTW FiniteDifferences Images Optim
+(CompressedSensingTutorial) pkg> add FFTW FiniteDifferences Images Optim ...
 ```
 """
 
+# ╔═╡ aed7599a-31e7-4b9e-975d-d17374514b67
+md"https://github.com/timholy/Revise.jl"
+
 # ╔═╡ 8411466f-a684-4300-a97c-8dcbe5156fe7
-img = Float64.(Gray.(Images.load(joinpath(@__DIR__, "images/waterfall.jpeg"))))
+source_img = Gray.(Images.load(joinpath(@__DIR__, "images/waterfall.jpeg")))
+
+# ╔═╡ beb045bb-0eb1-435c-a0fb-55d5f3cbdb9a
+img = Float64.(source_img);
 
 # ╔═╡ e86fa8e0-57ff-4e8a-b345-95744187af2b
 size(img)
@@ -382,85 +457,47 @@ size(img)
 # ╔═╡ 44b00295-5010-434d-8470-033033a43193
 Gray.(FFTW.dct(img))
 
-# ╔═╡ 297dff75-f091-4292-aab7-83beb1a18149
-# extract small sample of signal
-sample_indices, sample_values = let
-	k = round(Int, length(img) * 0.1) # 50% sample
-	ri = StatsBase.sample(1:length(img), k, replace=false) # random sample of indices
-	ri, img[ri]
-end
+# ╔═╡ 6eb488a5-675b-4e4a-a363-6675ea47ed48
+# We have to use the Pluto ingredients for loading a local project
+# Please check the issue: https://github.com/fonsp/Pluto.jl/issues/115#issuecomment-661722426
+mod = ingredients("../lib/CompressedSensingTutorial/src/CompressedSensingTutorial.jl")
+
+# ╔═╡ 2e846f5d-a2fb-4d62-9f95-9da590319708
+CT = mod.CompressedSensingTutorial
+
+# ╔═╡ 3735f147-e90b-4545-b920-8aa92d50edc9
+md"Let us check the project!"
+
+# ╔═╡ e29b0741-b003-49ce-8622-bad8e1546336
+pixels = CT.sample_image_pixels(img, 0.1)
 
 # ╔═╡ 60aee03d-eced-4653-83f4-9100868aae9a
 md"The objective function."
 
-# ╔═╡ f1af554e-ec6b-4fc6-bc36-59f2f1fa385c
-function objective_f(x, sample_indices, b; C=0.0)
-	# constraint A*x = b, minimize norm(x, 1)
-	Ax_b = FFTW.idct(x)[sample_indices] .- b
-	Ax_b' * Ax_b .+ C .* norm(x, 1)
-end
-
-# ╔═╡ 6d390af5-7762-4cbc-b44d-9d3c772a5b82
-md"The graidient."
-
-# ╔═╡ c0654628-d5f8-4172-aed9-73374a537dfc
-function zero_padded(sz, sample_indices, b::AbstractVector{T}) where T
-	x = zeros(T, sz)
-	x[sample_indices] .= b
-	return x
-end
-
-# ╔═╡ db150c9f-c202-4415-807b-883436176c0b
-function objective_g!(g, x, sample_indices, b; C=0.0)
-	# gradient is 2 * (A' * A x - A' * b) + sign(x)
-	Ax_b = FFTW.idct(x)[sample_indices] .- b
-	padded = zero_padded(size(x), sample_indices, Ax_b)
-	g .= 2 .* FFTW.dct(padded) .+ C .* sign.(x)
-	g
-end
-
 # ╔═╡ f1a9764e-41c1-41a6-8e71-82d2e6fda658
-Gray.(zero_padded(size(img), sample_indices, sample_values))
-
-# ╔═╡ 7f837726-c264-49ff-a597-e0980a3209e6
-let
-	C = 0.0
-	k = round(Int, length(img) * 0.1)
-	sample_indices = StatsBase.sample(1:length(img), k, replace=false) # random sample of indices
-	sample_values = img[sample_indices]
-
-	x0 = rand(size(img)...)
-	g1 = FiniteDifferences.central_fdm(5, 1)(x->objective_f((y=copy(x0); y[1]=x; y), sample_indices, sample_values; C), x0[1])
-	g2 = FiniteDifferences.central_fdm(5, 1)(x->objective_f((y=copy(x0); y[2]=x; y), sample_indices, sample_values; C), x0[2])
-	gobj = objective_g!(zero(img), x0, sample_indices, sample_values; C)
-	g1, g2, gobj, g1/g2, gobj[1]/gobj[2], gobj[1]/g1
-end
+Gray.(CT.zero_padded(pixels, pixels.values))
 
 # ╔═╡ f356fbaa-e585-40dd-80f7-7fb7ff643ebe
 @bind do_compressed_sensing CheckBox()
 
-# ╔═╡ e24f27d5-3453-4c32-9501-c54f22707826
-if do_compressed_sensing
-	optres = optimize(x->objective_f(x, sample_indices, sample_values; C=0.001), (g, x)->objective_g!(g, x, sample_indices, sample_values; C=0.001), rand(Float64, size(img)...), LBFGS(), Optim.Options(g_tol = 1e-5,
-                             iterations = 20,
-                             store_trace = true,
-                             show_trace = false))
-end
+# ╔═╡ ad048231-08a8-4901-88b9-718d958739fa
+@doc CT.sensing_image
 
 # ╔═╡ 927fd52e-edde-4592-ae72-0e249403f009
-Gray.(FFTW.idct(optres.minimizer))
+newimg = if do_compressed_sensing
+	CT.sensing_image(pixels; C=0.005, optimizer=:LBFGS, show_trace=false, linesearch=Optim.HagerZhang())
+else
+	rand(size(img)...)
+end;
 
 # ╔═╡ bf91bdc0-eb76-4e84-97e1-4a64f05392f2
-Gray.(optres.minimizer)
-
-# ╔═╡ 0de7a606-ae18-4da9-8cc0-71dfc9362590
-objective_f(optres.minimizer, sample_indices, sample_values)
+Gray.(newimg)
 
 # ╔═╡ 0733a158-572d-4bff-971a-e10ec7213a60
-FFTW.idct(optres.minimizer)[sample_indices] - sample_values
+FFTW.dct(newimg)
 
-# ╔═╡ aff91caa-ab01-4945-baec-55c4d9b76622
-@bind do_compressed_sensing2 CheckBox()
+# ╔═╡ 23b442ff-cdce-4360-be5c-5e1f19d4d922
+newimg[pixels.indices] .- pixels.values
 
 # ╔═╡ 71f2887e-cce8-4179-9df4-599539604cb2
 md"""
@@ -468,192 +505,117 @@ md"""
 * [Quantum State Tomography via Compressed Sensing.](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.105.150401) David Gross, Yi-Kai Liu, Steven T. Flammia, Stephen Becker, and Jens Eisert. Phys. Rev. Lett. 105, 150401 – Published 4 October 2010
 """
 
-# ╔═╡ e2f1c0cd-9301-4eca-8a54-8e1b2d8ef083
-# source: https://gist.github.com/yegortk/ce18975200e7dffd1759125972cd54f4
-begin
+# ╔═╡ 20ffcbb5-f416-4508-a1ef-0906871a8e1e
+md"""
+# Kernel PCA
+"""
 
-# This is a Julia module implementing OWL-QN algorithm for large-scale L1-regularized convex optimization
-# https://www.microsoft.com/en-us/research/wp-content/uploads/2007/01/andrew07scalable.pdf
-# http://proceedings.mlr.press/v37/gonga15.pdf
+# ╔═╡ 22788566-b8ae-48b2-851f-86dbea15b8a0
+md"
+## References:
+* [Universal Kernels](https://www.jmlr.org/papers/v7/micchelli06a.html), Charles A. Micchelli, Yuesheng Xu, Haizhang Zhang; 2006.
+* [Kernel Principal Component Analysis](https://link.springer.com/chapter/10.1007/BFb0020217), Bernhard Scholkopf, Alexander Smola, Klaus Robert Muller, 1997
+* [Universality, Characteristic Kernels and RKHS Embedding of Measures](https://jmlr.org/papers/v12/sriperumbudur11a.html) Sriperumbudur, B. K., Fukumizu, K. & Lanckriet, G. R. G. Journal of Machine Learning Research 12, 2389–2410 (2011).
+"
 
-# The algorithm minimizes loss of the form: f(x) + lambda * ||x||_1
-# where f(x) is a differentiable convex function
-# ||x||_1 is the L1 norm of the parameter vector x
-# lambda is the regularization strength
+# ╔═╡ ad42f0a5-269b-406d-a7ab-283cfc7a0675
+md"""
+## Kernel Method
+"""
 
-# L-BFGS component implementation is based on:
-# https://en.wikipedia.org/wiki/Limited-memory_BFGS
-# https://mitpress.mit.edu/books/algorithms-optimization
-# https://bitbucket.org/rtaylor/pylbfgs/src/master/
+# ╔═╡ e087e62e-8989-43c7-a58c-dc7d6e1e5b5e
+md"""
+### From dot product to distance
+Let $x, y \in R^n$ be two vectors, their distance is defined by
+```math
+{\rm dist}(x, y) = \|x - y\|^2 = x^T x + y^T y - 2y^T x
+```
 
-# libary to support ⋅ vector dot product notation
+If we can defined an inner product between two vectors, we can defined a measure of distance.
+"""
 
-# struct with key algorithm parameters
-mutable struct OWLQN
-    s                # param_t+1 - param_t [max size of m]
-    y                # grad_t+1 - grad_t [max size of m]
-    rho              # 1/s]i]'y[i]
-    m::Int           # L-BFGS history length 
-    t::Int           # iteration
-    lambda::Float64  # L1 penalty
+# ╔═╡ 6811bb34-1e66-4c35-8e6b-49e972e00556
+md"""
+### Kernel functions
+By extending the dot product by an arbitrary $(highlight("symmetric positive definite")) kernel funciton.
+```math
+x^T y \rightarrow \kappa(x, y)
+```
+
+We have a new measure of distance as
+```math
+{\rm dist}_\kappa(x, y) = \kappa(x, x) + \kappa(y, y) - 2\kappa(x, y)
+```
+"""
+
+# ╔═╡ f4c814c6-58a2-4e8c-99e0-05b7ab935d5b
+md"""
+### Universality of a kernel
+"""
+
+# ╔═╡ 4c843b88-0a4e-44da-8bcb-8eaf295d02ee
+md"""
+A kernel $\kappa$ is universal if and only if the following equation is a universal function approximator.
+"""
+
+# ╔═╡ d47510d1-b3c8-475f-83de-f367c435cd39
+md"""
+```math
+f = \sum_{j=1}^n c_j \kappa(\cdot, x_j),
+```
+
+where $c_j \in \mathbb{R}$ and $x_j$ can be either a number of a vector.
+"""
+
+# ╔═╡ 11ed425b-0338-45db-804d-93f6b2fd0558
+md"""
+As noted in Micchelli et al. (2006), one can ask whether the function, ``f`` in the above euqation approximates any real-valued target function arbitrarily well as the number of summands increases without bound. This is an important question to consider because if the answer is affirmative, then the kernel-based learning algorithm can be consistent in the sense that for any target function, ``f^⋆``, the discrepancy between ``f`` (which is learned from the training data) and ``f^⋆`` goes to zero (in some appropriate sense) as the sample size goes to infinity.
+"""
+
+# ╔═╡ a36ba73f-2014-4187-9bd0-7b297897df26
+let
+	video = html"""<iframe width="560" height="315" src="https://www.youtube.com/embed/hmBTACBGWJs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>"""
+	md"""
+# Homework
+
+### 1. Autodiff
+Given ``A\in \mathbb{R}^{n\times n}`` and ``x, b\in \mathbb{R}^n``. Please derive the backward rule of ``\mathcal{L} = \|Ax - b\|_2`` either using the chain rules or the perturbative approach (from the last lecture).
+
+### 2. Sparsity detection
+Choose one.
+##### (a). Text compression
+Given a text to be compressed:
+```
+Compressed sensing (also known as compressive sensing, compressive sampling, or sparse sampling) is a signal processing technique for efficiently acquiring and reconstructing a signal, by finding solutions to underdetermined linear systems. This is based on the principle that, through optimization, the sparsity of a signal can be exploited to recover it from far fewer samples than required by the Nyquist–Shannon sampling theorem. There are two conditions under which recovery is possible. The first one is sparsity, which requires the signal to be sparse in some domain. The second one is incoherence, which is applied through the isometric property, which is sufficient for sparse signals.
+```
+Please
+1. Analyse the frequency of each char
+2. Create an optimal Huffman coding for each char
+3. Encode the text and count the length of total coding (not including the deliminators).
+
+##### (b). Compressed Sensing
+Go through the video clip [Compressed Sensing: When It Works](https://youtu.be/hmBTACBGWJs)
+
+$(video)
+
+Please summarize this video clip, and explain when does compressed sensing work and when not.
+
+!!! note
+    If you are interested in knowing more about compressed sensing, please do not miss this youtube video paylist: [https://youtube.com/playlist?list=PLMrJAkhIeNNRHP5UA-gIimsXLQyHXxRty](https://youtube.com/playlist?list=PLMrJAkhIeNNRHP5UA-gIimsXLQyHXxRty)
+"""
 end
-
-# constructor
-function OWLQN(x::Vector{Float64}; lambda = 1.0)
-    s = []
-    y = []
-    rho = []
-    m = 6
-    t = 0
-    OWLQN(s, y, rho, m, t, lambda)
-end
-
-# projected gradient based on raw gradient, parameter values, and L1 reg. strength
-function pseudo_gradient(g::Vector{Float64}, x::Vector{Float64}, lambda::Float64)
-    pg = zeros(size(g))
-    for i in 1:size(g)[1]
-        if x[i] > 0
-            pg[i] = g[i] + lambda
-        elseif x[i] < 0
-            pg[i] = g[i] - lambda
-        else
-            if g[i] + lambda < 0
-                pg[i] = g[i] + lambda
-            elseif g[i] - lambda > 0
-                pg[i] = g[i] - lambda
-            end
-        end
-    end
-    return pg
-end
-
-# pi alignment operator - projection of a on orthat defined by b
-function project!(a::Vector{Float64}, b::Vector{Float64})
-    for i in 1:size(a)[1]
-        if sign(a[i]) != sign(b[i])
-            a[i] = 0.0
-        end
-    end
-end
-
-# projected backtracking line search
-function projected_backtracking_line_search_update(f::Function, pg::Vector{Float64}, x::Vector{Float64}, z::Vector{Float64}, lambda::Float64; alpha=1.0, beta=0.5, gamma=1e-4)
-    y = f(x) + lambda*sum(abs.(x))
-
-    # choose orthant for the new point
-    xi = sign.(x)
-    for i in 1:size(xi)[1]
-        if xi[i] == 0
-            xi[i] = sign(-pg[i])
-        end
-    end
-
-    while true
-        # update current point
-        xt = x - alpha * z
-
-        # project point onto orthant
-        project!(xt, xi)
-
-        # sufficient decrease condition
-        if f(xt) + lambda*sum(abs.(xt)) <= y + gamma * (pg ⋅ (xt - x))
-            x .= xt
-            break
-        end
-
-        # update step size
-        alpha *= beta
-    end
-end
-
-# single update of parameters x
-function step!(M::OWLQN, f::Function, ∇f::Function, x::Vector{Float64})
-    s, y, rho, lambda, g = M.s, M.y, M.rho, M.lambda, ∇f(x)
-    
-    if all(g .== 0.0)
-        println("(Local) minimum found: ∇f(x) == 0")
-        return
-    end
-    
-    m = min(M.m, size(s)[1])
-    M.t += 1
-    
-    x_copy = deepcopy(x)
-    g_copy = deepcopy(g)
-    
-    pg = pseudo_gradient(g, x, lambda)
-    Q = deepcopy(pg)
-    
-    if m > 0
-
-        # L-BFGS computation of Hessian-scaled gradient z = H_inv * g
-        alpha = []
-        for i in m : -1 : 1
-            push!(alpha, rho[i] * (s[i] ⋅ Q))
-            Q -= alpha[end] * y[i]
-        end
-        reverse!(alpha)
-        z = Q .* (s[end] ⋅ y[end]) / (y[end] ⋅ y[end])
-        for i in 1 : m
-            z += s[i] * (alpha[i] - rho[i] * (y[i] ⋅ z))
-        end
-        
-        # zeroing out all elements in z if sign(z[i]) != sign(g[i])
-        # that is, if scaling changes gradient sign
-        project!(z, pg)
-        
-        # fancy way to do x .-= z
-        projected_backtracking_line_search_update(f, pg, x, z, lambda)
-    else
-        # fancy way to do  x .-= g
-        projected_backtracking_line_search_update(f, pg, x, pg, lambda, alpha = 1 / norm(pg, 2))
-    end
-    
-    push!(s, x - x_copy)
-    push!(y, ∇f(x) - g_copy)
-    push!(rho, 1/(y[end] ⋅ s[end]))
-    
-    while length(s) > M.m
-        popfirst!(s)
-        popfirst!(y)
-        popfirst!(rho)
-    end
-end
-
-end
-
-# ╔═╡ 1573bac8-7c16-466c-a1ed-b80ad1c49322
-result = if do_compressed_sensing2 let
-	sz = size(img)
-	beta = vec(rand(sz...))
-	lambda = 0.002
-	M = OWLQN(vec(beta); lambda)
-	f = x->objective_f(reshape(x, sz), sample_indices, sample_values; C=0.0)
-	∇f = x->vec(objective_g!(zero(reshape(x, sz)), reshape(x, sz), sample_indices, sample_values; C=0.0))
-	for i in 1:10    
-	    step!(M, f, ∇f, beta);
-	    
-	    mse = f(beta);
-	    nrm = sum(abs.(beta))
-	    loss = mse + lambda * nrm
-	    
-	    #@info(string("Iteration: ", i, " Loss: ", loss, " MSE: ", mse, "\n"))
-	end
-	reshape(beta, sz)
-end end
-
-# ╔═╡ 0221d110-a09d-4f05-9158-ba1d2455e9ee
-Gray.(result)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
@@ -661,11 +623,13 @@ SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+DataStructures = "~0.18.13"
 FFTW = "~1.6.0"
 FiniteDifferences = "~0.12.26"
 Images = "~0.25.2"
 Interpolations = "~0.14.7"
 JuMP = "~1.1.1"
+NLSolversBase = "~7.8.3"
 Optim = "~1.7.5"
 Plots = "~1.38.10"
 PlutoUI = "~0.7.50"
@@ -679,7 +643,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "07bb15927db7eecc1d6b928971dfc4eefe483b9c"
+project_hash = "38a6e156059de689ff0997c7c4d001e2f1c2112f"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -1034,15 +998,15 @@ version = "3.3.8+0"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Preferences", "Printf", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "UUIDs", "p7zip_jll"]
-git-tree-sha1 = "011a22022ed2fb0352a9bded0fa9d3793a8db362"
+git-tree-sha1 = "db730189e3d250d97515a91886de7e33aa8833e6"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.72.1"
+version = "0.72.2"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt5Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "7ea8ead860c85b27e83d198ea54bb2f387db9fc3"
+git-tree-sha1 = "47a2efe07729dd508a032e2f56c46c517481052a"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.72.1+1"
+version = "0.72.2+0"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -1343,9 +1307,9 @@ version = "1.3.0"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
-git-tree-sha1 = "2422f47b34d4b127720a18f86fa7b1aa2e141f29"
+git-tree-sha1 = "98dc144f1e0b299d49e8d23e56ad68d3e4f340a5"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.15.18"
+version = "0.15.20"
 
 [[deps.LazyArtifacts]]
 deps = ["Artifacts", "Pkg"]
@@ -1932,10 +1896,10 @@ uuid = "cae243ae-269e-4f55-b966-ac2d0dc13c15"
 version = "0.1.1"
 
 [[deps.StaticArrays]]
-deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "3c76dde64d03699e074ac02eb2e8ba8254d428da"
+deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
+git-tree-sha1 = "63e84b7fdf5021026d0f17f76af7c57772313d99"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.2.13"
+version = "1.5.21"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -2277,26 +2241,38 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─eb0daec5-acb4-438b-a71c-73b2382f9018
 # ╟─b405e338-bcdb-4b1c-9b9d-d48d67c2d1cc
+# ╟─56f87742-fd58-47cd-ab10-63c2968f540a
 # ╠═3cbcac23-9c60-4deb-9777-797854933b0b
 # ╠═c27b97ac-f6ca-489a-ab68-4d5f6407f4ac
+# ╟─6d603a05-624a-439b-841c-c1049fc35008
 # ╟─bbd1494a-fd20-45b9-9288-130b618a9c6e
 # ╟─68a1c41c-71e5-4ad1-8bc4-9d6045c8552c
-# ╟─07b770d9-780f-4217-a2c4-852d7b028d7b
+# ╟─8c7d2068-784a-45dd-b8a9-966433f41338
 # ╟─9f44ee56-c945-4fc4-b119-9bb54b0573fa
-# ╟─69c73a47-56ed-43b5-88e4-fe9b1be66f54
 # ╟─ed54a4ec-1936-4adf-8022-0de1b4e00c99
+# ╟─3307c8e5-3a82-4188-a8cc-16aaf16cd7bc
+# ╟─301169f6-c5c8-4d29-bfab-417bd8b55a8f
 # ╟─686486c5-8f4c-4071-8406-f1c9c0eb6d1a
+# ╟─07b770d9-780f-4217-a2c4-852d7b028d7b
+# ╟─69c73a47-56ed-43b5-88e4-fe9b1be66f54
+# ╟─2640bfca-c26d-43fd-8556-685909c801db
+# ╟─a3e16dea-465f-457b-b1fa-767a9ea75d8d
+# ╟─6c6f8150-83cc-4b19-9ae1-7667246061fc
 # ╠═b83e597f-723c-477d-9806-f18b4df5fb2f
-# ╠═84652f84-3a33-449d-a1f5-767cad739733
-# ╠═93c7f772-8241-424d-84dc-108be0169666
+# ╠═5df95033-ec18-4520-98eb-c0df71a70092
+# ╠═64cc4e63-861a-483f-a93a-51b6deb7ea8f
+# ╠═aad28726-d9bb-4474-ab13-2ee96d682f2c
+# ╟─0e88e129-06fa-4d86-bf29-d1f256d609c1
+# ╠═b8b4d527-1a87-4e5b-9c06-301a4e14aa83
+# ╠═14b0302a-815a-450f-88f1-68261728a7fe
+# ╠═50d3c466-1091-4548-a279-86a061d872d2
+# ╟─87bf6416-a399-40f7-81b1-d40fb69df70f
+# ╟─4a1484ad-ad3d-44ac-a158-1b5e3a3bb975
 # ╟─2a19dd51-b855-4b67-b3fe-cbf266b88309
 # ╟─adb18186-982a-45c2-8b63-d93d3f80c5d4
-# ╟─5f3ec76c-6e48-4e71-b3f6-da22ec5285f0
-# ╟─56f87742-fd58-47cd-ab10-63c2968f540a
-# ╟─12beafc3-ad18-4816-a832-64d89b9832d7
-# ╟─20ffcbb5-f416-4508-a1ef-0906871a8e1e
-# ╟─963a5c10-70da-4e1f-b26d-ce1368d15eec
+# ╠═d363841d-39bc-4aaa-87bd-31fc81680576
 # ╟─d8953176-d094-4d03-ad86-edaa1320c56f
 # ╟─688bd350-0efb-4dee-aaa0-81da147130c5
 # ╟─db3693f0-df90-11ed-36f2-238ff06426b4
@@ -2342,31 +2318,38 @@ version = "1.4.1+0"
 # ╠═f06bd52e-77fa-4af4-b89c-959f2130beb8
 # ╟─f311bd77-1d8d-4291-998c-e96338b3da13
 # ╟─aedbcc25-526a-445f-82ef-317637d69e5e
-# ╠═6151ba1d-6727-475c-8d79-e55a3ba589c4
+# ╟─6151ba1d-6727-475c-8d79-e55a3ba589c4
+# ╟─aed7599a-31e7-4b9e-975d-d17374514b67
 # ╠═4455086c-029d-48cf-b696-af011cb563a8
 # ╠═8411466f-a684-4300-a97c-8dcbe5156fe7
+# ╠═beb045bb-0eb1-435c-a0fb-55d5f3cbdb9a
 # ╠═e86fa8e0-57ff-4e8a-b345-95744187af2b
 # ╠═44b00295-5010-434d-8470-033033a43193
-# ╠═297dff75-f091-4292-aab7-83beb1a18149
+# ╠═147c6133-3c53-4ad3-b1af-1b46821c33ce
+# ╠═6eb488a5-675b-4e4a-a363-6675ea47ed48
+# ╠═2e846f5d-a2fb-4d62-9f95-9da590319708
+# ╟─3735f147-e90b-4545-b920-8aa92d50edc9
+# ╠═e29b0741-b003-49ce-8622-bad8e1546336
 # ╟─60aee03d-eced-4653-83f4-9100868aae9a
-# ╠═f1af554e-ec6b-4fc6-bc36-59f2f1fa385c
-# ╟─6d390af5-7762-4cbc-b44d-9d3c772a5b82
-# ╠═db150c9f-c202-4415-807b-883436176c0b
-# ╠═c0654628-d5f8-4172-aed9-73374a537dfc
 # ╠═f1a9764e-41c1-41a6-8e71-82d2e6fda658
 # ╠═9ce82cd0-da0e-409c-b127-655365f37ad4
 # ╠═7e66c503-22d5-4768-ac40-096f15340aae
-# ╠═7f837726-c264-49ff-a597-e0980a3209e6
 # ╠═f356fbaa-e585-40dd-80f7-7fb7ff643ebe
-# ╠═e24f27d5-3453-4c32-9501-c54f22707826
+# ╠═ad048231-08a8-4901-88b9-718d958739fa
 # ╠═927fd52e-edde-4592-ae72-0e249403f009
 # ╠═bf91bdc0-eb76-4e84-97e1-4a64f05392f2
-# ╠═0de7a606-ae18-4da9-8cc0-71dfc9362590
 # ╠═0733a158-572d-4bff-971a-e10ec7213a60
-# ╠═aff91caa-ab01-4945-baec-55c4d9b76622
-# ╠═1573bac8-7c16-466c-a1ed-b80ad1c49322
-# ╠═0221d110-a09d-4f05-9158-ba1d2455e9ee
+# ╠═23b442ff-cdce-4360-be5c-5e1f19d4d922
 # ╟─71f2887e-cce8-4179-9df4-599539604cb2
-# ╠═e2f1c0cd-9301-4eca-8a54-8e1b2d8ef083
+# ╟─20ffcbb5-f416-4508-a1ef-0906871a8e1e
+# ╟─22788566-b8ae-48b2-851f-86dbea15b8a0
+# ╟─ad42f0a5-269b-406d-a7ab-283cfc7a0675
+# ╟─e087e62e-8989-43c7-a58c-dc7d6e1e5b5e
+# ╟─6811bb34-1e66-4c35-8e6b-49e972e00556
+# ╟─f4c814c6-58a2-4e8c-99e0-05b7ab935d5b
+# ╟─4c843b88-0a4e-44da-8bcb-8eaf295d02ee
+# ╟─d47510d1-b3c8-475f-83de-f367c435cd39
+# ╟─11ed425b-0338-45db-804d-93f6b2fd0558
+# ╟─a36ba73f-2014-4187-9bd0-7b297897df26
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
