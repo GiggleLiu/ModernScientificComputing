@@ -1,0 +1,16 @@
+name = "KernelPCA"
+uuid = "659736db-e33a-4d97-a2b7-5a5dcfea6c5b"
+authors = ["GiggleLiu <cacate0129@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
