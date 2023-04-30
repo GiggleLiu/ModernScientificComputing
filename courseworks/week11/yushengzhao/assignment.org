@@ -1,0 +1,6 @@
+#+TITLE: Assignment 11
+#+AUTHOR: Yusheng Zhao
+#+OPTIONS: toc:nil
+
+* Problem 1
+$\frac{\partial \|\mathbf{x}\|^2}{\partial \mathbf{x}} = 2 \mathbf{x}$
