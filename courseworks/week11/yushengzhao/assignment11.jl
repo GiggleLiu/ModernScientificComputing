@@ -9,6 +9,11 @@ begin
 using DataStructures 
 end
 
+# ╔═╡ 037d2ab7-25ad-454e-aeba-ab40ff13f748
+md"
+Derivation in the pdf file.
+" 
+
 # ╔═╡ 0f860824-e73f-11ed-146b-c33ae9c33cc8
 # following code from lecture
 struct Node{VT,PT}
@@ -93,7 +98,7 @@ end
 # ╔═╡ 3e0497f7-299e-4b71-9b9e-02e8e179b12f
 let
 total_code_length = mean_code_length * length(text)
-    println("The total code length is: $(ceil(Int,total_code_length))")
+    println("The total coding length is: $(ceil(Int,total_code_length))")
 end
 
 # ╔═╡ afa26a29-2cf7-474b-987e-14ac923ab789
@@ -114,7 +119,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "5a896dd2d0ff25ca4c1b15e3bcb710a969e917d6"
+project_hash = "94b5f2f7240c1d4a3c57271fa0c48cc356714096"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -197,6 +202,7 @@ version = "5.1.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╠═037d2ab7-25ad-454e-aeba-ab40ff13f748
 # ╠═964c0fcd-60ce-4d8b-bed3-f1f6f5f1d8b3
 # ╠═0f860824-e73f-11ed-146b-c33ae9c33cc8
 # ╠═be7181a4-b626-47ed-9cad-1b1f04ae052d
