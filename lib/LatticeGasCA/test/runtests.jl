@@ -1,6 +1,6 @@
 using LatticeGasCA
 using Test
 
-@testset "LatticeGasCA.jl" begin
-    # Write your tests here.
+@testset "hpp" begin
+    include("hpp.jl")
 end
