@@ -7,6 +7,21 @@ using KernelPCA, Test, LinearAlgebra
     @test diag(m) ≈ ones(100)
 end
 
+@testset "poly" begin
+    ker = PolyKernel(2)
+    x, y = Point(0.2, 0.5), Point(0.4, 0.9)
+    @test ker(x, y) == ϕ(ker, x)' * ϕ(ker, y)
+
+    ker = PolyKernel(3)
+    x, y = Point(0.2, 0.5), Point(0.4, 0.9)
+    @test ker(x, y) == ϕ(ker, x)' * ϕ(ker, y)
+
+    # linear kernel
+    ker = PolyKernel(1)
+    @test ker(x, y) == ϕ(ker, x)' * ϕ(ker, y)
+    @test ker(x, y) == collect(x)' * collect(y)
+end
+
 using Plots
 
 # 1D
