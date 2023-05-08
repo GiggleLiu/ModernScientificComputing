@@ -41,7 +41,7 @@ function wavelet_transformation(signal::AbstractVector{T}, fw) where T
     fft_product = fft_signal .* fft_fw
 
     # Perform the inverse FFT to get the resulting wavelet transformation
-    resulting_vector = real(ifft(fft_product))[1:n_signal + n_fw - 1]
+    resulting_vector = abs.(ifft(fft_product))[1:n_signal + n_fw - 1]
 
     return resulting_vector
 end
@@ -57,5 +57,5 @@ let
 	push!(res, res_a)
   end
   plot3 = heatmap(hcat(res...); ylabel="time", xlabel="widths")
-  savefig(plot3,"wavelet.png")
+  savefig(plot3,"wavelet-2.png")
 end
