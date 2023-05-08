@@ -1,0 +1,6 @@
+using LinearAlgebra
+
+a = 5.0
+b = 3.0
+
+cond(a/b) = 1.0
