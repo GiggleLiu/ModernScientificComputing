@@ -1,4 +1,6 @@
 [deps]
 Franklin = "713c75ef-9fc9-4b05-94a9-213340da978e"
 NodeJS = "2bd173c7-0d6d-553b-b6af-13a54713934c"
+PlutoLecturing = "3e1d68ed-7204-4e43-84e1-610205b9583d"
+PlutoSliderServer = "2fc8631c-6f24-4c5b-bca7-cbb509c42db4"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
