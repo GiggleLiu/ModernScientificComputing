@@ -40,27 +40,18 @@ rbf_kernel_function(x, y, σ::Real) = exp(-1/2σ * dist2(x, y))
 
 """
     PolyKernel <: AbstractKernel
-    PolyKernel(order)
+    PolyKernel{order}()
 
 Polynomial Kernel.
 """
-struct PolyKernel <: AbstractKernel
-    order::Int
-end
-(k::PolyKernel)(x, y) = poly_kernel_function(x, y, k.order)
+struct PolyKernel{order} <: AbstractKernel end
+(k::PolyKernel{order})(x, y) where order = poly_kernel_function(x, y, order)
 poly_kernel_function(x, y, order::Int) = dot(x, y)^order
+get_order(::PolyKernel{order}) where order = order
 
 # take `k.order` elements from input vector `x`.
-function ϕ(k::PolyKernel, x)
-    vec([prod(i->x[i], ci.I) for ci in CartesianIndices(ntuple(i->length(x), k.order))])
+function ϕ(::PolyKernel{order}, x) where order
+    vec([prod(i->x[i], ci.I) for ci in CartesianIndices(ntuple(i->length(x), order))])
 end
 
-"""
-    LinearKernel <: AbstractKernel
-    LinearKernel(order)
-
-Polynomial Kernel.
-"""
-struct LinearKernel <: AbstractKernel end
-(k::LinearKernel)(x, y) = dot(x, y)
-ϕ(k::LinearKernel, x) = x
+const LinearKernel = PolyKernel{1}

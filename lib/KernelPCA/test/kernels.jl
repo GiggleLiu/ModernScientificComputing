@@ -8,16 +8,16 @@ using KernelPCA, Test, LinearAlgebra
 end
 
 @testset "poly" begin
-    ker = PolyKernel(2)
+    ker = PolyKernel{2}()
     x, y = Point(0.2, 0.5), Point(0.4, 0.9)
     @test ker(x, y) == ϕ(ker, x)' * ϕ(ker, y)
 
-    ker = PolyKernel(3)
+    ker = PolyKernel{3}()
     x, y = Point(0.2, 0.5), Point(0.4, 0.9)
     @test ker(x, y) == ϕ(ker, x)' * ϕ(ker, y)
 
     # linear kernel
-    ker = PolyKernel(1)
+    ker = LinearKernel()
     @test ker(x, y) == ϕ(ker, x)' * ϕ(ker, y)
     @test ker(x, y) == collect(x)' * collect(y)
 end
