@@ -7,6 +7,9 @@ struct KPCAResult{KT<:AbstractKernel, T, VT<:AbstractVector{T}, MT<:AbstractMatr
     anchors::AVT
 end
 
+# Kernel Principle Component analysis
+# The inverse map could be found by using the technique of "Learning to Find Pre-Images"
+# https://papers.nips.cc/paper_files/paper/2003/hash/ac1ad983e08ad3304a97e147f522747e-Abstract.html
 function kpca(kernel::AbstractKernel, dataset::AbstractVector; atol=1e-10, centered::Bool=true)
     K = matrix(kernel, dataset)
     n = length(dataset)

@@ -1,13 +1,29 @@
 using KernelPCA, Test
-using GLMakie: scatter, contour, Figure, Axis, contour!, scatter!
 using LinearAlgebra, Random
+using Plots
 
 @testset "kpca" begin
     Random.seed!(4)
     # normalization condition
     #kernel = RBFKernel(0.5)
     kernel = PolyKernel{2}()
-    dataset = KernelPCA.DataSets.quadratic(100)
+    dataset = KernelPCA.DataSets.rings(100)
+    #dataset = KernelPCA.DataSets.linear(100)
+    res = kpca(kernel, dataset; centered=false)
+    # check normalization
+    for k in 1:length(res.lambda)
+        @test res.lambda[k] * norm(res.vectors[:, k])^2 ≈ 1
+    end
+    @show res.lambda
+    display(showres(res))
+end
+
+@testset "kpca" begin
+    Random.seed!(4)
+    # normalization condition
+    #kernel = RBFKernel(0.5)
+    kernel = PolyKernel{2}()
+    dataset = KernelPCA.DataSets.curve(100)
     #dataset = KernelPCA.DataSets.linear(100)
     res = kpca(kernel, dataset; centered=false)
     # check normalization
@@ -21,13 +37,14 @@ using LinearAlgebra, Random
     for k in 1:length(res.lambda)
         @test res.lambda[1] * V1 ≈ C * V1
     end
-    plot(res)
+    showres(res)
 end
 
 @testset "centered kpca" begin
     Random.seed!(2)
     kernel = PolyKernel{2}()
-    dataset = KernelPCA.DataSets.quadratic(100)
+    #kernel = LinearKernel()
+    dataset = KernelPCA.DataSets.curve(100)
     res = kpca(kernel, dataset; centered=true)
 
     Φ = [ϕ(kernel, x) for x in dataset]
@@ -39,19 +56,17 @@ end
     for k in 1:length(res.lambda)
         @test res.lambda[1] * V1 ≈ C * V1
     end
-    plot(res)
+    display(showres(res))
 end
 
-function plot(res)
+function showres(res)
     dataset = res.anchors
     x, y = getindex.(dataset, 1), getindex.(dataset, 2)
     @show res.lambda
     kf = kernelf(res, 1)
-    f = Figure()
-    ax = Axis(f[1, 1])
-    X, Y = -3:0.01:3, -3:0.01:3
+    X, Y = minimum(x):0.01:maximum(x), minimum(y):0.01:maximum(y)
+    @show X, Y
     #levels = -0.1:0.01:0.1
-    contour!(ax, X, Y, kf.(Point.(X, Y')); labels=true)
-    scatter!(ax, x, y)
-    display(f)
+    plt = Plots.contour(X, Y, kf.(KernelPCA.Point.(X', Y)); label="")
+    Plots.scatter!(plt, x, y; label="data")
 end

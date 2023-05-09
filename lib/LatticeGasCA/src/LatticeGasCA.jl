@@ -2,7 +2,7 @@ module LatticeGasCA
 
 import UnicodePlots
 
-export hpp_center_square, hpp_singledot, HPPLatticeGas, simulate, update!
+export hpp_center_square, hpp_singledot, HPPLatticeGas, simulate, update!, AbstractLatticeGas, density
 
 include("hpp.jl")
 include("cuda.jl")

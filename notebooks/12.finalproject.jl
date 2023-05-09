@@ -5,13 +5,24 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ f2d7dc70-2de3-4411-ab1d-973980693f46
-using PlutoUI
+using PlutoUI, Test
 
 # ╔═╡ 075a4141-5860-4cf1-888d-23f9e090c48e
-using CUDA
+using CUDA; CUDA.allowscalar(false)
+
+# ╔═╡ 0ea829bc-87f1-479d-b0ee-cd222afcb173
+using BenchmarkTools
+
+# ╔═╡ bffa0b11-1e5e-412b-88ed-35a4a9b450ba
+using CUDA.CUSPARSE
 
 # ╔═╡ 695af2cf-7905-4282-a735-4e5f3e6e2879
 TableOfContents()
+
+# ╔═╡ f26db3f9-04a0-4e72-93ee-219e4743b1d9
+function highlight(str)
+	HTML("""<span style="background-color:yellow">$(str)</span>""")
+end
 
 # ╔═╡ 0b956e8e-e5a1-11ed-2cfd-ddc0643b1144
 md"""
@@ -20,32 +31,6 @@ md"""
 
 # ╔═╡ 88f7b1b8-c60f-4969-997a-6f8b47d51e34
 md"# Simulting lattice gas cellular automata"
-
-# ╔═╡ 6070842e-4117-4d26-9c75-6989c8b3e394
-md"""## The Navier-Stokes equation
-Reference: [https://youtu.be/Ra7aQlenTb8](https://youtu.be/Ra7aQlenTb8)
-"""
-
-# ╔═╡ 2440375c-9284-4624-b6bc-dd41bcbd8b25
-html"""
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Ra7aQlenTb8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-"""
-
-# ╔═╡ c5786eac-1913-47e6-b4f5-949090bd2da9
-md"""
-The navier stokes equation describes the fluid dynamics, which contains the following two parts.
-
-The first one describes the conservation of volume
-```math
-\nabla \underbrace{u}_{\text{velocity } u \in \mathbb{R}^d} = 0
-```
-
-The second one describes the dynamics
-```math
-\underbrace{\rho}_{\text{density}} \frac{du}{dt} = \underbrace{-\nabla p}_{\text{pressure}} + \underbrace{\mu \nabla^2 u}_{\text{viscosity (or friction)}} + \underbrace{f}_{\text{external force}}.
-```
-
-"""
 
 # ╔═╡ 050b3d36-6d01-4eb2-b5ea-6308225eced0
 md"""
@@ -83,56 +68,226 @@ The following rules also govern the model:
 # ╔═╡ 7326ecb5-6ac6-41e1-a4e1-e8c3d2e4c5cd
 md"""
 # CUDA programming with Julia
-Even a gorilla can understand
+CUDA programming is a $(highlight("parallel computing platform and programming model")) developed by NVIDIA for performing general-purpose computations on its GPUs (Graphics Processing Units). CUDA stands for Compute Unified Device Architecture.
+
+References:
+1. [JuliaComputing/Training](https://github.com/JuliaComputing/Training)
+2. [arXiv: 1712.03112](https://arxiv.org/abs/1712.03112)
 """
 
-# ╔═╡ 790feb8f-2438-4ea9-9f72-dcfa8da9f7f2
-md"All you need is [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl)"
+# ╔═╡ e4772a9c-ef82-4710-9459-c4652399867c
+md"""
+## Goal
+1. Run a CUDA program
+3. Write your own CUDA kernel
+4. Create a CUDA project
+"""
+
+# ╔═╡ 788e09ee-072d-4192-86da-46cfb110aab7
+md"## Run a CUDA program"
 
 # ╔═╡ afcda842-6a4f-4898-aec2-f036f006cc81
 md"""
-1. Check whether you have a GPU installed.
+1. Make sure you have a NVIDIA GPU device and its driver is properly installed.
 """
 
 # ╔═╡ c6ff8e8f-270d-4cfe-b09e-b8ecba71d3b9
 run(`nvidia-smi`)
 
 # ╔═╡ ec84fd61-8e6f-4c95-ba30-44f23af04bcb
-md""
+md"""2. Install the [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) package, and disable scalar indexing of CUDA arrays.
+
+CUDA.jl provides wrappers for several CUDA libraries that are part of the CUDA toolkit:
+
+* Driver library: manage the device, $(highlight("launch kernels")), etc.
+* CUBLAS: linear algebra
+* CURAND: random number generation
+* CUFFT: fast fourier transform
+* CUSPARSE: sparse arrays
+* CUSOLVER: decompositions & linear systems
+
+There's also support for a couple of libraries that aren't part of the CUDA toolkit, but are commonly used:
+
+* CUDNN: deep neural networks
+* CUTENSOR: linear algebra with tensors
+"""
+
+# ╔═╡ 57437cc1-d3b8-4fe0-a884-a3f373b5baac
+CUDA.versioninfo()
+
+# ╔═╡ 1fee5ca3-c7fa-4b92-96fc-f338e4190534
+md"""
+3. Choose a device (if multiple devices are available).
+"""
+
+# ╔═╡ 58906955-9355-4029-bef2-1fe7d49a5ca7
+devices()
+
+# ╔═╡ 14e07e25-62bf-4bb2-8091-20a23d7944dc
+dev = CuDevice(0)
+
+# ╔═╡ 8819ab5f-6834-4fa4-932a-810428fdd8c8
+md"grid > block > thread"
+
+# ╔═╡ bf8970df-d3a6-4a73-9458-00b9e531d2c6
+attribute(dev, CUDA.DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK)
+
+# ╔═╡ 2646178f-1d46-4d4c-9054-cceaa84cd3b3
+attribute(dev, CUDA.CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X)
+
+# ╔═╡ 242c6d2f-8be8-4a78-8c17-407f1bc96bec
+attribute(dev, CUDA.CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X)
 
 # ╔═╡ 09e1e603-caef-4ee9-959f-1154efaf1557
-md"Initialize an array"
+md"4. Create a CUDA Array"
 
 # ╔═╡ 5cb9f3f9-9244-4785-9b19-f04e19ee58d7
 CUDA.zeros(10)
 
+# ╔═╡ ada9cb01-c2c7-4354-8581-d84c63b82b34
+cuarray1 = CUDA.randn(10)
+
+# ╔═╡ f51579f8-b662-4050-bdbe-9ebcd6d6c172
+@test_throws ErrorException cuarray1[3]
+
+# ╔═╡ ded2a67f-f6c8-4f8a-b9df-325daf86442d
+CUDA.@allowscalar cuarray1[3] += 10
+
+# ╔═╡ 6617d8ae-60cb-4257-9414-079b8964759d
+md"Upload a CPU Array to GPU"
+
+# ╔═╡ a3eb5495-c4f5-4b20-b045-86b75d8c8e58
+CuArray(randn(10))
+
+# ╔═╡ adaeb3b3-4632-44c5-baf8-6fc8777cde89
+md"5. Compute"
+
+# ╔═╡ cf9931db-ac03-445b-8b50-252d202ad5b8
+md"""
+Computing a function on GPU Arrays
+1. Launch a CUDA job - a few micro seconds
+2. Launch more CUDA jobs...
+3. Synchronize threads - a few micro seconds
+"""
+
+# ╔═╡ 8a2dbc92-2f0d-4e73-914e-d78291f9fb39
+md"Computing matrix multiplication."
+
+# ╔═╡ 1fcad444-1c0f-4ee9-ba61-03a399674338
+@elapsed rand(2000,2000) * rand(2000,2000)
+
+# ╔═╡ 7e002aa5-fc10-4583-bbae-6499d9cd48b3
+@elapsed CUDA.@sync CUDA.rand(2000,2000) * CUDA.rand(2000,2000)
+
+# ╔═╡ 7e6abc2d-97ca-44d9-91b2-ae888e413be2
+md"Broadcasting a native Julia function
+Julia -> LLVM (optimized for CUDA) -> CUDA
+"
+
+# ╔═╡ 0a4a816a-ec1a-45dc-8519-9cc92fb25051
+factorial(n) = n == 1 ? 1 : factorial(n-1)*n
+
 # ╔═╡ d5005144-80ae-457a-aa2b-03971784059f
 # this function is copied from lecture 9
-function poor_besselj(ν, z::T; atol=eps(T)) where T
+function poor_besselj(ν::Int, z::T; atol=eps(T)) where T
     k = 0
     s = (z/2)^ν / factorial(ν)
-    out = s
+    out = s::T
     while abs(s) > atol
         k += 1
-        s *= (-1) / k / (k+ν) * (z/2)^2
+        s *= -(k+ν) * (z/2)^2 / k
         out += s
     end
     out
 end
 
 # ╔═╡ 610521c2-d36f-4174-816f-82b36d052c94
+# ╠═╡ disabled = true
+#=╠═╡
 x = CUDA.CuArray(0.0:0.01:10)
+  ╠═╡ =#
+
+# ╔═╡ c84dcaf6-7165-4473-aa0b-0cf15562f50d
+md"6. manage your GPU devices"
+
+# ╔═╡ 142d4bda-85b9-4eb3-adb7-0ad61c82d2f1
+nvml_dev = NVML.Device(parent_uuid(device()))
+
+# ╔═╡ 90a4d05b-02d9-414b-b571-4680043edf36
+NVML.power_usage(nvml_dev)
+
+# ╔═╡ bb6ec433-d2e9-41c5-9a50-3617f666a455
+NVML.utilization_rates(nvml_dev)
+
+# ╔═╡ c45650c7-413a-4ef0-848d-9f4b3ca5055d
+NVML.compute_processes(nvml_dev)
+
+# ╔═╡ 1e134127-5fa4-4153-adb8-24dd5b33a957
+md"## Sparse Arrays"
+
+# ╔═╡ ac8b50fb-7acf-4f8b-b05a-4f39133d9926
+x = CUDA.CUSPARSE.sprand(10, 10, 0.2)
 
 # ╔═╡ fc4e9b3b-c716-4b27-90cb-7f90fb762148
 poor_besselj.(1, x)
 
+# ╔═╡ eba6ff9a-3d68-40a3-9573-b5031c1d2355
+x.nzval |> typeof
+
+# ╔═╡ 6f0be83e-7e0e-4831-8c43-030b0a575fe5
+d_x = CuSparseVector(x)
+10-element CuSparseVector{Float64, Int32} with 5 stored entries:
+  [2 ]  =  0.538639
+  [4 ]  =  0.89699
+  [6 ]  =  0.258478
+  [7 ]  =  0.338949
+  [10]  =  0.424742
+
+# ╔═╡ d24a5cc3-2f02-4967-b967-c8e823529761
+nnz(d_x)
+
+# ╔═╡ e1f2b080-3bfe-43ce-b3e0-956441251578
+md"## Kernel Programming"
+
+# ╔═╡ 2f2de6d7-6d28-4973-a58e-dd37e8a13e88
+md"Please check [lib/CUDATutorial](../lib/CUDATutorial/kernel.jl)"
+
+# ╔═╡ 6070842e-4117-4d26-9c75-6989c8b3e394
+md"""# Appendix: The Navier-Stokes equation
+Reference: [https://youtu.be/Ra7aQlenTb8](https://youtu.be/Ra7aQlenTb8)
+"""
+
+# ╔═╡ 2440375c-9284-4624-b6bc-dd41bcbd8b25
+html"""
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Ra7aQlenTb8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+"""
+
+# ╔═╡ c5786eac-1913-47e6-b4f5-949090bd2da9
+md"""
+The navier stokes equation describes the fluid dynamics, which contains the following two parts.
+
+The first one describes the conservation of volume
+```math
+\nabla \underbrace{u}_{\text{velocity } u \in \mathbb{R}^d} = 0
+```
+
+The second one describes the dynamics
+```math
+\underbrace{\rho}_{\text{density}} \frac{du}{dt} = \underbrace{-\nabla p}_{\text{pressure}} + \underbrace{\mu \nabla^2 u}_{\text{viscosity (or friction)}} + \underbrace{f}_{\text{external force}}.
+```
+
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+BenchmarkTools = "~1.3.2"
 CUDA = "~4.1.4"
 PlutoUI = "~0.7.50"
 """
@@ -141,15 +296,21 @@ PlutoUI = "~0.7.50"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.5"
+julia_version = "1.9.0-rc3"
 manifest_format = "2.0"
-project_hash = "aa555d3ba4ae7a538ad52ff8ad8750ddf947fd18"
+project_hash = "7d0204ea5973ad20c1acbad2acd500bb70fe7c0a"
 
 [[deps.AbstractFFTs]]
-deps = ["ChainRulesCore", "LinearAlgebra"]
+deps = ["LinearAlgebra"]
 git-tree-sha1 = "16b6dbc4cf7caee4e1e75c49485ec67b667098a0"
 uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 version = "1.3.1"
+
+    [deps.AbstractFFTs.extensions]
+    AbstractFFTsChainRulesCoreExt = "ChainRulesCore"
+
+    [deps.AbstractFFTs.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -162,6 +323,10 @@ deps = ["LinearAlgebra", "Requires"]
 git-tree-sha1 = "cc37d689f599e8df4f464b2fa3870ff7db7492ef"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.6.1"
+weakdeps = ["StaticArrays"]
+
+    [deps.Adapt.extensions]
+    AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -184,6 +349,12 @@ version = "0.4.2"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.3.2"
 
 [[deps.CEnum]]
 git-tree-sha1 = "eb4cb44a499229b3b8426dcfb5dd85333951ff90"
@@ -214,34 +385,16 @@ git-tree-sha1 = "81eed046f28a0cdd0dc1f61d00a49061b7cc9433"
 uuid = "76a88914-d11a-5bdc-97e0-2f5a05c973a2"
 version = "0.5.0+2"
 
-[[deps.ChainRulesCore]]
-deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "c6d890a52d2c4d55d326439580c3b8d0875a77d9"
-uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.7"
-
-[[deps.ChangesOfVariables]]
-deps = ["LinearAlgebra", "Test"]
-git-tree-sha1 = "f84967c4497e0e1955f9a582c232b02847c5f589"
-uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-version = "0.1.7"
-
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
 git-tree-sha1 = "eb7f0f8307f71fac7c606984ea5fb2817275d6e4"
 uuid = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 version = "0.11.4"
 
-[[deps.Compat]]
-deps = ["Dates", "LinearAlgebra", "UUIDs"]
-git-tree-sha1 = "7a60c856b9fa189eb34f5f8a6f6b5529b7942957"
-uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.6.1"
-
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.1+0"
+version = "1.0.2+0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -312,12 +465,6 @@ version = "0.2.2"
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
-[[deps.InverseFunctions]]
-deps = ["Test"]
-git-tree-sha1 = "6667aadd1cdee2c6cd068128b3d226ebc4fb0c67"
-uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.9"
-
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
@@ -380,14 +527,24 @@ version = "1.10.2+0"
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[deps.LinearAlgebra]]
-deps = ["Libdl", "libblastrampoline_jll"]
+deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
-deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
+deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "0a1b7c2863e44523180fdb3146534e265a91870b"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 version = "0.3.23"
+
+    [deps.LogExpFunctions.extensions]
+    LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
+    LogExpFunctionsChangesOfVariablesExt = "ChangesOfVariables"
+    LogExpFunctionsInverseFunctionsExt = "InverseFunctions"
+
+    [deps.LogExpFunctions.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    ChangesOfVariables = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -410,14 +567,14 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.0+0"
+version = "2.28.2+0"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.2.1"
+version = "2022.10.11"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
@@ -426,7 +583,7 @@ version = "1.2.0"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.20+0"
+version = "0.3.21+4"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -446,9 +603,9 @@ uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.5.8"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.8.0"
+version = "1.9.0"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -471,6 +628,10 @@ version = "1.3.0"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.Profile]]
+deps = ["Printf"]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -526,14 +687,20 @@ version = "1.0.3"
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[deps.SparseArrays]]
-deps = ["LinearAlgebra", "Random"]
+deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SpecialFunctions]]
-deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
 git-tree-sha1 = "ef28127915f4229c971eb43f3fc075dd3fe91880"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "2.2.0"
+
+    [deps.SpecialFunctions.extensions]
+    SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
+
+    [deps.SpecialFunctions.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
@@ -549,16 +716,22 @@ version = "1.4.0"
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+version = "1.9.0"
+
+[[deps.SuiteSparse_jll]]
+deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
+uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
+version = "5.10.1+6"
 
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.0"
+version = "1.0.3"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.1"
+version = "1.10.0"
 
 [[deps.Test]]
 deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
@@ -601,12 +774,12 @@ version = "0.1.2"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.12+3"
+version = "1.2.13+0"
 
 [[deps.libblastrampoline_jll]]
-deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
+deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.1.1+0"
+version = "5.7.0+0"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -622,25 +795,61 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╠═f2d7dc70-2de3-4411-ab1d-973980693f46
 # ╠═695af2cf-7905-4282-a735-4e5f3e6e2879
+# ╠═f26db3f9-04a0-4e72-93ee-219e4743b1d9
 # ╟─0b956e8e-e5a1-11ed-2cfd-ddc0643b1144
 # ╟─88f7b1b8-c60f-4969-997a-6f8b47d51e34
-# ╟─6070842e-4117-4d26-9c75-6989c8b3e394
-# ╟─2440375c-9284-4624-b6bc-dd41bcbd8b25
-# ╟─c5786eac-1913-47e6-b4f5-949090bd2da9
 # ╟─050b3d36-6d01-4eb2-b5ea-6308225eced0
 # ╟─6739234e-c3f4-42bb-a056-8c31e0913d10
 # ╟─02154869-eefb-44e6-8b2c-9b471b1ba250
 # ╟─3659db4f-d7f1-4e8b-9806-e5e58408912f
 # ╟─7326ecb5-6ac6-41e1-a4e1-e8c3d2e4c5cd
-# ╟─790feb8f-2438-4ea9-9f72-dcfa8da9f7f2
+# ╟─e4772a9c-ef82-4710-9459-c4652399867c
+# ╟─788e09ee-072d-4192-86da-46cfb110aab7
 # ╟─afcda842-6a4f-4898-aec2-f036f006cc81
 # ╠═c6ff8e8f-270d-4cfe-b09e-b8ecba71d3b9
-# ╠═ec84fd61-8e6f-4c95-ba30-44f23af04bcb
+# ╟─ec84fd61-8e6f-4c95-ba30-44f23af04bcb
 # ╠═075a4141-5860-4cf1-888d-23f9e090c48e
+# ╠═57437cc1-d3b8-4fe0-a884-a3f373b5baac
+# ╟─1fee5ca3-c7fa-4b92-96fc-f338e4190534
+# ╠═58906955-9355-4029-bef2-1fe7d49a5ca7
+# ╠═14e07e25-62bf-4bb2-8091-20a23d7944dc
+# ╟─8819ab5f-6834-4fa4-932a-810428fdd8c8
+# ╠═bf8970df-d3a6-4a73-9458-00b9e531d2c6
+# ╠═2646178f-1d46-4d4c-9054-cceaa84cd3b3
+# ╠═242c6d2f-8be8-4a78-8c17-407f1bc96bec
 # ╟─09e1e603-caef-4ee9-959f-1154efaf1557
 # ╠═5cb9f3f9-9244-4785-9b19-f04e19ee58d7
+# ╠═ada9cb01-c2c7-4354-8581-d84c63b82b34
+# ╠═f51579f8-b662-4050-bdbe-9ebcd6d6c172
+# ╠═ded2a67f-f6c8-4f8a-b9df-325daf86442d
+# ╟─6617d8ae-60cb-4257-9414-079b8964759d
+# ╠═a3eb5495-c4f5-4b20-b045-86b75d8c8e58
+# ╟─adaeb3b3-4632-44c5-baf8-6fc8777cde89
+# ╟─cf9931db-ac03-445b-8b50-252d202ad5b8
+# ╟─8a2dbc92-2f0d-4e73-914e-d78291f9fb39
+# ╠═1fcad444-1c0f-4ee9-ba61-03a399674338
+# ╠═7e002aa5-fc10-4583-bbae-6499d9cd48b3
+# ╟─7e6abc2d-97ca-44d9-91b2-ae888e413be2
 # ╠═d5005144-80ae-457a-aa2b-03971784059f
+# ╠═0a4a816a-ec1a-45dc-8519-9cc92fb25051
 # ╠═610521c2-d36f-4174-816f-82b36d052c94
 # ╠═fc4e9b3b-c716-4b27-90cb-7f90fb762148
+# ╠═0ea829bc-87f1-479d-b0ee-cd222afcb173
+# ╟─c84dcaf6-7165-4473-aa0b-0cf15562f50d
+# ╠═142d4bda-85b9-4eb3-adb7-0ad61c82d2f1
+# ╠═90a4d05b-02d9-414b-b571-4680043edf36
+# ╠═bb6ec433-d2e9-41c5-9a50-3617f666a455
+# ╠═c45650c7-413a-4ef0-848d-9f4b3ca5055d
+# ╟─1e134127-5fa4-4153-adb8-24dd5b33a957
+# ╠═ac8b50fb-7acf-4f8b-b05a-4f39133d9926
+# ╠═eba6ff9a-3d68-40a3-9573-b5031c1d2355
+# ╠═bffa0b11-1e5e-412b-88ed-35a4a9b450ba
+# ╠═6f0be83e-7e0e-4831-8c43-030b0a575fe5
+# ╠═d24a5cc3-2f02-4967-b967-c8e823529761
+# ╟─e1f2b080-3bfe-43ce-b3e0-956441251578
+# ╟─2f2de6d7-6d28-4973-a58e-dd37e8a13e88
+# ╟─6070842e-4117-4d26-9c75-6989c8b3e394
+# ╟─2440375c-9284-4624-b6bc-dd41bcbd8b25
+# ╟─c5786eac-1913-47e6-b4f5-949090bd2da9
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
