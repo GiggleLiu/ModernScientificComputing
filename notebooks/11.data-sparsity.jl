@@ -548,6 +548,31 @@ We have a new measure of distance as
 ```
 """
 
+# ╔═╡ fd3cf146-7709-4d07-8c68-6dff585fb5e4
+md"""
+Given a kernel function, there is a mapping from the original vector space to reproducing kernel Hilbert space (RKHS) associated with it. The kernel function of two vectors can be defined as an inner product of their images in the RKHS.
+```math
+\kappa(x, y) = \phi(x)^T\phi(y)
+```
+"""
+
+# ╔═╡ e812680a-a8f7-4f5e-b771-db388b39ae31
+md"It is important to note that $\kappa(\cdot, x)$ is nolonger a linear function under this definition of inner product."
+
+# ╔═╡ fd3de280-fb9f-43d7-a563-17c2d5908803
+md"""
+### Example
+Let $x, y\in \mathbb{R}^2$, a polynomial kernel of order 2 can be defined as
+```math
+\kappa(x, y) = (x^T y)^2
+```
+
+Then we can express the mapping from a vector to RKHS as
+```math
+\phi(x) = \left(\begin{matrix}x_1^2\\x_2^2\\x_1x_2\\x_2x_1\end{matrix}\right)
+```
+"""
+
 # ╔═╡ f4c814c6-58a2-4e8c-99e0-05b7ab935d5b
 md"""
 ### Universality of a kernel
@@ -2346,6 +2371,9 @@ version = "1.4.1+0"
 # ╟─ad42f0a5-269b-406d-a7ab-283cfc7a0675
 # ╟─e087e62e-8989-43c7-a58c-dc7d6e1e5b5e
 # ╟─6811bb34-1e66-4c35-8e6b-49e972e00556
+# ╟─fd3cf146-7709-4d07-8c68-6dff585fb5e4
+# ╟─e812680a-a8f7-4f5e-b771-db388b39ae31
+# ╟─fd3de280-fb9f-43d7-a563-17c2d5908803
 # ╟─f4c814c6-58a2-4e8c-99e0-05b7ab935d5b
 # ╟─4c843b88-0a4e-44da-8bcb-8eaf295d02ee
 # ╟─d47510d1-b3c8-475f-83de-f367c435cd39
