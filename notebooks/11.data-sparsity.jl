@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.25
 
 using Markdown
 using InteractiveUtils
@@ -595,6 +595,43 @@ where $c_j \in \mathbb{R}$ and $x_j$ can be either a number of a vector.
 # ╔═╡ 11ed425b-0338-45db-804d-93f6b2fd0558
 md"""
 As noted in Micchelli et al. (2006), one can ask whether the function, ``f`` in the above euqation approximates any real-valued target function arbitrarily well as the number of summands increases without bound. This is an important question to consider because if the answer is affirmative, then the kernel-based learning algorithm can be consistent in the sense that for any target function, ``f^⋆``, the discrepancy between ``f`` (which is learned from the training data) and ``f^⋆`` goes to zero (in some appropriate sense) as the sample size goes to infinity.
+"""
+
+# ╔═╡ a65627f1-9e8a-46e2-b1f7-a7b80cf476f8
+md"""
+## Kernel Principle Component Analysis (PCA)
+
+The linear PCA starts from computing a convariance matrix of the data $x_k \in \mathbb{R}^N$, for $k=1,\ldots, l$. We assume the data is centralized, i.e. $\sum_{k} x_k=0$. Then the covariance matrix is defined as
+```math
+C = \frac{1}{l}\sum_{k=1}^l x_k x_k^T
+```
+
+The new coordinates in the eigenvector basis of $C$ are called principle components.
+"""
+
+# ╔═╡ c50e2a11-81fd-4ded-afe1-7aabc827b653
+md"""
+The kernel PCA is defined as the PCA in the RKHS, i.e. 
+```math
+\overline{C} = \frac{1}{l}\sum_{k=1}^l \phi(x_k)\phi(x_k)^T
+```
+"""
+
+# ╔═╡ 7edef57f-08d7-4f84-a103-3d07f8c57940
+md"The eigenvalue problem to solve is
+```math
+\lambda V = \overline{C} V
+```
+where $V=\sum_{k=1}^l \alpha_k \phi(x_k)$
+"
+
+# ╔═╡ 98085599-c15a-4ab9-b06f-3c7dc12a6e17
+md"""
+By projecting this eigenvalue problem into this subspace, we obtain the following equivalent form
+```math
+l\lambda \alpha = K \alpha
+```
+where $K_{ij} = K(x_i, x_j)$.
 """
 
 # ╔═╡ a36ba73f-2014-4187-9bd0-7b297897df26
@@ -2378,6 +2415,10 @@ version = "1.4.1+0"
 # ╟─4c843b88-0a4e-44da-8bcb-8eaf295d02ee
 # ╟─d47510d1-b3c8-475f-83de-f367c435cd39
 # ╟─11ed425b-0338-45db-804d-93f6b2fd0558
+# ╟─a65627f1-9e8a-46e2-b1f7-a7b80cf476f8
+# ╟─c50e2a11-81fd-4ded-afe1-7aabc827b653
+# ╟─7edef57f-08d7-4f84-a103-3d07f8c57940
+# ╟─98085599-c15a-4ab9-b06f-3c7dc12a6e17
 # ╟─a36ba73f-2014-4187-9bd0-7b297897df26
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
