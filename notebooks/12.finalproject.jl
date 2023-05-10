@@ -13,9 +13,6 @@ using CUDA; CUDA.allowscalar(false)
 # ╔═╡ 0ea829bc-87f1-479d-b0ee-cd222afcb173
 using BenchmarkTools
 
-# ╔═╡ bffa0b11-1e5e-412b-88ed-35a4a9b450ba
-using CUDA.CUSPARSE
-
 # ╔═╡ 695af2cf-7905-4282-a735-4e5f3e6e2879
 TableOfContents()
 
@@ -202,10 +199,10 @@ function poor_besselj(ν::Int, z::T; atol=eps(T)) where T
 end
 
 # ╔═╡ 610521c2-d36f-4174-816f-82b36d052c94
-# ╠═╡ disabled = true
-#=╠═╡
 x = CUDA.CuArray(0.0:0.01:10)
-  ╠═╡ =#
+
+# ╔═╡ fc4e9b3b-c716-4b27-90cb-7f90fb762148
+poor_besselj.(1, x)
 
 # ╔═╡ c84dcaf6-7165-4473-aa0b-0cf15562f50d
 md"6. manage your GPU devices"
@@ -222,32 +219,8 @@ NVML.utilization_rates(nvml_dev)
 # ╔═╡ c45650c7-413a-4ef0-848d-9f4b3ca5055d
 NVML.compute_processes(nvml_dev)
 
-# ╔═╡ 1e134127-5fa4-4153-adb8-24dd5b33a957
-md"## Sparse Arrays"
-
-# ╔═╡ ac8b50fb-7acf-4f8b-b05a-4f39133d9926
-x = CUDA.CUSPARSE.sprand(10, 10, 0.2)
-
-# ╔═╡ fc4e9b3b-c716-4b27-90cb-7f90fb762148
-poor_besselj.(1, x)
-
-# ╔═╡ eba6ff9a-3d68-40a3-9573-b5031c1d2355
-x.nzval |> typeof
-
-# ╔═╡ 6f0be83e-7e0e-4831-8c43-030b0a575fe5
-d_x = CuSparseVector(x)
-10-element CuSparseVector{Float64, Int32} with 5 stored entries:
-  [2 ]  =  0.538639
-  [4 ]  =  0.89699
-  [6 ]  =  0.258478
-  [7 ]  =  0.338949
-  [10]  =  0.424742
-
-# ╔═╡ d24a5cc3-2f02-4967-b967-c8e823529761
-nnz(d_x)
-
 # ╔═╡ e1f2b080-3bfe-43ce-b3e0-956441251578
-md"## Kernel Programming"
+md"## CUDA libraries and Kernel Programming"
 
 # ╔═╡ 2f2de6d7-6d28-4973-a58e-dd37e8a13e88
 md"Please check [lib/CUDATutorial](../lib/CUDATutorial/kernel.jl)"
@@ -840,12 +813,6 @@ version = "17.4.0+0"
 # ╠═90a4d05b-02d9-414b-b571-4680043edf36
 # ╠═bb6ec433-d2e9-41c5-9a50-3617f666a455
 # ╠═c45650c7-413a-4ef0-848d-9f4b3ca5055d
-# ╟─1e134127-5fa4-4153-adb8-24dd5b33a957
-# ╠═ac8b50fb-7acf-4f8b-b05a-4f39133d9926
-# ╠═eba6ff9a-3d68-40a3-9573-b5031c1d2355
-# ╠═bffa0b11-1e5e-412b-88ed-35a4a9b450ba
-# ╠═6f0be83e-7e0e-4831-8c43-030b0a575fe5
-# ╠═d24a5cc3-2f02-4967-b967-c8e823529761
 # ╟─e1f2b080-3bfe-43ce-b3e0-956441251578
 # ╟─2f2de6d7-6d28-4973-a58e-dd37e8a13e88
 # ╟─6070842e-4117-4d26-9c75-6989c8b3e394
