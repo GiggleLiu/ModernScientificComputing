@@ -38,8 +38,8 @@ jobs:
             cd("website"); mkpath("notebooks");
             using Pkg; Pkg.activate("."); Pkg.instantiate();
             using PlutoSliderServer;
-            for file in readdir("../notebooks")
-              (endswith(file, ".jl") && file != "cuda.jl") && PlutoSliderServer.export_notebook(joinpath("../notebooks", file); Export_output_dir="notebooks")
+            for file in readdir("../notebooks");
+              (endswith(file, ".jl") && file != "cuda.jl") && PlutoSliderServer.export_notebook(joinpath("../notebooks", file); Export_output_dir="notebooks");
             end;
             using NodeJS; run(`$(npm_cmd()) install highlight.js`);
             using Franklin;
