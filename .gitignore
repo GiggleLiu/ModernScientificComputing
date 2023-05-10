@@ -27,3 +27,4 @@ unweighted/images/*.tex
 *.thm
 *.so
 website/notebooks/*.html
+.vscode
