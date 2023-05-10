@@ -89,7 +89,7 @@ function simulate(lg::AbstractLatticeGas, niters::Int; verbose::Bool=false)
     verbose && println(lg)
     for _ = 1:niters
         update!(lg)
-        verbose && (println(lg); sleep(0.1))
+        verbose && (println(lg); sleep(0.2))
     end
     return lg
 end

@@ -15,7 +15,7 @@ end
     A = SparseArrays.sprand(10, 10, 0.2)
     cuA = CUSPARSE.CuSparseMatrixCSC(A)
 
-    @show nnz(spA)
+    @show SparseArrays.nnz(cuA)
 
     # operations
     v = randn(10)

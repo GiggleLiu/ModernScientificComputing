@@ -4,7 +4,7 @@ using KernelPCA
 ################## Linear Kernel ###################
 xaxis, yaxis = -2:0.05:2, -2:0.05:2
 x2 = [KernelPCA.Point(a, b) for a in xaxis, b in yaxis]
-constants2 = [0.8, 0.1, 0.5]
+constants = [0.8, 0.1, 0.5]
 anchors2 = KernelPCA.Point.([(0.8, 0.2), (0.01, -0.9), (-0.5, -0.5)])
 lkf = kernelf(KernelPCA.LinearKernel(), constants, anchors2)
 Plots.contour(xaxis, yaxis, lkf.(x2); label="2D function")

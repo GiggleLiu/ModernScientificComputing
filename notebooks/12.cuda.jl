@@ -19,12 +19,7 @@ TableOfContents()
 # ╔═╡ f26db3f9-04a0-4e72-93ee-219e4743b1d9
 function highlight(str)
 	HTML("""<span style="background-color:yellow">$(str)</span>""")
-end
-
-# ╔═╡ 0b956e8e-e5a1-11ed-2cfd-ddc0643b1144
-md"""
-# Kernel principle component analysis
-"""
+end;
 
 # ╔═╡ 88f7b1b8-c60f-4969-997a-6f8b47d51e34
 md"# Simulting lattice gas cellular automata"
@@ -768,8 +763,7 @@ version = "17.4.0+0"
 # ╔═╡ Cell order:
 # ╠═f2d7dc70-2de3-4411-ab1d-973980693f46
 # ╠═695af2cf-7905-4282-a735-4e5f3e6e2879
-# ╠═f26db3f9-04a0-4e72-93ee-219e4743b1d9
-# ╟─0b956e8e-e5a1-11ed-2cfd-ddc0643b1144
+# ╟─f26db3f9-04a0-4e72-93ee-219e4743b1d9
 # ╟─88f7b1b8-c60f-4969-997a-6f8b47d51e34
 # ╟─050b3d36-6d01-4eb2-b5ea-6308225eced0
 # ╟─6739234e-c3f4-42bb-a056-8c31e0913d10
