@@ -44,8 +44,13 @@ Please check the following book as a reference.
 
 ### Week 11: Sparsity detection
 * Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/11.data-sparsity/), [pdf](notebooks/11.data-sparsity.pdf), [source](notebooks/11.data-sparsity.jl)]
+* [Project: Compressed Sensing](lib/CompressedSensingTutorial/)
+* [Project: Kernel Principle Component Analysis](lib/KernelPCA/)
 
-### Week 12: Computational hard problems
+### Week 12: CUDA programming
+* Pluto notebook [[pdf](notebooks/12.cuda.pdf), [source](notebooks/12.cuda.jl)]
+* [Live Coding: CUDA programming](lib/CUDATutorial/)
+* [Project: Lattice Gas Cellular Automata](lib/LatticeGasCA/)
 
 ### Week 13: Final exam
 
