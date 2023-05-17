@@ -1,0 +1,7 @@
+diff --git a/courseworks/week1/ZhigaoXIE/hello b/courseworks/week1/ZhigaoXIE/hello
+new file mode 100644
+index 0000000..4effa19
+--- /dev/null
++++ b/courseworks/week1/ZhigaoXIE/hello
+@@ -0,0 +1 @@
++hello!

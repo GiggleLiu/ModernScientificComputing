@@ -29,18 +29,28 @@ Please check the following book as a reference.
 ### Week 6: Eigenvalue problems and sparse matrices
 * Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/6.sparse/), [pdf](notebooks/6.sparse.pdf), [source](notebooks/6.sparse.jl)]
 
-### Week 7: Nonlinear equations and optimization
+### Week 7: Fast Fourier transform
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/7.fft/), [pdf](notebooks/7.fft.pdf), [source](notebooks/7.fft.jl)]
 
-### Week 8: Fast Fourier transform
+### Week 8: Nonlinear equations and optimization
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/8.optimization/), [pdf](notebooks/8.optimization.pdf), [source](notebooks/8.optimization.jl)]
 
-### Week 9: Random numbers and stochastic simulation
+### Week 9: Automatic differentiation
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/9.autodiff/), [pdf](notebooks/9.autodiff.pdf), [source](notebooks/9.autodiff.jl)]
 
 # *PART 3: Scientific applications*
 ### Week 10: Probabilistic modeling
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/10.inference/), [pdf](notebooks/10.inference.pdf), [source](notebooks/10.inference.jl)]
 
 ### Week 11: Sparsity detection
+* Pluto notebook [[html](https://giggleliu.github.io/ModernScientificComputing/notebooks/11.data-sparsity/), [pdf](notebooks/11.data-sparsity.pdf), [source](notebooks/11.data-sparsity.jl)]
+* [Project: Compressed Sensing](lib/CompressedSensingTutorial/)
+* [Project: Kernel Principle Component Analysis](lib/KernelPCA/)
 
-### Week 12: Computational hard problems
+### Week 12: CUDA programming
+* Pluto notebook [[pdf](notebooks/12.cuda.pdf), [source](notebooks/12.cuda.jl)]
+* [Live Coding: CUDA programming](lib/CUDATutorial/)
+* [Project: Lattice Gas Cellular Automata](lib/LatticeGasCA/)
 
 ### Week 13: Final exam
 
