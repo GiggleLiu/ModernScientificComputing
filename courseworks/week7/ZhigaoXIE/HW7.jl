@@ -3,28 +3,54 @@ using ForwardDiff
 using Plots
 using LinearAlgebra
 
-function loss_function(x, edges)
+function is_valid_udg(x, edges)
     n = size(x, 2)
-    loss = 0.0
     for (u, v) in edges
         if norm(x[:, u] - x[:, v]) > 1.0
-            loss += norm(x[:, u] - x[:, v]) - 1.0
+            return false
         end
     end
     for u in 1:n
         for v in (u + 1):n
             if (u, v) ∉ edges && norm(x[:, u] - x[:, v]) < 1.0
-                loss += 1.0 - norm(x[:, u] - x[:, v])
+                return false
             end
         end
     end
-    return loss
+    return true
 end
 
-function unit_disk_embedding(edges, n)
+function loss_function(x::AbstractArray, n::Int, edges::Vector{Tuple{Int, Int}})
+    Loss = 0
+
+    for i in 1:n
+        for j in i + 1:n
+            if (i, j) in edges
+                d_ij = norm(x[:, i] - x[:, j])
+                if d_ij >= 1
+                    Loss += 1
+                end
+            else
+                d_ij = norm(x[:, i] - x[:, j])
+                if d_ij <= 1
+                    Loss += 1
+                end
+            end
+        end
+    end
+
+    if Loss == 0
+        println("The result is a unit disk.")
+    else
+        println("The result is not a unit disk.")
+    end
+    return Loss
+end
+
+function unit_disk_embedding(n, edges)
     # Assign each vertex with a random coordinate
     x0 = rand(2, n)
-    res = optimize(x -> loss_function(x, edges), x0, BFGS(), autodiff=:forward)
+    res = optimize(x -> loss_function(x, n,edges), x0, BFGS(), autodiff=:forward)
 
     # Extract the optimal coordinates from the optimizer result
     x_opt = res.minimizer
@@ -57,6 +83,6 @@ edges = [
 ]
 
 # Generate the unit-disk embedding and plot the resulting graph
-x_opt = unit_disk_embedding(edges, n)
+x_opt = unit_disk_embedding(n,edges)
 savefig("unit_disk_embedding.png")
 
