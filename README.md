@@ -1,6 +1,6 @@
 # Modern Scientific Computing (AMAT 5315)
 
-(Work in progress!!!)
+This repo has been moved to: https://github.com/GiggleLiu/ModernScientificComputing2.git
 
 # *PART 1: Computing*
 ### Week 1: Understanding our computing devices
